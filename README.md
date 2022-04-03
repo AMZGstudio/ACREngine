@@ -14,7 +14,7 @@ Thats it!
 
 # Code Preview
 How to draw a red square to the screen:
-
+```
 #include "ConsoleEngine.h"
 #include <conio.h>
 
@@ -39,3 +39,4 @@ int main()
     getch();
     return 0;
 }
+```
