@@ -14,7 +14,7 @@ Thats it!
 
 # Code Preview
 How to draw a red square to the screen:
-```
+```C
 #include "ConsoleEngine.h"
 #include <conio.h>
 
@@ -35,8 +35,8 @@ int main()
     //render the screen, (write to output buffer).
     render();
 
-    //get a userInput, so it doesnt terminate immediatly.
-    getch();
+    //close the API, (stops memory from leaking)
+    terminate();
     return 0;
 }
 ```
