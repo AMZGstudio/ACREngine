@@ -53,27 +53,6 @@ void bubbleSort(int* cycles, int* values, int size)
 		}
 }
 
-void insertionSort(int* cycles, int* values, int size)
-{
-	for (int i = 0; i <= size; i++)
-	{
-		int key = values[i];
-		
-
-		int j = i - 1;
-
-		while (j >= 0 && values[j] > key)
-		{
-			(*cycles)++;
-			values[j + 1] = values[j];
-			j--;
-		}
-		
-		drawArray(*cycles, i - 1, values); render();
-		values[j + 1] = key;
-	}
-}
-
 int main()
 {
 	int enterPressed = 0, menuWidth = 20, selected = 0, darkLight = 2, cycles = 0, numbers[WIDTH / 2] = { 0 };
@@ -100,26 +79,12 @@ int main()
 				defaultFrontColor = Black, defaultBackColor = White, darkLight = 1;
 			}
 		}
-		/*
-		if (enterPressed == 1 && selected == 2)
-		{
-			drawSquare(1, 1, 5, 5, Red, Red);
-			render();
-			char input[100] = { 0 };
-			wordInput(input, 100, 1, 1);
-
-			int newSpeed = atoi(input);
-			drawNumber(newSpeed, 5, 15, White, Black);
-			render();
-			while (!getKeyInput(enterKey));
-		}*/
 		drawText("Demo program - consoleEngine - AMZG", 3, HEIGHT - 1, Default, Default);
 		drawWindow(3, 2, 9 + menuWidth, 10, 1, Default, Default);
 		drawMenu(selected, menuOptions, 3, menuWidth, 1, 6, 4);
 		render();
 	}
 	randomizeNumbers(numbers, WIDTH / 2);
-	//insertionSort(&cycles, numbers, WIDTH / 2);
 	bubbleSort(&cycles, numbers, WIDTH / 2);
 
 	terminate();
