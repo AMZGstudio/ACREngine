@@ -5,7 +5,7 @@
 
 int main()
 {
-	initalize(WIDTH, HEIGHT, White, Cyan);
+	initalize("Drawing Pad", WIDTH, HEIGHT, 10, 20, White, Cyan);
 	int x = 5, y = 5, selectedColor = Blue, amountColors = 8;
 
 	int colors[48][24] = { 0 };
@@ -19,8 +19,8 @@ int main()
 			for (int j = 0; j < HEIGHT - 10; j++)
 				drawChar(' ', i + 2, j + 2, Default, colors[i][j]);
 
-		input(&y, HEIGHT - 9, 2, Y);
-		input(&x, WIDTH - 1, 2, X);
+		keyInput(&y, HEIGHT - 9, 2, Y);
+		keyInput(&x, WIDTH - 1, 2, X);
 
 		if (getKeyInput('1')) selectedColor = Black;
 		if (getKeyInput('2')) selectedColor = Black + 1;
@@ -32,7 +32,7 @@ int main()
 		if (getKeyInput('8')) selectedColor = Black + 7;
 		if (getKeyInput('E')) colors[x - 2][y - 2] = selectedColor;
 		
-		drawChar('#', x, y, Yellow, Yellow);
+		drawChar(' ', x, y, Default, Yellow);
 		drawText("Welcome to the drawing Pad!", 2, 23, Black, Default);
 		drawText("Use WASD keys to move, and press E to draw!", 2, 24, Black, Default);
 		drawText("These are the colors you can use:", 2, 26, Black, Default);
