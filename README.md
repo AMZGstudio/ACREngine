@@ -15,25 +15,23 @@ Thats it!
 # Code Preview
 How to draw a red square to the screen:
 ```C
+#define WIDTH 100 // screen dimensions
+#define HEIGHT 50
 #include "ConsoleEngine.h"
-#include <conio.h>
-
-#define SCREEN_WIDTH 100
-#define SCREEN_HEIGHT 30
 
 int main()
 {
-    // we initalize the screen with its width, its height, and then the foreground color and background color.
-    // the foreground color is the color of the text, and the background color is the background of the text.
-    initalize(SCREEN_WIDTH, SCREEN_HEIGHT, Default, Default);
+    // we create the screen, with the window title, the text foreground, and background color. over here, its white text on a cyan background.
+    initalize("Demo", White, Cyan); // TIP: write None, for default foreground and background.
 
     // Draw a square on the screen, the inputs are: x, y, (top left of the square), then x, y, (bottom right of the square)
     // And then the color foreground, and color background, the color of the text doesnt matter in this case, so we leave it
     // at Default, and we want the background to be red, so its like the pixel is set to Red.
     drawSquare(4, 4, 40, 20, Default, Red);
 
-    //render the screen, (write to output buffer).
-    render();
+    // render the screen, (write to output buffer).
+    // paramter is to clear the screens buffer after rendering.
+    render(false); 
 
     //close the API, (stops memory from leaking)
     terminate();
