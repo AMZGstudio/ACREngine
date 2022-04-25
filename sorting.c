@@ -1,8 +1,8 @@
-/*//make sure height is half of width
-#define WIDTH 500
-#define HEIGHT 250
-#define FONT_WIDTH 1
-#define FONT_HEIGHT 1
+//make sure height is half of width
+#define WIDTH 100
+#define HEIGHT 50
+#define FONT_WIDTH 7
+#define FONT_HEIGHT 14
 #define WAIT 0
 
 #include "ConsoleEngine.h"
@@ -25,7 +25,7 @@ void drawArray(int cycles, int selected, int* values)
 		else drawSquare(realLoc, values[j - 1], realLoc + 1, HEIGHT, Default, defaultFrontColor);
 		realLoc += 2;
 	}
-	render();
+	render(true);
 }
 
 void randomizeNumbers(int numbers[], int amountNums)
@@ -63,7 +63,7 @@ void menu()
 	char menuOptions[][100] = { "Start Sorting", "Switch mode ", "Resize Window" };
 	char input[100] = { 0 };
 	Window* Window1 = createWindow(3, 2, WIDTH - 3, HEIGHT - 2, singl, true, Default, Default);
-	Menu* menu = createMenu(menuOptions, 3, 20, 1, &selected, true, Window1);
+	Menu* menu = createMenu(menuOptions, 3, 20, 1, &selected, true, false, Window1);
 	
 	while (!pressed || selected != 0)
 	{
@@ -77,7 +77,7 @@ void menu()
 			if (darkMode == true) darkMode = false, defaultFrontColor = Black, defaultBackColor = White;
 			else if (darkMode == false) darkMode = true, defaultFrontColor = White, defaultBackColor = Black;
 		}
-		render();
+		render(true);
 	}
 	deleteWindow(Window1);
 	deleteMenu(menu);
@@ -94,4 +94,4 @@ int main()
 	bubbleSort(&cycles, numbers, WIDTH / 2);
 
 	return terminate();
-}*/
+}
