@@ -8,7 +8,7 @@
 #define singl 1
 #define doubl 2
 #define VERSION 1.3
-
+#define _WIN32_WINNT 0x0500
 #ifndef WAIT
 #define WAIT 0
 #endif
@@ -141,9 +141,9 @@ int SetFont(int fontSizeX, int fontSizeY, UINT codePage)
 	info.dwFontSize.Y = fontSizeY; // leave X as zero
 	info.FontWeight = FW_NORMAL;
 	wcscpy_s(info.FaceName, 9, L"Consolas");
-	if (SetCurrentConsoleFontEx(hConsoleOutput, 0, &info) == 0) returnValue = -1;
+	if (!SetCurrentConsoleFontEx(hConsoleOutput, 0, &info)) while(1) printf("Setting console font failed.\n");;
 	//char text[500] = { 0 }GetLastError();
-	if (SetConsoleOutputCP(codePage) == 0) returnValue = -2;
+	if (!SetConsoleOutputCP(codePage)) while (1) printf("Setting consoles codepage failed.\n");
 	return returnValue;
 }
 int SetConsoleWindowSize(int x, int y)
@@ -465,7 +465,7 @@ void initalize(const char* title,int width, int height, int bufferFontWidth, int
 	hConsoleInput = GetStdHandle(STD_INPUT_HANDLE);
 	ConsoleWindow = GetConsoleWindow();
 
-	if (SetFont(fontWidth, fontHeight, 437) != 0) while(1) printf("Setting console font failed\n");
+	SetFont(fontWidth, fontHeight, 437);
 	
 	if (SetConsoleWindowSize(bufferWidth, bufferHeight) != 0) while (1) printf("Console resizing failed\n");
 	SetConsoleTitleA(title);
@@ -482,7 +482,7 @@ void initalize(const char* title,int width, int height, int bufferFontWidth, int
 	// Set flags to allow mouse input, and disable selecting, and support for ANSI escape sequences.	
 	if (!SetConsoleMode(hConsoleInput, ENABLE_EXTENDED_FLAGS | ENABLE_WINDOW_INPUT | ENABLE_MOUSE_INPUT))
 		while(1) printf("Setting The consoles Input modes did not work.\n");
-	if (!SetConsoleMode(hConsoleOutput, ENABLE_PROCESSED_OUTPUT | ENABLE_VIRTUAL_TERMINAL_PROCESSING | ENABLE_WRAP_AT_EOL_OUTPUT))
+	if (!SetConsoleMode(hConsoleOutput, ENABLE_PROCESSED_OUTPUT | ENABLE_VIRTUAL_TERMINAL_PROCESSING | ENABLE_WRAP_AT_EOL_OUTPUT | DISABLE_NEWLINE_AUTO_RETURN))
 		while (1) printf("Setting The consoles Output modes did not work.\n");
 	
 	if (defaultFront != Default) defaultFrontColor = defaultFront;
@@ -522,6 +522,7 @@ void render(bool clear)
 	}
 	startTime = clock();
 	//render
+	printf("\033[0;0H\033[?25l");
 	if (!WriteConsoleA(hConsoleOutput, screenBuffer, (bufferWidth * bufferHeight) * WIDTHESCAPE, NULL, NULL)) while (1) printf("Rendering failed.\n");
 	
 	if (clear == true) clearScreen();
