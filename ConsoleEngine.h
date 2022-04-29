@@ -4,25 +4,9 @@
 #define hideCursor() printf("\033[?25l")
 //ignore
 #define WIDTHESCAPE 9
-#define WAIT_BETWEEN_PRESS 200
+#define WAIT_BETWEEN_PRESS 50
 #define singl 1
 #define doubl 2
-
-#ifndef WIDTH
-#define WIDTH 80
-#endif
-
-#ifndef HEIGHT
-#define HEIGHT 80
-#endif
-
-#ifndef FONT_WIDTH
-#define FONT_WIDTH 8
-#endif
-
-#ifndef FONT_HEIGHT
-#define FONT_HEIGHT 16
-#endif
 
 #ifndef WAIT
 #define WAIT 0
@@ -31,7 +15,6 @@
 #include <stdio.h>
 #include <windows.h>
 #include <time.h>
-#include <conio.h>
 #include <stdbool.h>
 
 #define CLEAR_AFTER_RENDER false
@@ -40,7 +23,7 @@
 
 enum names { X, Y, Right, Left, Up, Down, Yes, No};
 enum keys { upArrow = VK_UP, downArrow = VK_DOWN, leftArrow = VK_LEFT, rightArrow = VK_RIGHT, enterKey = VK_RETURN, escapeKey = VK_ESCAPE};
-enum colors {Default, None, Black, Red, Green, Yellow, Blue, Magenta, Cyan, White};
+enum colors {Default, Black, Red, Green, Yellow, Blue, Magenta, Cyan, White};
 enum special {LightShade = 176, MediumShade = 177, DarkShade = 178, FullBlock = 219, LowerHalfBlock = 220, LeftHalfBlock = 221, RightHalfBlock = 222, UpperHalfBlock = 223};
 
 typedef struct Menu {
@@ -66,13 +49,16 @@ typedef struct Window {
 HANDLE hConsoleOutput, hConsoleInput;
 HWND ConsoleWindow;
 
+bool terminated = false;
 char* screenBuffer = NULL;
-int bufferWidth = 0, bufferHeight = 0;
+int bufferWidth = 120, bufferHeight = 80;
+int fontWidth = 7, fontHeight = 14;
 int cursorPosX = 0, cursorPosY = 0;
 int defaultFrontColor = White, defaultBackColor = Black;
 int waitBetweenRender = 0;
 
-time_t time1 = 0, time2 = 0, startTime = 0;
+clock_t time1 = 0, time2 = 0, startTime = 0;
+clock_t current_ticks;
 COORD mousePos;
 
 /**************************************************************************************************
@@ -154,8 +140,8 @@ int SetFont(int fontSizeX, int fontSizeY, UINT codePage)
 	info.dwFontSize.Y = fontSizeY; // leave X as zero
 	info.FontWeight = FW_NORMAL;
 	wcscpy_s(info.FaceName, 9, L"Consolas");
-	if (SetCurrentConsoleFontEx(hConsoleOutput, NULL, &info) == 0) returnValue = -1;
-
+	if (SetCurrentConsoleFontEx(hConsoleOutput, 0, &info) == 0) returnValue = -1;
+	//char text[500] = { 0 }GetLastError();
 	if (SetConsoleOutputCP(codePage) == 0) returnValue = -2;
 	return returnValue;
 }
@@ -163,11 +149,11 @@ int SetConsoleWindowSize(int x, int y)
 {
 	int returnValue = 0; //0 means ok
 
-	if (hConsoleOutput == INVALID_HANDLE_VALUE) printf("Unable to get stdout handle.");
+	if (hConsoleOutput == INVALID_HANDLE_VALUE) while(1) printf("Unable to get stdout handle.");
 	{
 		COORD largestSize = GetLargestConsoleWindowSize(hConsoleOutput);
-		if (x > largestSize.X) printf("The x dimension is too large.");
-		if (y > largestSize.Y) printf("The y dimension is too large.");
+		if (x > largestSize.X) while(1) printf("The x dimension is too large.\n");
+		if (y > largestSize.Y) while(1) printf("The y dimension is too large.\n");
 	}
 	CONSOLE_SCREEN_BUFFER_INFO bufferInfo;
 	if (!GetConsoleScreenBufferInfo(hConsoleOutput, &bufferInfo)) printf("Unable to retrieve screen buffer info.");
@@ -186,6 +172,8 @@ int SetConsoleWindowSize(int x, int y)
 
 	SMALL_RECT info = { 0, 0, x - 1, y - 1 };
 	if (!SetConsoleWindowInfo(hConsoleOutput, TRUE, &info)) returnValue = -2; //printf("Unable to resize window after resizing buffer.");
+
+	return returnValue;
 }
 /**************************************************************************************************
 Input Functions (also related to windows, wont work cross platform)
@@ -237,22 +225,30 @@ create functions
 *********************************/
 Menu* createMenu(char options[][100], int numOptions, int width, int seperation, int* selected, bool centered, bool allowMouse, Window* windowToCling)
 {
-	Menu* menu = malloc(sizeof(Menu));
+	int* selectedTemp = (int*)malloc(sizeof(int));
+
+	Menu* menu = (Menu*)malloc(sizeof(Menu));
+
 	menu->amountOptions = numOptions, menu->menuWidth = width, menu->menuSpacing = seperation, menu->centered = centered, menu->allowMouse = allowMouse;
-	menu->options = malloc(sizeof(char*) * numOptions);
-	menu->selected = selected;
+	menu->options = (char**)malloc(sizeof(char*) * numOptions);
+	if (selected == 0)
+	{
+		*selectedTemp = 0;
+	}
+	else *selectedTemp = *selected;
+	menu->selected = selectedTemp;
 
 	for (int i = 0; i < numOptions; i++)
-		menu->options[i] = &options[i];
+		menu->options[i] = options[i];
 
 	if (windowToCling != NULL)
 		windowToCling->optionMenu = menu;
 
 	return menu;
 }
-int createWindow(int xStart, int yStart, int xEnd, int yEnd, int singleDoubleThick, bool resizable, int colorFront, int colorBack)
+Window* createWindow(int xStart, int yStart, int xEnd, int yEnd, int singleDoubleThick, bool resizable, int colorFront, int colorBack)
 {
-	Window* createdWindow = malloc(sizeof(Window));
+	Window* createdWindow = (Window*)malloc(sizeof(Window));
 	if (createdWindow == NULL) while (1) printf("Error creating windows sizes failed\n");
 
 	createdWindow->x1 = xStart, createdWindow->x2 = xEnd;
@@ -311,17 +307,18 @@ void drawSquare(int xStart, int yStart, int xEnd, int yEnd, int colorFront, int 
 		for (int y = yStart; y <= yEnd; y++)
 			fillArrayWithColor(colorFront, colorBack, xyLoc(x, y));
 }
-void drawLine(int xStart, int yStart, int length, int direction, int colorFront, int colorBack)
+void drawLine(int xStart, int yStart, int xEnd, int yEnd, int colorFront, int colorBack)
 {
-	int xEnd = xStart, yEnd = yStart;
-	switch (direction)
+	int changeX = xEnd - xStart;
+	int changeY = yEnd - yStart;
+	float slope = (float)changeY / (float)changeX;
+	int b = yStart;
+
+	for (int i = xStart; i <= xEnd; i++)
 	{
-	case Right: xEnd += length - 1; break;
-	case Left: xEnd -= length - 1; break;
-	case Up: yEnd -= length - 1; break;
-	case Down: yEnd += length - 1; break;
+		int slot = xyLoc(i, slope * i + b);
+		if (slot != -1) fillArrayWithColor(colorFront, colorBack, slot);
 	}
-	drawSquare(xStart, yStart, xEnd, yEnd, colorFront, colorBack);
 }
 void drawMenu(Menu* whichOne, int x, int y)
 {
@@ -346,7 +343,7 @@ void drawMenu(Menu* whichOne, int x, int y)
 
 	for (int i = 0; i < amountOptions; i++)
 	{
-		if (i == *(whichOne->selected)) drawSquare(x, y, x + menuWidth, y, defaultBackColor, defaultFrontColor);
+		if (i == *(whichOne->selected)) drawSquare(x, y, x + menuWidth, y, defaultBackColor, White);
 		else drawSquare(x, y, x + menuWidth, y, defaultFrontColor, defaultBackColor);
 
 		drawText(whichOne->options[i], x + menuPadding, y, Default, Default);
@@ -362,18 +359,7 @@ void drawWindow(Window* whichWindow)
 	int xMenu = 1, yMenu = 1, connected[4];
 	int xWidthMin = 0, yWidthMin = 0;
 	for (int i = 0; i < 4; i++) connected[i] = whichWindow->connected[i];
-
-	//draw the menu
-	if (whichWindow->optionMenu != NULL)
-	{
-		if (whichWindow->optionMenu->centered == true)
-		{
-			xMenu = central(whichWindow->optionMenu->menuWidth, xStart, xEnd);
-			yMenu = central(whichWindow->optionMenu->amountOptions + whichWindow->optionMenu->menuSpacing + 1, yStart, yEnd);
-		}
-		drawMenu(whichWindow->optionMenu, xMenu, yMenu, whichWindow->optionMenu->selected);
-		xWidthMin = whichWindow->optionMenu->menuWidth + 4;
-	}
+	
 	if (whichWindow->resizeable == true)
 	{
 		if ((cursorPosX <= xEnd && cursorPosX >= xStart && cursorPosY == yStart || connected[0] == 1) && key(VK_LBUTTON, 0))
@@ -412,6 +398,20 @@ void drawWindow(Window* whichWindow)
 			else if (x == xStart || x == xEnd)
 				drawChar(rl, x, y, colorFront, colorBack);
 		}
+	//draw the background of the window
+	drawSquare(xStart + 1, yStart + 1, xEnd - 1, yEnd - 1, colorFront, colorBack);
+
+	//draw the menu
+	if (whichWindow->optionMenu != NULL)
+	{
+		if (whichWindow->optionMenu->centered == true)
+		{
+			xMenu = central(whichWindow->optionMenu->menuWidth, xStart, xEnd);
+			yMenu = central(whichWindow->optionMenu->amountOptions + whichWindow->optionMenu->menuSpacing + 1, yStart, yEnd);
+		}
+		drawMenu(whichWindow->optionMenu, xMenu, yMenu);
+		xWidthMin = whichWindow->optionMenu->menuWidth + 4;
+	}
 }
 void drawBuffer(char buffer[][8], int bufferHeight, int x, int y, int colorFront, int colorBack)
 {
@@ -427,18 +427,46 @@ void clearScreen()
 /**************************************************************************************************
 Handing console (creating buffers, destroying buffers, rendering buffers, etc).
 **************************************************************************************************/
-void initalize(char* title, int defaultFront, int defaultBack)
+int width()
 {
+	return bufferWidth;
+}
+int height()
+{
+	return bufferHeight;
+}
+int terminate(void)
+{
+	terminated = true;
+	if (SetConsoleOutputCP(65001) == 0) while (1) printf("Changing codepage back to default failed.\n");
+	free(screenBuffer);
+	screenBuffer = NULL;
+	//check leaks
+	//printf("\033[0;0mleaks: %d", _CrtDumpMemoryLeaks());
+	//while (!key(escapeKey, 0));
+	return 0;
+}
+void initalize(const char* title,int width, int height, int bufferFontWidth, int bufferFontHeight, int defaultFront, int defaultBack)
+{
+	if (terminated == false) terminate();
+
+	terminated = false;
 	//set default values
-	bufferWidth = WIDTH, bufferHeight = HEIGHT, waitBetweenRender = WAIT;
+	if (bufferWidth != Default) bufferWidth = width;
+	if (bufferHeight != Default) bufferHeight = height;
+	if (bufferFontWidth != Default) fontWidth = bufferFontWidth;
+	if (bufferFontHeight != Default) fontHeight = bufferFontHeight;
+
+	waitBetweenRender = WAIT;
 
 	hConsoleOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+	if (hConsoleOutput == 0) while (1) printf("Getting console output handle didnt work.\n");
 	hConsoleInput = GetStdHandle(STD_INPUT_HANDLE);
 	ConsoleWindow = GetConsoleWindow();
 
-	if (SetFont(FONT_WIDTH, FONT_HEIGHT, 437) != 0) while(1) printf("Setting console font failed\n");
+	if (SetFont(fontWidth, fontHeight, 437) != 0) while(1) printf("Setting console font failed\n");
 	
-	if (SetConsoleWindowSize(bufferWidth, bufferHeight) == 0) while (1) printf("Console resizing failed\n");
+	if (SetConsoleWindowSize(bufferWidth, bufferHeight) != 0) while (1) printf("Console resizing failed\n");
 	SetConsoleTitleA(title);
 	//makes window not resizbale
 
@@ -446,17 +474,20 @@ void initalize(char* title, int defaultFront, int defaultBack)
 	SetWindowLong(ConsoleWindow, GWL_STYLE, GetWindowLong(ConsoleWindow, GWL_STYLE) & ~WS_MAXIMIZEBOX & ~WS_SIZEBOX);
 
 	hideCursor();
+	cursorXY(0, 0);
 
 	hConsoleOutput = GetStdHandle(STD_OUTPUT_HANDLE);
 	hConsoleInput = GetStdHandle(STD_INPUT_HANDLE);
-	// Set flags to allow mouse input, and disable selecting		
+	// Set flags to allow mouse input, and disable selecting, and support for ANSI escape sequences.	
 	if (!SetConsoleMode(hConsoleInput, ENABLE_EXTENDED_FLAGS | ENABLE_WINDOW_INPUT | ENABLE_MOUSE_INPUT))
-		while(1) printf("EROROR\n");
+		while(1) printf("Setting The consoles Input modes did not work.\n");
+	if (!SetConsoleMode(hConsoleOutput, ENABLE_PROCESSED_OUTPUT | ENABLE_VIRTUAL_TERMINAL_PROCESSING | ENABLE_WRAP_AT_EOL_OUTPUT))
+		while (1) printf("Setting The consoles Output modes did not work.\n");
+	
+	if (defaultFront != Default) defaultFrontColor = defaultFront;
+	if (defaultBack != Default) defaultBackColor = defaultBack;
 
-	if (defaultFront != None) defaultFrontColor = defaultFront;
-	if (defaultBack != None) defaultBackColor = defaultBack;
-
-	screenBuffer = malloc(sizeof(char) * ((bufferWidth * bufferHeight) * WIDTHESCAPE + 1));
+	screenBuffer = (char*)malloc(sizeof(char) * ((bufferWidth * bufferHeight) * WIDTHESCAPE + 1));
 
 	for (int i = 0; i < (bufferWidth * bufferHeight) * WIDTHESCAPE; i += WIDTHESCAPE)
 	{
@@ -472,7 +503,7 @@ void deleteWindow(Window* window)
 }
 void deleteMenu(Menu* menu)
 {
-	free(menu->options);
+	free(menu->selected);
 	free(menu);
 }
 void render(bool clear)
@@ -484,22 +515,20 @@ void render(bool clear)
 	{
 		if (ConsoleWindow && ScreenToClient(ConsoleWindow, &cursor_pos));
 		{
-			cursorPosX = ((cursor_pos.x) / (FONT_WIDTH)) + 1;
-			cursorPosY = ((cursor_pos.y) / (FONT_HEIGHT)) + 1;
+			cursorPosX = ((cursor_pos.x) / (fontWidth)) + 1;
+			cursorPosY = ((cursor_pos.y) / (fontHeight)) + 1;
 		}
 	}
-	COORD start = { 0, 0 };
+	startTime = clock();
 	//render
-	WriteConsoleA(hConsoleOutput, screenBuffer, (bufferWidth * bufferHeight) * WIDTHESCAPE, NULL, NULL);
+	if (!WriteConsoleA(hConsoleOutput, screenBuffer, (bufferWidth * bufferHeight) * WIDTHESCAPE, NULL, NULL)) while (1) printf("Rendering failed.\n");
 	
 	if (clear == true) clearScreen();
-	while (!((int)clock() > (int)startTime + waitBetweenRender));
+	while (!((int)clock() > (int)startTime + WAIT));
 }
-int terminate()
+
+int map(int numberToMap, int numberBegin, int numberEnd, int numberMapStart, int numberMapEnd)
 {
-	free(screenBuffer);
-	//check leaks
-	//printf("\033[0;0mleaks: %d", _CrtDumpMemoryLeaks());
-	//while (!key(escapeKey, 100));
-	return 0;
+	int output = numberMapStart + ((numberMapEnd - numberMapStart) / (numberEnd - numberBegin)) * (numberToMap - numberBegin);
+	return output; 
 }
