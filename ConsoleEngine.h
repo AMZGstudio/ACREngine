@@ -7,6 +7,7 @@
 #define WAIT_BETWEEN_PRESS 50
 #define singl 1
 #define doubl 2
+#define VERSION 1.3
 
 #ifndef WAIT
 #define WAIT 0
