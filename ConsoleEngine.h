@@ -1,37 +1,42 @@
 #pragma once
-//could be used, arent for now
-#define cursorXY(x,y) printf("\033[%d;%dH",(y),(x))
 #define hideCursor() printf("\033[?25l")
 //ignore
 #define WIDTHESCAPE 9
-#define WAIT_BETWEEN_PRESS 50
-#define singl 1
-#define doubl 2
-#define VERSION 1.3
+#define _CRT_SECURE_NO_WARNINGS
 #define _WIN32_WINNT 0x0500
 #ifndef WAIT
 #define WAIT 0
 #endif
-
+#ifndef FULLSCREEN
+#define FULLSCREEN false
+#endif
 #include <stdio.h>
 #include <windows.h>
 #include <time.h>
+#include <conio.h>
 #include <stdbool.h>
+#include <stdarg.h>
 
-#define CLEAR_AFTER_RENDER false
+#define AMOUNT_KEYS 34
+#define None NULL
 //#define _CRTDBG_MAP_ALLOC
 //#include <crtdbg.h>
 
-enum names { X, Y, Right, Left, Up, Down, Yes, No};
-enum keys { upArrow = VK_UP, downArrow = VK_DOWN, leftArrow = VK_LEFT, rightArrow = VK_RIGHT, enterKey = VK_RETURN, escapeKey = VK_ESCAPE};
-enum colors {Default, Black, Red, Green, Yellow, Blue, Magenta, Cyan, White};
+enum keys { A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z, Up, Down, Left, Right, EnterKey, EscapeKey, LeftM, RightM, Space };
+enum colors {Default, Red, Green, Yellow, Blue, Magenta, Cyan, White, Black};
 enum special {LightShade = 176, MediumShade = 177, DarkShade = 178, FullBlock = 219, LowerHalfBlock = 220, LeftHalfBlock = 221, RightHalfBlock = 222, UpperHalfBlock = 223};
+
+typedef struct Key {
+	bool pressed;
+	bool held;
+	int letter;
+} Key;
 
 typedef struct Menu {
 	char** options;
 	int amountOptions;
 	int menuWidth;
-	int* selected;
+	int selected;
 	int menuSpacing;
 	bool centered;
 	bool allowMouse;
@@ -41,35 +46,34 @@ typedef struct Window {
 	int x1, x2, y1, y2;
 	int heightMin, widthMin;
 	int colorFront, colorBack;
-	int singleDoubleThick;
 	int connected[4];
-	bool resizeable, hasMenu;
+	bool resizeable, hasMenu, doubleThick;
 	Menu* optionMenu;
 } Window;
+
 //windows handles
 HANDLE hConsoleOutput, hConsoleInput;
 HWND ConsoleWindow;
 
-bool terminated = false;
+bool terminated = true;
+
 char* screenBuffer = NULL;
-int bufferWidth = 120, bufferHeight = 80;
-int fontWidth = 7, fontHeight = 14;
-int cursorPosX = 0, cursorPosY = 0;
+int bufferWidth = 120, bufferHeight = 80, fontWidth = 7, fontHeight = 14;
+int mouseX = 0, mouseY = 0;
 int defaultFrontColor = White, defaultBackColor = Black;
 int waitBetweenRender = 0;
-
-clock_t time1 = 0, time2 = 0, startTime = 0;
-clock_t current_ticks;
+Key allKeys[AMOUNT_KEYS] = { 0 };
+clock_t startTime = 0;
 COORD mousePos;
 
 /**************************************************************************************************
 Screen Dimension Functions
 **************************************************************************************************/
-int central(int length, int start, int end)
+int center(int length, int start, int end)
 {
 	return start + ((end - start) / 2) - (length / 2) + 1;
 }
-int thirds(int firstOrSecond, int mode, int roundUp)
+int thirds(int firstOrSecond, int mode, bool roundUp)
 {
 	int lengthOfBuffer;
 	if (mode == X) lengthOfBuffer = bufferWidth;
@@ -79,9 +83,14 @@ int thirds(int firstOrSecond, int mode, int roundUp)
 	if (firstOrSecond == 1) location = (float)lengthOfBuffer / (float)3.0;
 	else if (firstOrSecond == 2) location = (float)lengthOfBuffer / (float)3.0 + (float)lengthOfBuffer / (float)3.0;		
 
-	if (roundUp == Yes) location = (int)(location + (float)0.9);
+	if (roundUp == true) location = (int)(location + (float)0.9);
 		
 	return (int)location;
+}
+int map(int numberToMap, int numberBegin, int numberEnd, int numberMapStart, int numberMapEnd)
+{
+	int output = numberMapStart + ((numberMapEnd - numberMapStart) / (numberEnd - numberBegin)) * (numberToMap - numberBegin);
+	return output;
 }
 void fillArrayWithColor(int colorFront, int colorBack, int slot)
 {
@@ -141,27 +150,26 @@ int SetFont(int fontSizeX, int fontSizeY, UINT codePage)
 	info.dwFontSize.Y = fontSizeY; // leave X as zero
 	info.FontWeight = FW_NORMAL;
 	wcscpy_s(info.FaceName, 9, L"Consolas");
-	if (!SetCurrentConsoleFontEx(hConsoleOutput, 0, &info)) while(1) printf("Setting console font failed.\n");;
+	if (SetCurrentConsoleFontEx(hConsoleOutput, 0, &info) == 0) returnValue = -1;
+	if (!SetCurrentConsoleFontEx(hConsoleOutput, 0, &info)) while (1) printf("Setting console font failed.\n");;
 	//char text[500] = { 0 }GetLastError();
+	if (SetConsoleOutputCP(codePage) == 0) returnValue = -2;
 	if (!SetConsoleOutputCP(codePage)) while (1) printf("Setting consoles codepage failed.\n");
 	return returnValue;
 }
 int SetConsoleWindowSize(int x, int y)
 {
 	int returnValue = 0; //0 means ok
-
-	if (hConsoleOutput == INVALID_HANDLE_VALUE) while(1) printf("Unable to get stdout handle.");
+	if (hConsoleOutput == INVALID_HANDLE_VALUE) while (1) printf("Unable to get stdout handle.");
 	{
 		COORD largestSize = GetLargestConsoleWindowSize(hConsoleOutput);
-		if (x > largestSize.X) while(1) printf("The x dimension is too large.\n");
-		if (y > largestSize.Y) while(1) printf("The y dimension is too large.\n");
+		if (x > largestSize.X) while (1) printf("The x dimension is too large.\n");
+		if (y > largestSize.Y) while (1) printf("The y dimension is too large.\n");
 	}
 	CONSOLE_SCREEN_BUFFER_INFO bufferInfo;
 	if (!GetConsoleScreenBufferInfo(hConsoleOutput, &bufferInfo)) printf("Unable to retrieve screen buffer info.");
-
 	SMALL_RECT winInfo = bufferInfo.srWindow;
 	COORD windowSize = { winInfo.Right - winInfo.Left + 1, winInfo.Bottom - winInfo.Top + 1 };
-
 	if (windowSize.X > x || windowSize.Y > y)
 	{
 		// window size needs to be adjusted before the buffer size can be reduced.
@@ -170,84 +178,73 @@ int SetConsoleWindowSize(int x, int y)
 	}
 	COORD size = { x, y };
 	if (!SetConsoleScreenBufferSize(hConsoleOutput, size)) returnValue = -1;//printf("Unable to resize screen buffer.");
-
 	SMALL_RECT info = { 0, 0, x - 1, y - 1 };
 	if (!SetConsoleWindowInfo(hConsoleOutput, TRUE, &info)) returnValue = -2; //printf("Unable to resize window after resizing buffer.");
-
 	return returnValue;
+}
+void setRequiredModes()
+{
+	if (!SetConsoleMode(hConsoleInput, ENABLE_EXTENDED_FLAGS | ENABLE_WINDOW_INPUT | ENABLE_MOUSE_INPUT))
+		while(1) printf("Setting The consoles Input modes did not work.\n");
+	if (!SetConsoleMode(hConsoleOutput, ENABLE_PROCESSED_OUTPUT | ENABLE_VIRTUAL_TERMINAL_PROCESSING | ENABLE_WRAP_AT_EOL_OUTPUT | DISABLE_NEWLINE_AUTO_RETURN))
+		while (1) printf("Setting The consoles Output modes did not work.\n");
 }
 /**************************************************************************************************
 Input Functions (also related to windows, wont work cross platform)
 **************************************************************************************************/
-char getArrowKeys(int arrow1, int arrow2)
+Key key(int whichKey)
 {
-	int key = 0;
-	int currentPrevTime = time1;
-	int currentTime = clock();
-
-	if (currentTime > currentPrevTime + WAIT_BETWEEN_PRESS && checkActiveWindow() == 1)
-	{
-		if (GetAsyncKeyState(arrow1) & 0x8000) key = arrow1;
-		if (GetAsyncKeyState(arrow2) & 0x8000) key = arrow2;
-		if (key != 0) time1 = clock();
-	}
-	return key;
+	bool pressed = false;
+	if ((GetAsyncKeyState(allKeys[whichKey].letter) & 0x8000) && checkActiveWindow()) pressed = true;
+	
+	if (pressed == true && allKeys[whichKey].held == false)
+		allKeys[whichKey].pressed = true;
+	
+	else allKeys[whichKey].pressed = false;
+	allKeys[whichKey].held = pressed;
+	return allKeys[whichKey];
 }
-int key(int key, int waitBetween)
+void arrowInput(int* number, int numberMin, int numberMax, int mode)
 {
-	int currentPrevTime = time2;
-	int currentTime = clock();
-	int returnValue = 0;
-	if ((currentTime >= currentPrevTime + waitBetween) && GetConsoleWindow() == GetForegroundWindow())
-	{
-		if (GetAsyncKeyState(key) & 0x8000) returnValue = 1, time2 = clock();
-	}
-	return returnValue;
-}
-void arrowInput(int* number, int numberMax, int numberMin, int mode)
-{
-	int input = 0;
 	if (mode == Y)
 	{
-		input = getArrowKeys(upArrow, downArrow);
-		if (input == upArrow && *number > numberMin) *number -= 1;
-		if (input == downArrow && *number < numberMax) *number += 1;
+		if (key(Up).pressed && *number > numberMin) *number -= 1;
+		if (key(Down).pressed && *number < numberMax) *number += 1;
 	}
-
 	else if (mode == X)
 	{
-		input = getArrowKeys(rightArrow, leftArrow);
-		if (input == leftArrow && *number > numberMin) *number -= 1;
-		if (input == rightArrow && *number < numberMax) *number += 1;
+		if (key(Left).pressed && *number > numberMin) *number -= 1;
+		if (key(Right).pressed && *number < numberMax) *number += 1;
 	}
 }
 /*******************************
 create functions
 *********************************/
-Menu* createMenu(char options[][100], int numOptions, int width, int seperation, int* selected, bool centered, bool allowMouse, Window* windowToCling)
+Menu* createMenu(Window* windowToCling, bool centered, bool allowMouse, int width, int seperation, int startSelected, int numOptions, ...)
 {
-	int* selectedTemp = (int*)malloc(sizeof(int));
-
 	Menu* menu = (Menu*)malloc(sizeof(Menu));
-
-	menu->amountOptions = numOptions, menu->menuWidth = width, menu->menuSpacing = seperation, menu->centered = centered, menu->allowMouse = allowMouse;
 	menu->options = (char**)malloc(sizeof(char*) * numOptions);
-	if (selected == 0)
-	{
-		*selectedTemp = 0;
-	}
-	else *selectedTemp = *selected;
-	menu->selected = selectedTemp;
+
+	va_list ptr;
+	va_start(ptr, numOptions);
 
 	for (int i = 0; i < numOptions; i++)
-		menu->options[i] = options[i];
+	{
+		char* string = (char*)malloc(sizeof(char) * 100);
+		strcpy(string, va_arg(ptr, char*));
+		menu->options[i] = string;
+	}
+	va_end(ptr);
+	
+	menu->amountOptions = numOptions, menu->menuWidth = width, menu->menuSpacing = seperation, menu->centered = centered;
+	menu->allowMouse = allowMouse, menu->selected = startSelected;
 
 	if (windowToCling != NULL)
 		windowToCling->optionMenu = menu;
 
 	return menu;
 }
-Window* createWindow(int xStart, int yStart, int xEnd, int yEnd, int singleDoubleThick, bool resizable, int colorFront, int colorBack)
+Window* createWindow(int xStart, int yStart, int xEnd, int yEnd, bool doubleThick, bool resizable, int colorFront, int colorBack)
 {
 	Window* createdWindow = (Window*)malloc(sizeof(Window));
 	if (createdWindow == NULL) while (1) printf("Error creating windows sizes failed\n");
@@ -256,7 +253,7 @@ Window* createWindow(int xStart, int yStart, int xEnd, int yEnd, int singleDoubl
 	createdWindow->y1 = yStart, createdWindow->y2 = yEnd;
 
 	createdWindow->resizeable = resizable, createdWindow->colorFront = colorFront;
-	createdWindow->colorBack = colorBack, createdWindow->singleDoubleThick = singleDoubleThick;
+	createdWindow->colorBack = colorBack, createdWindow->doubleThick = doubleThick;
 	createdWindow->optionMenu = NULL;
 
 	for (int i = 0; i < 4; i++)
@@ -264,7 +261,6 @@ Window* createWindow(int xStart, int yStart, int xEnd, int yEnd, int singleDoubl
 
 	return createdWindow;
 }
-
 /**************************************************************************************************
 Drawing to the screen functions
 **************************************************************************************************/
@@ -327,12 +323,17 @@ void drawMenu(Menu* whichOne, int x, int y)
 	int menuWidth = whichOne->menuWidth;
 	int menuSpacing = whichOne->menuSpacing;
 
+	if ((x == Default) && whichOne->centered)
+		x = center(whichOne->menuWidth, 1, bufferWidth);
+	if ((y == Default) && whichOne->centered)
+		y = center(whichOne->amountOptions + whichOne->menuSpacing, 1, bufferHeight);
+
 	// check if the mouse is click one of the buttons, and change the corrsepoding selected value.
 	if (whichOne->allowMouse == true)
 	{
 		for(int i = 0; i < amountOptions * (menuSpacing + 1); i+= menuSpacing + 1)
-			if (cursorPosX >= x && cursorPosX <= x + whichOne->menuWidth && cursorPosY == (i + y) && key(VK_LBUTTON, 0))
-				*(whichOne->selected) = i / (menuSpacing + 1);
+			if (mouseX >= x && mouseX <= x + whichOne->menuWidth && mouseY == (i + y) && (key(LeftM).held))
+				(whichOne->selected) = i / (menuSpacing + 1);
 	}
 	int longestOption = 0;
 
@@ -344,7 +345,7 @@ void drawMenu(Menu* whichOne, int x, int y)
 
 	for (int i = 0; i < amountOptions; i++)
 	{
-		if (i == *(whichOne->selected)) drawSquare(x, y, x + menuWidth, y, defaultBackColor, White);
+		if (i == (whichOne->selected)) drawSquare(x, y, x + menuWidth, y, defaultBackColor, White);
 		else drawSquare(x, y, x + menuWidth, y, defaultFrontColor, defaultBackColor);
 
 		drawText(whichOne->options[i], x + menuPadding, y, Default, Default);
@@ -355,7 +356,7 @@ void drawWindow(Window* whichWindow)
 {
 	int xStart = whichWindow->x1, xEnd = whichWindow->x2;
 	int yStart = whichWindow->y1, yEnd = whichWindow->y2;
-	int singleDoubleThick = whichWindow->singleDoubleThick;
+	bool doubleThick = whichWindow->doubleThick;
 	int colorFront = whichWindow->colorFront, colorBack = whichWindow->colorBack;
 	int xMenu = 1, yMenu = 1, connected[4];
 	int xWidthMin = 0, yWidthMin = 0;
@@ -363,26 +364,26 @@ void drawWindow(Window* whichWindow)
 	
 	if (whichWindow->resizeable == true)
 	{
-		if ((cursorPosX <= xEnd && cursorPosX >= xStart && cursorPosY == yStart || connected[0] == 1) && key(VK_LBUTTON, 0))
-			whichWindow->connected[0] = 1, whichWindow->y1 = cursorPosY;
+		if ((mouseX <= xEnd && mouseX >= xStart && mouseY == yStart || connected[0] == 1) && key(LeftM).held)
+			whichWindow->connected[0] = 1, whichWindow->y1 = mouseY;
 		else whichWindow->connected[0] = 0;
 
-		if ((cursorPosY <= yEnd && cursorPosY >= yStart && cursorPosX == xStart || connected[1] == 1) && key(VK_LBUTTON, 0))
-			whichWindow->connected[1] = 1, whichWindow->x1 = cursorPosX;
+		if ((mouseY <= yEnd && mouseY >= yStart && mouseX == xStart || connected[1] == 1) && key(LeftM).held)
+			whichWindow->connected[1] = 1, whichWindow->x1 = mouseX;
 		else whichWindow->connected[1] = 0;
 
-		if ((cursorPosX <= xEnd && cursorPosX >= xStart && cursorPosY == yEnd || connected[2] == 1) && key(VK_LBUTTON, 0))
-			whichWindow->connected[2] = 1, whichWindow->y2 = cursorPosY;
+		if ((mouseX <= xEnd && mouseX >= xStart && mouseY == yEnd || connected[2] == 1) && key(LeftM).held)
+			whichWindow->connected[2] = 1, whichWindow->y2 = mouseY;
 		else whichWindow->connected[2] = 0;
 
-		if ((cursorPosY <= yEnd && cursorPosY >= yStart && cursorPosX == xEnd || connected[3] == 1) && key(VK_LBUTTON, 0))
-			whichWindow->connected[3] = 1, whichWindow->x2 = cursorPosX;
+		if ((mouseY <= yEnd && mouseY >= yStart && mouseX == xEnd || connected[3] == 1) && key(LeftM).held)
+			whichWindow->connected[3] = 1, whichWindow->x2 = mouseX;
 		else whichWindow->connected[3] = 0;
 	}
 	//draw it
 	int tr, tl, rl, l, br, bl, tb;
-	if (singleDoubleThick == 2) tl = 201, tr = 187, bl = 200, br = 188, rl = 186, tb = 205;
-	if (singleDoubleThick == 1) tl = 218, tr = 191, bl = 192, br = 217, rl = 179, tb = 196;
+	if (doubleThick == 2) tl = 201, tr = 187, bl = 200, br = 188, rl = 186, tb = 205;
+	if (doubleThick == 1) tl = 218, tr = 191, bl = 192, br = 217, rl = 179, tb = 196;
 
 	for (int x = xStart; x <= xEnd; x++)
 		for (int y = yStart; y <= yEnd; y++)
@@ -407,14 +408,14 @@ void drawWindow(Window* whichWindow)
 	{
 		if (whichWindow->optionMenu->centered == true)
 		{
-			xMenu = central(whichWindow->optionMenu->menuWidth, xStart, xEnd);
-			yMenu = central(whichWindow->optionMenu->amountOptions + whichWindow->optionMenu->menuSpacing + 1, yStart, yEnd);
+			xMenu = center(whichWindow->optionMenu->menuWidth, xStart, xEnd);
+			yMenu = center(whichWindow->optionMenu->amountOptions + whichWindow->optionMenu->menuSpacing + 1, yStart, yEnd);
 		}
 		drawMenu(whichWindow->optionMenu, xMenu, yMenu);
 		xWidthMin = whichWindow->optionMenu->menuWidth + 4;
 	}
 }
-void drawBuffer(char buffer[][8], int bufferHeight, int x, int y, int colorFront, int colorBack)
+void drawBuffer(char** buffer, int bufferHeight, int bufferWidth, int x, int y, int colorFront, int colorBack)
 {
 	for (int i = 0; i < bufferHeight; i++)
 		drawText(buffer[i], x, y + i, colorFront, colorBack);
@@ -449,44 +450,31 @@ int terminate(void)
 }
 void initalize(const char* title,int width, int height, int bufferFontWidth, int bufferFontHeight, int defaultFront, int defaultBack)
 {
-	if (terminated == false) terminate();
-
-	terminated = false;
-	//set default values
-	if (bufferWidth != Default) bufferWidth = width;
-	if (bufferHeight != Default) bufferHeight = height;
-	if (bufferFontWidth != Default) fontWidth = bufferFontWidth;
-	if (bufferFontHeight != Default) fontHeight = bufferFontHeight;
-
-	waitBetweenRender = WAIT;
-
 	hConsoleOutput = GetStdHandle(STD_OUTPUT_HANDLE);
 	if (hConsoleOutput == 0) while (1) printf("Getting console output handle didnt work.\n");
 	hConsoleInput = GetStdHandle(STD_INPUT_HANDLE);
 	ConsoleWindow = GetConsoleWindow();
 
-	SetFont(fontWidth, fontHeight, 437);
-	
-	if (SetConsoleWindowSize(bufferWidth, bufferHeight) != 0) while (1) printf("Console resizing failed\n");
-	SetConsoleTitleA(title);
-	//makes window not resizbale
-
-	ConsoleWindow = GetConsoleWindow();
-	SetWindowLong(ConsoleWindow, GWL_STYLE, GetWindowLong(ConsoleWindow, GWL_STYLE) & ~WS_MAXIMIZEBOX & ~WS_SIZEBOX);
-
-	hideCursor();
-	cursorXY(0, 0);
-
-	hConsoleOutput = GetStdHandle(STD_OUTPUT_HANDLE);
-	hConsoleInput = GetStdHandle(STD_INPUT_HANDLE);
-	// Set flags to allow mouse input, and disable selecting, and support for ANSI escape sequences.	
-	if (!SetConsoleMode(hConsoleInput, ENABLE_EXTENDED_FLAGS | ENABLE_WINDOW_INPUT | ENABLE_MOUSE_INPUT))
-		while(1) printf("Setting The consoles Input modes did not work.\n");
-	if (!SetConsoleMode(hConsoleOutput, ENABLE_PROCESSED_OUTPUT | ENABLE_VIRTUAL_TERMINAL_PROCESSING | ENABLE_WRAP_AT_EOL_OUTPUT | DISABLE_NEWLINE_AUTO_RETURN))
-		while (1) printf("Setting The consoles Output modes did not work.\n");
-	
+	//set default values
 	if (defaultFront != Default) defaultFrontColor = defaultFront;
 	if (defaultBack != Default) defaultBackColor = defaultBack;
+	if (width != Default) bufferWidth = width;
+	if (height != Default) bufferHeight = height;
+	if (bufferFontWidth != Default) fontWidth = bufferFontWidth;
+	if (bufferFontHeight != Default) fontHeight = bufferFontHeight;
+
+	SetFont(fontWidth, fontHeight, 437);
+
+	if (SetConsoleWindowSize(width, height) != 0) while (1) printf("Console resizing failed.\n");
+	SetConsoleTitleA(title);
+
+	//makes window not resizbale
+	SetWindowLong(ConsoleWindow, GWL_STYLE, GetWindowLong(ConsoleWindow, GWL_STYLE) & ~WS_MAXIMIZEBOX & ~WS_SIZEBOX);
+
+	setRequiredModes();
+
+	waitBetweenRender = WAIT;
+	if (terminated == false) terminate();
 
 	screenBuffer = (char*)malloc(sizeof(char) * ((bufferWidth * bufferHeight) * WIDTHESCAPE + 1));
 
@@ -497,6 +485,15 @@ void initalize(const char* title,int width, int height, int bufferFontWidth, int
 		screenBuffer[i + 6] = '0', screenBuffer[i + 7] = 'm', screenBuffer[i + 8] = ' ';
 	}
 	clearScreen();
+	allKeys[A].letter = 'A', allKeys[B].letter = 'B', allKeys[C].letter = 'C', allKeys[D].letter = 'D', allKeys[E].letter = 'E';
+	allKeys[F].letter = 'F', allKeys[G].letter = 'G', allKeys[H].letter = 'H', allKeys[I].letter = 'I', allKeys[J].letter = 'J';
+	allKeys[K].letter = 'K', allKeys[L].letter = 'L', allKeys[M].letter = 'M', allKeys[N].letter = 'N', allKeys[O].letter = 'O';
+	allKeys[P].letter = 'P', allKeys[Q].letter = 'Q', allKeys[R].letter = 'R', allKeys[S].letter = 'S', allKeys[T].letter = 'T';
+	allKeys[U].letter = 'U', allKeys[V].letter = 'V', allKeys[W].letter = 'W', allKeys[X].letter = 'X', allKeys[Y].letter = 'Y';
+	allKeys[Z].letter = 'Z', allKeys[Up].letter = VK_UP, allKeys[Down].letter = VK_DOWN, allKeys[Left].letter = VK_LEFT, allKeys[Right].letter = VK_RIGHT;
+	allKeys[EnterKey].letter = VK_RETURN, allKeys[EscapeKey].letter = VK_ESCAPE, allKeys[RightM].letter = VK_RBUTTON, allKeys[LeftM].letter = VK_LBUTTON;
+	allKeys[Space].letter = VK_SPACE;
+	terminated = false;
 }
 void deleteWindow(Window* window)
 {
@@ -504,7 +501,8 @@ void deleteWindow(Window* window)
 }
 void deleteMenu(Menu* menu)
 {
-	free(menu->selected);
+	for (int i = 0; i < menu->amountOptions; i++) free(menu->options[i]);
+	free(menu->options);
 	free(menu);
 }
 void render(bool clear)
@@ -516,21 +514,27 @@ void render(bool clear)
 	{
 		if (ConsoleWindow && ScreenToClient(ConsoleWindow, &cursor_pos));
 		{
-			cursorPosX = ((cursor_pos.x) / (fontWidth)) + 1;
-			cursorPosY = ((cursor_pos.y) / (fontHeight)) + 1;
+			mouseX = ((cursor_pos.x) / (fontWidth)) + 1;
+			mouseY = ((cursor_pos.y) / (fontHeight)) + 1;
 		}
 	}
-	startTime = clock();
 	//render
 	printf("\033[0;0H\033[?25l");
 	if (!WriteConsoleA(hConsoleOutput, screenBuffer, (bufferWidth * bufferHeight) * WIDTHESCAPE, NULL, NULL)) while (1) printf("Rendering failed.\n");
-	
+
 	if (clear == true) clearScreen();
+	char title[10] = { 0 };
+	_itoa(1000 / (clock() - startTime), title, 10);
+	SetConsoleTitleA(title);
+
+	startTime = clock();
 	while (!((int)clock() > (int)startTime + WAIT));
 }
 
-int map(int numberToMap, int numberBegin, int numberEnd, int numberMapStart, int numberMapEnd)
+bool rectangleCollide(int xStart1, int yStart1, int xEnd1, int yEnd1, int xStart2, int yStart2, int xEnd2, int yEnd2)
 {
-	int output = numberMapStart + ((numberMapEnd - numberMapStart) / (numberEnd - numberBegin)) * (numberToMap - numberBegin);
-	return output; 
+	if ((yStart1 > yEnd2 || yEnd1 < yStart2) || (xStart1 > xEnd2 || xEnd1 < xStart2))
+		return false;
+	
+	return true;
 }
