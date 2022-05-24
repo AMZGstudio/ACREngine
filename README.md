@@ -1,45 +1,48 @@
 # ConsoleEngine
-A simple, but powerful engine, that you can create games in, or any simple GUI. It is written in C, and is very easy to understand. its not the fastest in the world, but its a great Engine to start with! It uses ASNI escapse sequences, meaning it is compatible with pretty much every platform.
+A easy to use, game engine, that runs entirely in the console! its a single header file, which makes it very convenient to implement! the usage of the engine is as simple as possible, while also containing some advanced features! rendering is fast enough for real time games, at higher resolutions. if you are a beginner, or more advanced programmer, and you want to create a game, without having to learn complex graphics libraries, this is the perfect fit!
 
 # What is it?
-This is a single header file, you drop it into your project and get started. it is entirely made in the console/terminal, meaning everything is drawn out of text, and ANSI escape codes, allowing for colors.
+its a game engine, that uses the windows default libraries, to render text to the screen, and uses ANSI escape sequences to put colors on the screen. its got a whole lot of function that are easy to use, so you can worry about the game, and not the engine.
 
 # How to use this?
-Step 1) put this header in your code.
-Step 2) Call initalize(ScreenWidth, ScreenHeight, DefaultForegorund, DefaultBackground) with your desired info.
-Step 3) Draw to the screen. You can use drawSquare, drawLine, drawText, and drawChar. (documentation for each function further down)
-Step 4) render the screen, with the function render().
+Step 1) include this header in your code.
+Step 2) Call (initalize(ScreenWidth, ScreenHeight, DefaultForegorund, DefaultBackground) with your desired info.)
+Step 3) Draw to the screen. with any of the drawing functions.
+Step 4) render to the screen, with the function: render(false).
 
 Thats it!
 
 # Code Preview
-How to draw a red square to the screen:
+How to make a controlable square on the screen:
 ```C
-#define WIDTH 100 // screen dimensions
-#define HEIGHT 50
 #include "ConsoleEngine.h"
 
 int main()
 {
     // we create the screen, with the window title, the text foreground, and background color. over here, its white text on a cyan background.
     initalize("Demo", White, Cyan); // TIP: write None, for default foreground and background.
-
-    // Draw a square on the screen, the inputs are: x, y, (top left of the square), then x, y, (bottom right of the square)
-    // And then the color foreground, and color background, the color of the text doesnt matter in this case, so we leave it
-    // at Default, and we want the background to be red, so its like the pixel is set to Red.
-    drawSquare(4, 4, 40, 20, Default, Red);
-
-    // render the screen, (write to output buffer).
-    // paramter is to clear the screens buffer after rendering.
-    render(false); 
-
+    
+    //square coordinates.
+    int x = 1, y = 1;
+    
+    // keep on running the game loop, as long as the escape key is not pressed.
+    while(key(EscapeKey).pressed == false)
+    {
+        // draw a rectangle starting from x, and y, to x and y + 10, meaking the square 10 units wide.
+        drawFilledRect(x, y, x+10, y+10, Default, Red);
+        
+        // check if any of the WASD keys are pressed, and move the x and y of the square accordingly.
+        
+        if(key(W).held) y--;
+        if(key(S).held) y++;
+        if(key(A).held) x--;
+        if(key(D).held) x++;
+        
+        // render to screen, true means to clear the screen after rendering.
+        render(true); 
+    }
+    
     //close the API, (stops memory from leaking)
-    terminate();
-    return 0;
+    return terminate();
 }
 ```
-# Things created with this header
-![image](https://user-images.githubusercontent.com/99887800/161416383-3151046c-66b7-4ce3-b98a-2e32597d536e.png)
-![image](https://user-images.githubusercontent.com/99887800/161416466-92ee86fa-ebcf-432e-8180-4ff19bb455ef.png)
-
-
