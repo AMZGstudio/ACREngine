@@ -1,4 +1,4 @@
-# ConsoleEngine
+# ACREngine
 A easy to use, game engine, that runs entirely in the console! its a single header file, which makes it very convenient to implement! the usage of the engine is as simple as possible, while also containing some advanced features! rendering is fast enough for real time games, at higher resolutions. if you are a beginner, or more advanced programmer, and you want to create a game, without having to learn complex graphics libraries, this is the perfect fit!
 
 # What is it?
@@ -19,7 +19,7 @@ Note: you would probably like to create a game loop.
 # Code Preview
 How to make a controlable square on the screen:
 ```C
-#include "ConsoleEngine.h"
+#include "ACREngine.h"
 
 int main()
 {
