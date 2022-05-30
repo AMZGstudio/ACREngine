@@ -6,11 +6,15 @@ its a game engine, that uses the windows default libraries, to render text to th
 
 # How to use this?
 Step 1) include this header in your code.
-Step 2) Call (initalize(ScreenWidth, ScreenHeight, DefaultForegorund, DefaultBackground) with your desired info.)
-Step 3) Draw to the screen. with any of the drawing functions.
+
+Step 2) initalize the screen.
+
+Step 3) draw things to the screen.
+
 Step 4) render to the screen, with the function: render(false).
 
 Thats it!
+Note: you would probably like to create a game loop.
 
 # Code Preview
 How to make a controlable square on the screen:
@@ -19,8 +23,8 @@ How to make a controlable square on the screen:
 
 int main()
 {
-    // we create the screen, with the window title, the text foreground, and background color. over here, its white text on a cyan background.
-    initalize("Demo", White, Cyan); // TIP: write None, for default foreground and background.
+    // we create the screen, with the window title, dimensions, the text foreground, and background color. over here, its white text on a cyan background.
+    initalize("Demo", 200, 100, 6, 6, Default, Cyan); // TIP: write Default, for default foreground and background.
     
     //square coordinates.
     int x = 1, y = 1;
