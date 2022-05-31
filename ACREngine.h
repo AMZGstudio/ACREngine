@@ -729,7 +729,7 @@ void initalize(const char* title, int width, int height, int bufferFontWidth, in
 	if (bufferFontWidth != Default) fontWidth = bufferFontWidth;
 	if (bufferFontHeight != Default) fontHeight = bufferFontHeight;
 
-	SetFont(fontWidth, fontHeight, 437);
+	SetFont(fontWidth, fontHeight, 65001);
 	SetConsoleWindowSize(&bufferWidth, &bufferHeight);
 
 	Screen.startX = 0, Screen.startY = 0, Screen.endX = bufferWidth, Screen.endY = bufferHeight;
