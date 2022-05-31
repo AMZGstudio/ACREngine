@@ -1,5 +1,7 @@
+![ACREngine LogoCropped](https://user-images.githubusercontent.com/99887800/171085888-6702a6a6-8ec6-4ea1-8826-92683f1c3e60.png)
 # ACREngine
-A easy to use, game engine, that runs entirely in the console! its a single header file, which makes it very convenient to implement! the usage of the engine is as simple as possible, while also containing some advanced features! rendering is fast enough for real time games, at higher resolutions. if you are a beginner, or more advanced programmer, and you want to create a game, without having to learn complex graphics libraries, this is the perfect fit!
+A easy to use, game engine, that runs entirely in the console! its a single header file, which makes it very convenient to implement! the usage of the engine is as sim
+ple as possible, while also containing some advanced features! rendering is fast enough for real time games, at higher resolutions. if you are a beginner, or more advanced programmer, and you want to create a game, without having to learn complex graphics libraries, this is the perfect fit!
 
 # What is it?
 its a game engine, that uses the windows default libraries, to render text to the screen, and uses ANSI escape sequences to put colors on the screen. its got a whole lot of function that are easy to use, so you can worry about the game, and not the engine.
