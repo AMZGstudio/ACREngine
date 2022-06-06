@@ -51,5 +51,4 @@ int main()
     //close the API, (stops memory from leaking)
     return terminate();
 }
-}
 ```
