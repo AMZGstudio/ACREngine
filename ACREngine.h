@@ -22,8 +22,8 @@ M   O   E   N
 Z   N   N   G
 G   S   D   I
     O   E   N
-	L   R   E
-	E
+    L   R   E
+    E
 
 For information on how to use this, go to the github repo:
 https://github.com/AMZGstudio/ACREngine
