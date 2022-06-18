@@ -21,6 +21,7 @@ Note: you would probably like to create a game loop.
 # Code Preview
 How to make a controlable square on the screen:
 ```C
+#define ACRE_START // only do this in the main file.
 #include "ACREngine.h"
 
 int main()
@@ -32,11 +33,11 @@ int main()
     int x = 1, y = 1;
 
     // keep on running the game loop, as long as the escape key is not pressed.
-    while (key(EscapeKey).pressed == false)
+    while (key(Esc).pressed == false)
     {
         // draw a rectangle starting from x, and y, to x and y + 10, meaking the square 10 units wide.
         drawRectFilled(x, y, x + 10, y + 10, Blue);
-        
+
         // check if any of the WASD keys are pressed, and move the x and y of the square accordingly.
 
         if (key(W).held) y--;
