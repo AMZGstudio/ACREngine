@@ -1,6 +1,6 @@
 ![ACREngine LogoCropped](https://user-images.githubusercontent.com/99887800/171085888-6702a6a6-8ec6-4ea1-8826-92683f1c3e60.png)
 # ACREngine
-A easy to use, game engine, that runs entirely in the console! its a single header file, which makes it very convenient to implement! the usage of the engine is as simple as possible, while also containing some advanced features! rendering at high resolutions provides high FPS, and at lower resolutions, fps can be in the thousands. if you are a beginner, or more advanced programmer, and you want to create a game, without having to learn complex graphics libraries, this is the perfect fit!
+A easy to use, game engine for C and C++, that runs entirely in the console! its a single header file, which makes it very convenient to implement! the usage of the engine is as simple as possible, while also containing some advanced features! rendering at high resolutions provides high FPS, and at lower resolutions, fps can be in the thousands. if you are a beginner, or more advanced programmer, and you want to create a game, without having to learn complex graphics libraries, this is the perfect fit!
 
 # What is it?
 its a game engine, but not exculsively, it can be used for normal console applications, with more features then you would get by just printing to the screen. ACRE uses the windows default libraries, to render text to the screen, and uses ANSI escape sequences to put colors on the screen. its got dozens of drawing functions that are easy to use, aswell as more advanced ones. Which means can worry about the game, and not the engine.
@@ -27,7 +27,7 @@ How to make a controlable square on the screen:
 int main()
 {
     // we create the screen, with the window title, dimensions, the text foreground, and background color. over here, its black text on a white background.
-    initalize("Demo Text", 200, 100, 6, 6, Black, White); // TIP: write Default, for default foreground and background.
+    initalize("Demo Text", 200, 100, 5, 5, Black, White); // TIP: write Default, for default foreground and background.
 
     //square coordinates.
     float x = 1, y = 1;
@@ -39,11 +39,11 @@ int main()
         drawRectFilled(x, y, x + 10, y + 10, Blue);
 
         // check if any of the WASD keys are pressed, and move the x and y of the square accordingly.
-
-        if (key(W).held) y -= timePerSec(10); // these add the correct amount to the coordinates, to make them move 10 units every second.
-        if (key(S).held) y += timePerSec(10);
-        if (key(A).held) x -= timePerSec(10);
-        if (key(D).held) x += timePerSec(10);
+        // timerPerSec adds the correct amount to the coordinates, to make them move 40 units every second.
+        if (key(W).held) y -= timePerSec(40); 
+        if (key(S).held) y += timePerSec(40);
+        if (key(A).held) x -= timePerSec(40);
+        if (key(D).held) x += timePerSec(40);
 
         // render to screen, true means to clear the screen after rendering.
         render(true);
