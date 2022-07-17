@@ -1,19 +1,19 @@
 ![ACREngine LogoCropped](https://user-images.githubusercontent.com/99887800/171085888-6702a6a6-8ec6-4ea1-8826-92683f1c3e60.png)
 # ACREngine
-A easy to use, game engine, that runs entirely in the console! its a single header file, which makes it very convenient to implement! the usage of the engine is as sim
-ple as possible, while also containing some advanced features! rendering is fast enough for real time games, at higher resolutions. if you are a beginner, or more advanced programmer, and you want to create a game, without having to learn complex graphics libraries, this is the perfect fit!
+A easy to use, game engine, that runs entirely in the console! its a single header file, which makes it very convenient to implement! the usage of the engine is as simple as possible, while also containing some advanced features! rendering at high resolutions provides high FPS, and at lower resolutions, fps can be in the thousands. if you are a beginner, or more advanced programmer, and you want to create a game, without having to learn complex graphics libraries, this is the perfect fit!
 
 # What is it?
-its a game engine, that uses the windows default libraries, to render text to the screen, and uses ANSI escape sequences to put colors on the screen. its got a whole lot of function that are easy to use, so you can worry about the game, and not the engine.
+its a game engine, but not exculsively, it can be used for normal console applications, with more features then you would get by just printing to the screen. ACRE uses the windows default libraries, to render text to the screen, and uses ANSI escape sequences to put colors on the screen. its got dozens of drawing functions that are easy to use, aswell as more advanced ones. Which means can worry about the game, and not the engine.
+Check out the wiki, which explains fundemental concepts, that the game engine uses.
 
 # How to use this?
 Step 1) include this header in your code.
 
 Step 2) initalize the screen.
 
-Step 3) draw things to the screen.
+Step 3) draw things to the screen memory.
 
-Step 4) render to the screen, with the function: render(false).
+Step 4) render to the console screen, with the function: render().
 
 Thats it!
 Note: you would probably like to create a game loop.
@@ -30,7 +30,7 @@ int main()
     initalize("Demo Text", 200, 100, 6, 6, Black, White); // TIP: write Default, for default foreground and background.
 
     //square coordinates.
-    int x = 1, y = 1;
+    float x = 1, y = 1;
 
     // keep on running the game loop, as long as the escape key is not pressed.
     while (key(Esc).pressed == false)
@@ -40,10 +40,10 @@ int main()
 
         // check if any of the WASD keys are pressed, and move the x and y of the square accordingly.
 
-        if (key(W).held) y--;
-        if (key(S).held) y++;
-        if (key(A).held) x--;
-        if (key(D).held) x++;
+        if (key(W).held) y -= timePerSec(10); // these add the correct amount to the coordinates, to make them move 10 units every second.
+        if (key(S).held) y += timePerSec(10);
+        if (key(A).held) x -= timePerSec(10);
+        if (key(D).held) x += timePerSec(10);
 
         // render to screen, true means to clear the screen after rendering.
         render(true);
