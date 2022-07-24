@@ -58,7 +58,7 @@ int main()
 (Note all of these run smoothly)
 
 Tetris:
-[tetris](https://user-images.githubusercontent.com/99887800/179396978-a821a8ca-9693-48ec-839e-e02326abb8de.png)
+[tetris](https://user-images.githubusercontent.com/99887800/180656074-cdce0a86-dcd6-4bed-8709-dcf9b06bd744.png)
 
 Flappy Bird:
 [flappyBird](https://user-images.githubusercontent.com/99887800/179171151-97c7386d-76d5-45dc-aa6a-cf3b0ad2a965.png)
