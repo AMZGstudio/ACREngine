@@ -1,63 +1,85 @@
-/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-*
-*	   ___  _____ ______ _____            _
-*	  / _ \/  __ \| ___ \  ___|          (_)
-*	 / /_\ \ /  \/| |_/ / |__ _ __   __ _ _ _ __   ___
-*	 |  _  | |    |    /|  __| '_ \ / _` | | '_ \ / _ \
-*	 | | | | \__/\| |\ \| |__| | | | (_| | | | | |  __/
-*	 \_| |_/\____/\_| \_\____/_| |_|\__, |_|_| |_|\___|
-*	                                 __/ |
-*	                                |___/
-*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		*
+		*	   ___  _____ ______ _____            _
+		*	  / _ \/  __ \| ___ \  ___|          (_)
+		*	 / /_\ \ /  \/| |_/ / |__ _ __   __ _ _ _ __   ___
+		*	 |  _  | |    |    /|  __| '_ \ / _` | | '_ \ / _ \
+		*	 | | | | \__/\| |\ \| |__| | | | (_| | | | | |  __/
+		*	 \_| |_/\____/\_| \_\____/_| |_|\__, |_|_| |_|\___|
+		*	                                 __/ |
+		*	                                |___/
+		*
+		~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-ACREngine, a game engine that runs entirely in the console!
-You can use this for whatever you would like, it would be nice if you
-gave me credit, but you dont have to. ¯\_(ツ)_/¯
+		ACREngine, a game engine that runs entirely in the console!
+		You can use this for whatever you would like, it would be nice if you
+		gave me credit, but you dont have to. ¯\_(ツ)_/¯
 
-For information on how to use this, go to the github repo:
-https://github.com/AMZGstudio/ACREngine
+		For information on how to use this, go to the github repo:
+		https://github.com/AMZGstudio/ACREngine
 
-original creator:
-AMZGstudio
+		To use gcc, simply use the command:
+		gcc -o example.exe example.c
 
-BSD 2-Clause License
+		original creator:
+		AMZGstudio
 
-Copyright (c) 2022, AMZG
-All rights reserved.
+		BSD 2-Clause License
 
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
+		Copyright (c) 2022, AMZG
+		All rights reserved.
 
-1. Redistributions of source code must retain the above copyright notice, this
-   list of conditions and the following disclaimer.
+		Redistribution and use in source and binary forms, with or without
+		modification, are permitted provided that the following conditions are met:
 
-2. Redistributions in binary form must reproduce the above copyright notice,
-   this list of conditions and the following disclaimer in the documentation
-   and/or other materials provided with the distribution.
+		1. Redistributions of source code must retain the above copyright notice, this
+		   list of conditions and the following disclaimer.
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+		2. Redistributions in binary form must reproduce the above copyright notice,
+		   this list of conditions and the following disclaimer in the documentation
+		   and/or other materials provided with the distribution.
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+		THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+		AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+		IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+		DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+		FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+		DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+		SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+		CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+		OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+		OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+		~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 #ifndef ACRE_INCLUDES
 #define ACRE_INCLUDES
 	#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
-		//#define _CRT_SECURE_NO_WARNINGS
+		#define _CRT_SECURE_NO_WARNINGS 1
 		#define _WIN32_WINNT 0x0500
 
 		#include <stdio.h>
 		#include <windows.h>
 		#include <stdbool.h>
 		#include <stdarg.h>
+		#include <ctype.h>
+
+		#ifdef __GNUC__
+			typedef struct _CONSOLE_FONT_INFOEX
+			{
+				ULONG cbSize;
+				DWORD nFont;
+				COORD dwFontSize;
+				UINT  FontFamily;
+				UINT  FontWeight;
+				WCHAR FaceName[LF_FACESIZE];
+			}CONSOLE_FONT_INFOEX, * PCONSOLE_FONT_INFOEX;
+			BOOL WINAPI SetCurrentConsoleFontEx(HANDLE hConsoleOutput, BOOL bMaximumWindow, PCONSOLE_FONT_INFOEX lpConsoleCurrentFontEx);
+			BOOL WINAPI SetConsoleDisplayMode(HANDLE hConsoleOutput, DWORD  dwFlags,PCOORD lpNewScreenBufferDimensions);
+			
+			#define CONSOLE_FULLSCREEN_MODE 1
+			#define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
+			#define DISABLE_NEWLINE_AUTO_RETURN 0x0008
+		#endif	
 	#else
 		#error ACRE only supports windows
 	#endif	
@@ -70,6 +92,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	typedef struct Point { int x, y; } Point;
 	typedef struct Space { int startX, startY, endX, endY; } Space;
 	typedef struct MOUSE { int x, y; int scrollH, scrollW; } MOUSE;
+	typedef struct Font { int w, displayW; const unsigned char *dat; } Font;
 
 	typedef struct Key {
 		bool pressed, held, released;
@@ -86,15 +109,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 		double elapsedTime;
 	} Timer;
 	Space Screen;
-	MOUSE Mouse;
 	// all enums
 	enum KEYS {
 		A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z, Up, Down, Left, Right,
-		Enter, Esc, LeftM, RightM, Spacebar, Shift, Alt, Comma, Period, Colon, Slash, QuestionMark, Backspace,
-		Num0, Num1, Num2, Num3, Num4, Num5, Num6, Num7, Num8, Num9,
+		Enter, Esc, LeftM, RightM, Spacebar, Shift, Alt, Tab, Comma, Period, Colon, Slash, QuestionMark, Backspace,
+		Num0, Num1, Num2, Num3, Num4, Num5, Num6, Num7, Num8, Num9
 	};
-	enum ACRE_TYPES { EightBit = -503, Thirds = -502, Centered = -501, Default = -1 };
-	enum COLORS { Black, Red, Green, Yellow, Blue, Magenta, Cyan, White, Grey, DarkGrey = 237 };
+	enum ACRE_TYPES {Thirds = -502, Centered = -501, Default = -1 };
+	enum COLORS { Black, Red, Green, Yellow, Blue, Magenta, Cyan, White, Grey, DarkGrey = 237, VeryDarkGrey = 235 };
 
 	enum SPECIAL_CHARS {
 		LightShade = 176, MediumShade = 177, DarkShade = 178, FullBlock = 219, LowerHalfBlock = 220,
@@ -107,12 +129,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	int Height(Space screenSpace);
 	int Random(int rangeStart, int rangeEnd);
 	float timePerSec(float amount);
+	void timePerSecInt(float amount);
 	Space getSpace(Space prevSpace, int xStart, int yStart, int xEnd, int yEnd);
 	int map(int numberToMap, int numberBegin, int numberEnd, int numberMapStart, int numberMapEnd);
 	int strToInt(char* string);
 	int clamp(int numToClamp, int min, int max);
 	int Color(int r, int g, int b);
-	int stringLength(char* string, int fontType);
+	int stringLength(const char* string, Font fontType);
 	bool pointSpaceCollide(int x, int y, Space screenSpace);
 	bool rectangleCollide(int xStart1, int yStart1, int xEnd1, int yEnd1, int xStart2, int yStart2, int xEnd2, int yEnd2);
 	bool spaceCollide(Space space1, Space space2);
@@ -122,25 +145,27 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	Point sysDrawPoint(int x, int y, Space screenSpace, char character, int colorFront, int colorBack);
 	Space sysDrawRect(int xStart, int yStart, int xEnd, int yEnd, Space screenSpace, char character, bool filled, int colorFront, int colorBack);
 	Space sysDrawLine(int xStart, int yStart, int xEnd, int yEnd, Space screenSpace, char character, int colorFront, int colorBack);
-	void sysDrawTriange(int x1, int y1, int x2, int y2, int x3, int y3, Space screenSpace, char character, bool filled, int colorFront, int colorBack);
+	void sysDrawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, Space screenSpace, char character, bool filled, int colorFront, int colorBack);
 	Space sysDrawCircle(int x, int y, Space screenSpace, int radius, char character, bool filled, int colorFront, int colorBack);
 	Space sysDrawImage(int x, int y, Space screenSpace, Image inputImage);
-	Space sysDrawFontChar(int x, int y, Space screenSpace, char character, int colorFront, int colorBack);
-	Space sysDrawText(int x, int y, Space screenSpace, const char* text, int fontType, int colorFront, int colorBack);
-	Space sysDrawInt(int x, int y, Space screenSpace, int number, int fontType, int colorFront, int colorBack);
+	Space sysDrawFontChar(int x, int y, Space screenSpace, Font font, char character, int colorFront, int colorBack);
+	Space sysDrawText(int x, int y, Space screenSpace, const char* text, Font fontType, int colorFront, int colorBack);
+	Space sysDrawNumber(int x, int y, Space screenSpace, double number, int numDecimal, Font fontType, int colorFront, int colorBack);
 	Space sysDrawColorBuffer(int x, int y, Space screenSpace, int* buffer, int width, int height);
-	void drawTriange(int x1, int y1, int x2, int y2, int x3, int y3, int color);
+	void drawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, int color);
+	void drawTriangleFilled(int x1, int y1, int x2, int y2, int x3, int y3, int color);
 	void drawLine(int xStart, int yStart, int xEnd, int yEnd, int color);
 
 	Space drawRect(int xStart, int yStart, int xEnd, int yEnd, int color);
 	Space drawRectFilled(int xStart, int yStart, int xEnd, int yEnd, int color);
 	Space drawCircle(int x, int y, int radius, int color);
+	Space drawCircleFilled(int x, int y, int radius, int color);
 	Space drawImage(int x, int y, Image img);
-	Space drawText(int x, int y, const char* text, int fontType, int color);
+	Space drawText(int x, int y, const char* text, Font fontType, int color);
 	Point drawPoint(int x, int y, int colorBack);
 	Point drawChar(int x, int y, char character, int colorFront);
 
-	Space drawInt(int x, int y, int number, int fontType, int color);
+	Space drawNumber(int x, int y, double number, Font fontType, int color);
 	Space drawOutline(int xStart, int yStart, int xEnd, int yEnd, int color);
 	Space drawColorBuffer(int x, int y, int* buffer, int width, int height);
 	void clearScreen();
@@ -148,7 +173,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	bool textBoxInput(char* outputString, int outputStringLength);
 
 	int terminate(void);
-	void initalize(const char* title, int width, int height, int bufferFontWidth, int bufferFontHeight, int defaultFront, int defaultBack);
+	void initalize(const char* title, int width, int height, int fontWidth, int fontHeight, int defaultFront, int defaultBack);
 	void render(bool clear);
 #endif
 
@@ -156,9 +181,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	#undef ACRE_START
 	#ifndef ACRE_SYS_DEFS
 		#define ACRE_SYS_DEFS
-		#define ACRE_VER 2.2
+		#define ACRE_VER 2.3
 		#define ANSI_STR_LEN 24
-	#define AMOUNT_KEYS 53
+	#define AMOUNT_KEYS 54
 
 	#ifndef FONT_WEIGHT
 		#define FONT_WEIGHT 500
@@ -173,69 +198,62 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 		#define FULLSCREEN false
 	#endif
 #endif
-	char* screenBuffer = NULL, * screenBufferFull = NULL, windowTitle[200] = { 0 };
-	int* backgroundBuffer = NULL, * foregroundBuffer = NULL;
-	int nextOpenSlot = 0, buffW = 100, buffH = 50, fontWidth = 12, fontHeight = 12;
+	char* screenBuffer =    NULL, * screenBufferFull = NULL, windowTitle[200] = { 0 };
+	unsigned char* backgroundBuffer = NULL, * foregroundBuffer = NULL;
+
+	int nextOpenSlot = 0, buffW = 100, buffH = 50, globalFontWidth = 12, globalFontHeight = 12;
 	int defaultFrontColor = White, defaultBackColor = Black;
 	float fps = -1;
 	bool checkActiveWindow = false, terminated = true;
+	bool roundOne = true;
+
 	//windows handles
 	HANDLE hConsoleOutput, hConsoleInput;
 	HWND ConsoleWindow;
 
 	//others
 	MOUSE Mouse = { 0, 0, 0, 0 };
-	Key allKeys[AMOUNT_KEYS] = { 0 };
+	Key  allKeys[AMOUNT_KEYS] = { 0 };
 	LARGE_INTEGER start = { 0 }, end = { 0 }, frequency = { 0 };
-
 	float deltaTime = 0;
 
 	// the eight bit font option in hex
-	const unsigned char font8x8_basic[128][8] = {
-		{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-		{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-		{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-		{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-		{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-		{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-		{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-		{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-		{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-		{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-		{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-		{ 0x18, 0x3C, 0x3C, 0x18, 0x18, 0x00, 0x18, 0x00},{ 0x36, 0x36, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},{ 0x36, 0x36, 0x7F, 0x36, 0x7F, 0x36, 0x36, 0x00},
-		{ 0x0C, 0x3E, 0x03, 0x1E, 0x30, 0x1F, 0x0C, 0x00},{ 0x00, 0x63, 0x33, 0x18, 0x0C, 0x66, 0x63, 0x00},{ 0x1C, 0x36, 0x1C, 0x6E, 0x3B, 0x33, 0x6E, 0x00},
-		{ 0x06, 0x06, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00},{ 0x18, 0x0C, 0x06, 0x06, 0x06, 0x0C, 0x18, 0x00},{ 0x06, 0x0C, 0x18, 0x18, 0x18, 0x0C, 0x06, 0x00},
-		{ 0x00, 0x66, 0x3C, 0xFF, 0x3C, 0x66, 0x00, 0x00},{ 0x00, 0x0C, 0x0C, 0x3F, 0x0C, 0x0C, 0x00, 0x00},{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x0C, 0x0C, 0x06},
-		{ 0x00, 0x00, 0x00, 0x3F, 0x00, 0x00, 0x00, 0x00},{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x0C, 0x0C, 0x00},{ 0x60, 0x30, 0x18, 0x0C, 0x06, 0x03, 0x01, 0x00},
-		{ 0x3E, 0x63, 0x73, 0x7B, 0x6F, 0x67, 0x3E, 0x00},{ 0x0C, 0x0E, 0x0C, 0x0C, 0x0C, 0x0C, 0x3F, 0x00},{ 0x1E, 0x33, 0x30, 0x1C, 0x06, 0x33, 0x3F, 0x00},
-		{ 0x1E, 0x33, 0x30, 0x1C, 0x30, 0x33, 0x1E, 0x00},{ 0x38, 0x3C, 0x36, 0x33, 0x7F, 0x30, 0x78, 0x00},{ 0x3F, 0x03, 0x1F, 0x30, 0x30, 0x33, 0x1E, 0x00},
-		{ 0x1C, 0x06, 0x03, 0x1F, 0x33, 0x33, 0x1E, 0x00},{ 0x3F, 0x33, 0x30, 0x18, 0x0C, 0x0C, 0x0C, 0x00},{ 0x1E, 0x33, 0x33, 0x1E, 0x33, 0x33, 0x1E, 0x00},
-		{ 0x1E, 0x33, 0x33, 0x3E, 0x30, 0x18, 0x0E, 0x00},{ 0x00, 0x0C, 0x0C, 0x00, 0x00, 0x0C, 0x0C, 0x00},{ 0x00, 0x0C, 0x0C, 0x00, 0x00, 0x0C, 0x0C, 0x06},
-		{ 0x18, 0x0C, 0x06, 0x03, 0x06, 0x0C, 0x18, 0x00},{ 0x00, 0x00, 0x3F, 0x00, 0x00, 0x3F, 0x00, 0x00},{ 0x06, 0x0C, 0x18, 0x30, 0x18, 0x0C, 0x06, 0x00},
-		{ 0x1E, 0x33, 0x30, 0x18, 0x0C, 0x00, 0x0C, 0x00},{ 0x3E, 0x63, 0x7B, 0x7B, 0x7B, 0x03, 0x1E, 0x00},{ 0x0C, 0x1E, 0x33, 0x33, 0x3F, 0x33, 0x33, 0x00},
-		{ 0x3F, 0x66, 0x66, 0x3E, 0x66, 0x66, 0x3F, 0x00},{ 0x3C, 0x66, 0x03, 0x03, 0x03, 0x66, 0x3C, 0x00},{ 0x1F, 0x36, 0x66, 0x66, 0x66, 0x36, 0x1F, 0x00},
-		{ 0x7F, 0x46, 0x16, 0x1E, 0x16, 0x46, 0x7F, 0x00},{ 0x7F, 0x46, 0x16, 0x1E, 0x16, 0x06, 0x0F, 0x00},{ 0x3C, 0x66, 0x03, 0x03, 0x73, 0x66, 0x7C, 0x00},
-		{ 0x33, 0x33, 0x33, 0x3F, 0x33, 0x33, 0x33, 0x00},{ 0x1E, 0x0C, 0x0C, 0x0C, 0x0C, 0x0C, 0x1E, 0x00},{ 0x78, 0x30, 0x30, 0x30, 0x33, 0x33, 0x1E, 0x00},
-		{ 0x67, 0x66, 0x36, 0x1E, 0x36, 0x66, 0x67, 0x00},{ 0x0F, 0x06, 0x06, 0x06, 0x46, 0x66, 0x7F, 0x00},{ 0x63, 0x77, 0x7F, 0x7F, 0x6B, 0x63, 0x63, 0x00},
-		{ 0x63, 0x67, 0x6F, 0x7B, 0x73, 0x63, 0x63, 0x00},{ 0x1C, 0x36, 0x63, 0x63, 0x63, 0x36, 0x1C, 0x00},{ 0x3F, 0x66, 0x66, 0x3E, 0x06, 0x06, 0x0F, 0x00},
-		{ 0x1E, 0x33, 0x33, 0x33, 0x3B, 0x1E, 0x38, 0x00},{ 0x3F, 0x66, 0x66, 0x3E, 0x36, 0x66, 0x67, 0x00},{ 0x1E, 0x33, 0x07, 0x0E, 0x38, 0x33, 0x1E, 0x00},
-		{ 0x3F, 0x2D, 0x0C, 0x0C, 0x0C, 0x0C, 0x1E, 0x00},{ 0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0x3F, 0x00},{ 0x33, 0x33, 0x33, 0x33, 0x33, 0x1E, 0x0C, 0x00},
-		{ 0x63, 0x63, 0x63, 0x6B, 0x7F, 0x77, 0x63, 0x00},{ 0x63, 0x63, 0x36, 0x1C, 0x1C, 0x36, 0x63, 0x00},{ 0x33, 0x33, 0x33, 0x1E, 0x0C, 0x0C, 0x1E, 0x00},
-		{ 0x7F, 0x63, 0x31, 0x18, 0x4C, 0x66, 0x7F, 0x00},{ 0x1E, 0x06, 0x06, 0x06, 0x06, 0x06, 0x1E, 0x00},{ 0x03, 0x06, 0x0C, 0x18, 0x30, 0x60, 0x40, 0x00},
-		{ 0x1E, 0x18, 0x18, 0x18, 0x18, 0x18, 0x1E, 0x00},{ 0x08, 0x1C, 0x36, 0x63, 0x00, 0x00, 0x00, 0x00},{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF},
-		{ 0x0C, 0x0C, 0x18, 0x00, 0x00, 0x00, 0x00, 0x00},{ 0x00, 0x00, 0x1E, 0x30, 0x3E, 0x33, 0x6E, 0x00},{ 0x07, 0x06, 0x06, 0x3E, 0x66, 0x66, 0x3B, 0x00},
-		{ 0x00, 0x00, 0x1E, 0x33, 0x03, 0x33, 0x1E, 0x00},{ 0x38, 0x30, 0x30, 0x3e, 0x33, 0x33, 0x6E, 0x00},{ 0x00, 0x00, 0x1E, 0x33, 0x3f, 0x03, 0x1E, 0x00},
-		{ 0x1C, 0x36, 0x06, 0x0f, 0x06, 0x06, 0x0F, 0x00},{ 0x00, 0x00, 0x6E, 0x33, 0x33, 0x3E, 0x30, 0x1F},{ 0x07, 0x06, 0x36, 0x6E, 0x66, 0x66, 0x67, 0x00},
-		{ 0x0C, 0x00, 0x0E, 0x0C, 0x0C, 0x0C, 0x1E, 0x00},{ 0x30, 0x00, 0x30, 0x30, 0x30, 0x33, 0x33, 0x1E},{ 0x07, 0x06, 0x66, 0x36, 0x1E, 0x36, 0x67, 0x00},
-		{ 0x0E, 0x0C, 0x0C, 0x0C, 0x0C, 0x0C, 0x1E, 0x00},{ 0x00, 0x00, 0x33, 0x7F, 0x7F, 0x6B, 0x63, 0x00},{ 0x00, 0x00, 0x1F, 0x33, 0x33, 0x33, 0x33, 0x00},
-		{ 0x00, 0x00, 0x1E, 0x33, 0x33, 0x33, 0x1E, 0x00},{ 0x00, 0x00, 0x3B, 0x66, 0x66, 0x3E, 0x06, 0x0F},{ 0x00, 0x00, 0x6E, 0x33, 0x33, 0x3E, 0x30, 0x78},
-		{ 0x00, 0x00, 0x3B, 0x6E, 0x66, 0x06, 0x0F, 0x00},{ 0x00, 0x00, 0x3E, 0x03, 0x1E, 0x30, 0x1F, 0x00},{ 0x08, 0x0C, 0x3E, 0x0C, 0x0C, 0x2C, 0x18, 0x00},
-		{ 0x00, 0x00, 0x33, 0x33, 0x33, 0x33, 0x6E, 0x00},{ 0x00, 0x00, 0x33, 0x33, 0x33, 0x1E, 0x0C, 0x00},{ 0x00, 0x00, 0x63, 0x6B, 0x7F, 0x7F, 0x36, 0x00},
-		{ 0x00, 0x00, 0x63, 0x36, 0x1C, 0x36, 0x63, 0x00},{ 0x00, 0x00, 0x33, 0x33, 0x33, 0x3E, 0x30, 0x1F},{ 0x00, 0x00, 0x3F, 0x19, 0x0C, 0x26, 0x3F, 0x00},
-		{ 0x38, 0x0C, 0x0C, 0x07, 0x0C, 0x0C, 0x38, 0x00},{ 0x18, 0x18, 0x18, 0x00, 0x18, 0x18, 0x18, 0x00},{ 0x07, 0x0C, 0x0C, 0x38, 0x0C, 0x0C, 0x07, 0x00},
-		{ 0x6E, 0x3B, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
+	const unsigned char font8x8_basic[96][8] = {
+		{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00},{0x18,0x3C,0x3C,0x18,0x18,0x00,0x18,0x00},{0x36,0x36,0x00,0x00,0x00,0x00,0x00,0x00},
+		{0x36,0x36,0x7F,0x36,0x7F,0x36,0x36,0x00},{0x0C,0x3E,0x03,0x1E,0x30,0x1F,0x0C,0x00},{0x00,0x63,0x33,0x18,0x0C,0x66,0x63,0x00},
+		{0x1C,0x36,0x1C,0x6E,0x3B,0x33,0x6E,0x00},{0x06,0x06,0x03,0x00,0x00,0x00,0x00,0x00},{0x18,0x0C,0x06,0x06,0x06,0x0C,0x18,0x00},
+		{0x06,0x0C,0x18,0x18,0x18,0x0C,0x06,0x00},{0x00,0x66,0x3C,0xFF,0x3C,0x66,0x00,0x00},{0x00,0x0C,0x0C,0x3F,0x0C,0x0C,0x00,0x00},
+		{0x00,0x00,0x00,0x00,0x00,0x0C,0x0C,0x06},{0x00,0x00,0x00,0x3F,0x00,0x00,0x00,0x00},{0x00,0x00,0x00,0x00,0x00,0x0C,0x0C,0x00},
+		{0x60,0x30,0x18,0x0C,0x06,0x03,0x01,0x00},{0x3E,0x63,0x73,0x7B,0x6F,0x67,0x3E,0x00},{0x0C,0x0E,0x0C,0x0C,0x0C,0x0C,0x3F,0x00},
+		{0x1E,0x33,0x30,0x1C,0x06,0x33,0x3F,0x00},{0x1E,0x33,0x30,0x1C,0x30,0x33,0x1E,0x00},{0x38,0x3C,0x36,0x33,0x7F,0x30,0x78,0x00},
+		{0x3F,0x03,0x1F,0x30,0x30,0x33,0x1E,0x00},{0x1C,0x06,0x03,0x1F,0x33,0x33,0x1E,0x00},{0x3F,0x33,0x30,0x18,0x0C,0x0C,0x0C,0x00},
+		{0x1E,0x33,0x33,0x1E,0x33,0x33,0x1E,0x00},{0x1E,0x33,0x33,0x3E,0x30,0x18,0x0E,0x00},{0x00,0x0C,0x0C,0x00,0x00,0x0C,0x0C,0x00},
+		{0x00,0x0C,0x0C,0x00,0x00,0x0C,0x0C,0x06},{0x18,0x0C,0x06,0x03,0x06,0x0C,0x18,0x00},{0x00,0x00,0x3F,0x00,0x00,0x3F,0x00,0x00},
+		{0x06,0x0C,0x18,0x30,0x18,0x0C,0x06,0x00},{0x1E,0x33,0x30,0x18,0x0C,0x00,0x0C,0x00},{0x3E,0x63,0x7B,0x7B,0x7B,0x03,0x1E,0x00},
+		{0x0C,0x1E,0x33,0x33,0x3F,0x33,0x33,0x00},{0x3F,0x66,0x66,0x3E,0x66,0x66,0x3F,0x00},{0x3C,0x66,0x03,0x03,0x03,0x66,0x3C,0x00},
+		{0x1F,0x36,0x66,0x66,0x66,0x36,0x1F,0x00},{0x7F,0x46,0x16,0x1E,0x16,0x46,0x7F,0x00},{0x7F,0x46,0x16,0x1E,0x16,0x06,0x0F,0x00},
+		{0x3C,0x66,0x03,0x03,0x73,0x66,0x7C,0x00},{0x33,0x33,0x33,0x3F,0x33,0x33,0x33,0x00},{0x1E,0x0C,0x0C,0x0C,0x0C,0x0C,0x1E,0x00},
+		{0x78,0x30,0x30,0x30,0x33,0x33,0x1E,0x00},{0x67,0x66,0x36,0x1E,0x36,0x66,0x67,0x00},{0x0F,0x06,0x06,0x06,0x46,0x66,0x7F,0x00},
+		{0x63,0x77,0x7F,0x7F,0x6B,0x63,0x63,0x00},{0x63,0x67,0x6F,0x7B,0x73,0x63,0x63,0x00},{0x1C,0x36,0x63,0x63,0x63,0x36,0x1C,0x00},
+		{0x3F,0x66,0x66,0x3E,0x06,0x06,0x0F,0x00},{0x1E,0x33,0x33,0x33,0x3B,0x1E,0x38,0x00},{0x3F,0x66,0x66,0x3E,0x36,0x66,0x67,0x00},
+		{0x1E,0x33,0x07,0x0E,0x38,0x33,0x1E,0x00},{0x3F,0x2D,0x0C,0x0C,0x0C,0x0C,0x1E,0x00},{0x33,0x33,0x33,0x33,0x33,0x33,0x3F,0x00},
+		{0x33,0x33,0x33,0x33,0x33,0x1E,0x0C,0x00},{0x63,0x63,0x63,0x6B,0x7F,0x77,0x63,0x00},{0x63,0x63,0x36,0x1C,0x1C,0x36,0x63,0x00},
+		{0x33,0x33,0x33,0x1E,0x0C,0x0C,0x1E,0x00},{0x7F,0x63,0x31,0x18,0x4C,0x66,0x7F,0x00},{0x1E,0x06,0x06,0x06,0x06,0x06,0x1E,0x00},
+		{0x03,0x06,0x0C,0x18,0x30,0x60,0x40,0x00},{0x1E,0x18,0x18,0x18,0x18,0x18,0x1E,0x00},{0x08,0x1C,0x36,0x63,0x00,0x00,0x00,0x00},
+		{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0xFF},{0x0C,0x0C,0x18,0x00,0x00,0x00,0x00,0x00},{0x00,0x00,0x1E,0x30,0x3E,0x33,0x6E,0x00},
+		{0x07,0x06,0x06,0x3E,0x66,0x66,0x3B,0x00},{0x00,0x00,0x1E,0x33,0x03,0x33,0x1E,0x00},{0x38,0x30,0x30,0x3e,0x33,0x33,0x6E,0x00},
+		{0x00,0x00,0x1E,0x33,0x3f,0x03,0x1E,0x00},{0x1C,0x36,0x06,0x0f,0x06,0x06,0x0F,0x00},{0x00,0x00,0x6E,0x33,0x33,0x3E,0x30,0x1F},
+		{0x07,0x06,0x36,0x6E,0x66,0x66,0x67,0x00},{0x0C,0x00,0x0E,0x0C,0x0C,0x0C,0x1E,0x00},{0x30,0x00,0x30,0x30,0x30,0x33,0x33,0x1E},
+		{0x07,0x06,0x66,0x36,0x1E,0x36,0x67,0x00},{0x0E,0x0C,0x0C,0x0C,0x0C,0x0C,0x1E,0x00},{0x00,0x00,0x33,0x7F,0x7F,0x6B,0x63,0x00},
+		{0x00,0x00,0x1F,0x33,0x33,0x33,0x33,0x00},{0x00,0x00,0x1E,0x33,0x33,0x33,0x1E,0x00},{0x00,0x00,0x3B,0x66,0x66,0x3E,0x06,0x0F},
+		{0x00,0x00,0x6E,0x33,0x33,0x3E,0x30,0x78},{0x00,0x00,0x3B,0x6E,0x66,0x06,0x0F,0x00},{0x00,0x00,0x3E,0x03,0x1E,0x30,0x1F,0x00},
+		{0x08,0x0C,0x3E,0x0C,0x0C,0x2C,0x18,0x00},{0x00,0x00,0x33,0x33,0x33,0x33,0x6E,0x00},{0x00,0x00,0x33,0x33,0x33,0x1E,0x0C,0x00},
+		{0x00,0x00,0x63,0x6B,0x7F,0x7F,0x36,0x00},{0x00,0x00,0x63,0x36,0x1C,0x36,0x63,0x00},{0x00,0x00,0x33,0x33,0x33,0x3E,0x30,0x1F},
+		{0x00,0x00,0x3F,0x19,0x0C,0x26,0x3F,0x00},{0x38,0x0C,0x0C,0x07,0x0C,0x0C,0x38,0x00},{0x18,0x18,0x18,0x00,0x18,0x18,0x18,0x00},
+		{0x07,0x0C,0x0C,0x38,0x0C,0x0C,0x07,0x00},{0x6E,0x3B,0x00,0x00,0x00,0x00,0x00,0x00},{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00}
 	};
+	Font EightBit = { 8, 8, (const unsigned char*)font8x8_basic }; //sysDrawFontChar(x, y, Screen, EIGHT_BIT, text[slot], colorFront, colorBack);
+	Font DefaultFont = { 1, 1, NULL };
 
 	/**************************************************************************************************
 	General functions
@@ -263,9 +281,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 		char supportedVersion[] = "acrev2.0", ch, currentVersion[10] = { 0 }, width[5] = { 0 }, height[5] = { 0 };
 		FILE* image = fopen(imageFilePath, "r");
 		
-		if (image == NULL) 
-			Error(L"Opening image file failed!");
-
+		if (image == NULL)
+		{
+			wchar_t msg[100] = { L"Opening ACRE file: "};
+			wchar_t wszDest[100];
+			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, imageFilePath, -1, wszDest, 100);
+			wcscat(msg, wszDest);
+			Error(msg);
+		}
 		Image image1;
 
 		while ((ch = fgetc(image)) != ';');
@@ -338,12 +361,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 		}
 		return -1;
 	}
-	int stringLength(char* string, int fontType)
+	int stringLength(const char* string, Font fontType)
 	{
-		if (fontType == Default)
-			return strlen(string);
-		if (fontType == EightBit)
-			return strlen(string) * 8;
+		return strlen(string) * fontType.displayW;
 	}
 	int thirds(int firstOrSecond, int mode)
 	{
@@ -355,13 +375,18 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	{
 		return amount * deltaTime;
 	}
+	void timePerSecInt(float amount)
+	{
+		/*float howOftenToReturn = 1 / amount;
+		if(deltaTime)*/
+	}
 	Timer createTimer()
 	{
 		Timer timer;
 		timer.elapsedTime = 0.0f;
 		return timer;
 	}
-	Timer calculateTimer(Timer* timer)
+	void calculateTimer(Timer* timer)
 	{
 		timer->elapsedTime += deltaTime;
 	}
@@ -488,13 +513,21 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 			if ((*x) > largestSize.X)
 			{
 				wchar_t errMsg[200] = { 0 };
-				swprintf_s(errMsg, 200, L"X dimension too big (%d > %d)", (*x), largestSize.X);
+				#ifdef __GNUC__ // gcc uses different swprintf declaration.
+					swprintf(errMsg, L"X dimension too big (%d > %d)", (*x), largestSize.X);
+				#else
+					swprintf(errMsg, 200, L"X dimension too big (%d > %d)", (*x), largestSize.X);
+				#endif
 				Error(errMsg);
 			}
 			if ((*y) > largestSize.Y)
 			{
 				wchar_t errMsg[200] = { 0 };
-				swprintf_s(errMsg, 200, L"Y dimension too big (%d > %d)", (*y), largestSize.Y);
+				#ifdef __GNUC__ // gcc uses different swprintf declaration.
+					swprintf(errMsg, L"Y dimension too big (%d > %d)", (*y), largestSize.Y);
+				#else
+					swprintf(errMsg, 200, L"Y dimension too big (%d > %d)", (*y), largestSize.Y);
+				#endif
 				Error(errMsg);
 			}
 		}
@@ -528,9 +561,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 	bool windowActive()
 	{
-		if (!checkActiveWindow) return true;
-		if (ConsoleWindow == GetForegroundWindow()) return true;
-		else return false;
+		#ifndef NO_WINDOW_ACTIVE
+			return true;
+		#endif
+			if (ConsoleWindow == GetForegroundWindow()) return true;
 	}
 
 	void setRequiredModes()
@@ -547,7 +581,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	Drawing to the screen functions (draw functions
 	**************************************************************************************************/
 
-	int* sysGetPoint(int x, int y, int data[3])
+	void sysGetPoint(int x, int y, int data[3])
 	{
 		int slot = xyLoc(x, y);
 		data[0] = screenBuffer[slot];
@@ -657,11 +691,157 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 		}
 		return line;
 	}
-	void sysDrawTriange(int x1, int y1, int x2, int y2, int x3, int y3, Space screenSpace, char character, bool filled, int colorFront, int colorBack)
+
+	// these are both used for sysDrawTri-angle
+	#define SWAP(x,y) do { (x)=(x)^(y); (y)=(x)^(y); (x)=(x)^(y); } while(0)
+	void simple_draw_line(int x1, int x2, unsigned int y, Space screenSpace, char charater, int colorFront, int colorBack) {
+		if (x1 >= x2) SWAP(x1, x2);
+		for (; x1 <= x2; x1++) sysDrawPoint(x1, y, screenSpace, charater, colorFront, colorBack);
+	}
+	void sysDrawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, Space screenSpace, char character, bool filled, int colorFront, int colorBack)
 	{
-		sysDrawLine(x1, y1, x2, y2, screenSpace, character, colorFront, colorBack);
-		sysDrawLine(x2, y2, x3, y3, screenSpace, character, colorFront, colorBack);
-		sysDrawLine(x1, y1, x3, y3, screenSpace, character, colorFront, colorBack);
+		if (!filled)
+		{
+			sysDrawLine(x1, y1, x2, y2, screenSpace, character, colorFront, colorBack);
+			sysDrawLine(x2, y2, x3, y3, screenSpace, character, colorFront, colorBack);
+			sysDrawLine(x1, y1, x3, y3, screenSpace, character, colorFront, colorBack);
+
+		}
+		else //https://www.avrfreaks.net/sites/default/files/triangles.c
+		{
+			unsigned int t1x, t2x, y, minx, maxx, t1xp, t2xp;
+			bool changed1 = false;
+			bool changed2 = false;
+			int signx1, signx2, dx1, dy1, dx2, dy2;
+			unsigned int e1, e2;
+			// Sort vertices
+			if (y1 > y2) { SWAP(y1, y2); SWAP(x1, x2); }
+			if (y1 > y3) { SWAP(y1, y3); SWAP(x1, x3); }
+			if (y2 > y3) { SWAP(y2, y3); SWAP(x2, x3); }
+
+			t1x = t2x = x1; y = y1;   // Starting points
+
+			dx1 = (int)(x2 - x1); if (dx1 < 0) { dx1 = -dx1; signx1 = -1; }
+			else signx1 = 1;
+			dy1 = (int)(y2 - y1);
+
+			dx2 = (int)(x3 - x1); if (dx2 < 0) { dx2 = -dx2; signx2 = -1; }
+			else signx2 = 1;
+			dy2 = (int)(y3 - y1);
+
+			if (dy1 > dx1) {   // swap values
+				SWAP(dx1, dy1);
+				changed1 = true;
+			}
+			if (dy2 > dx2) {   // swap values
+				SWAP(dy2, dx2);
+				changed2 = true;
+			}
+
+			e2 = (unsigned int)(dx2 >> 1);
+			// Flat top, just process the second half
+			if (y1 == y2) goto next;
+			e1 = (unsigned int)(dx1 >> 1);
+
+			for (unsigned int i = 0; i < dx1;) {
+				t1xp = 0; t2xp = 0;
+				if (t1x < t2x) { minx = t1x; maxx = t2x; }
+				else { minx = t2x; maxx = t1x; }
+				// process first line until y value is about to change
+				while (i < dx1) {
+					i++;
+					e1 += dy1;
+					while (e1 >= dx1) {
+						e1 -= dx1;
+						if (changed1) t1xp = signx1;//t1x += signx1;
+						else          goto next1;
+					}
+					if (changed1) break;
+					else t1x += signx1;
+				}
+				// Move line
+				next1:
+					// process second line until y value is about to change
+					while (1) {
+						e2 += dy2;
+						while (e2 >= dx2) {
+							e2 -= dx2;
+							if (changed2) t2xp = signx2;//t2x += signx2;
+							else          goto next2;
+						}
+						if (changed2)     break;
+						else              t2x += signx2;
+					}
+				next2:
+					if (minx > t1x) minx = t1x; if (minx > t2x) minx = t2x;
+					if (maxx < t1x) maxx = t1x; if (maxx < t2x) maxx = t2x;
+					simple_draw_line(minx, maxx, y, screenSpace, character, colorFront, colorBack);    // Draw line from min to max points found on the y
+					// Now increase y
+					if (!changed1) t1x += signx1;
+					t1x += t1xp;
+					if (!changed2) t2x += signx2;
+					t2x += t2xp;
+					y += 1;
+					if (y == y2) break;
+
+				}
+			next:
+				// Second half
+				dx1 = (int)(x3 - x2); if (dx1 < 0) { dx1 = -dx1; signx1 = -1; }
+				else signx1 = 1;
+				dy1 = (int)(y3 - y2);
+				t1x = x2;
+
+				if (dy1 > dx1) {   // swap values
+					SWAP(dy1, dx1);
+					changed1 = true;
+				}
+				else changed1 = false;
+
+				e1 = (unsigned int)(dx1 >> 1);
+
+				for (unsigned int i = 0; i <= dx1; i++) {
+					t1xp = 0; t2xp = 0;
+					if (t1x < t2x) { minx = t1x; maxx = t2x; }
+					else { minx = t2x; maxx = t1x; }
+					// process first line until y value is about to change
+					while (i < dx1) {
+						e1 += dy1;
+						while (e1 >= dx1) {
+							e1 -= dx1;
+							if (changed1) { t1xp = signx1; break; }//t1x += signx1;
+							else          goto next3;
+						}
+						if (changed1) break;
+						else   	   	  t1x += signx1;
+						if (i < dx1) i++;
+					}
+				next3:
+					// process second line until y value is about to change
+					while (t2x != x3) {
+						e2 += dy2;
+						while (e2 >= dx2) {
+							e2 -= dx2;
+							if (changed2) t2xp = signx2;
+							else          goto next4;
+						}
+						if (changed2)     break;
+						else              t2x += signx2;
+					}
+				next4:
+
+					if (minx > t1x) minx = t1x; if (minx > t2x) minx = t2x;
+					if (maxx < t1x) maxx = t1x; if (maxx < t2x) maxx = t2x;
+					simple_draw_line(minx, maxx, y, screenSpace, character, colorFront, colorBack);    // Draw line from min to max points found on the y
+					// Now increase y
+					if (!changed1) t1x += signx1;
+					t1x += t1xp;
+					if (!changed2) t2x += signx2;
+					t2x += t2xp;
+					y += 1;
+					if (y > y3) return;
+				}
+			}
 	}
 	Space sysDrawCircle(int x, int y, Space screenSpace, int radius, char character, bool filled, int colorFront, int colorBack)
 	{
@@ -671,52 +851,45 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 		if (y == Centered) y = center(1, screenSpace, Y), circleSpace.startY = y - radius, circleSpace.endY = y + radius;
 		else y = screenSpace.startY + y - 1, circleSpace.startY = y, circleSpace.endY = y + radius * 2;
+		
 		// this code was modified from the olcConsoleGameEngine on github
-		int xVAR = 0, yVAR = radius;
-		int p = 3 - 2 * radius;
+		int xa = 0, ya = radius;
+		int pa = 3 - 2 * radius;
 		if (!radius) return circleSpace;
 
-		while (yVAR >= xVAR) // only formulate 1/8 of circle
+		while (ya >= xa) // only formulate 1/8 of circle
 		{
-			sysDrawPoint(x - xVAR, y - yVAR, Screen, character, colorFront, colorBack);
-			sysDrawPoint(x - xVAR, y - yVAR, Screen, character, colorFront, colorBack);//upper left left
-			sysDrawPoint(x - yVAR, y - xVAR, Screen, character, colorFront, colorBack);//upper upper left
-			sysDrawPoint(x + yVAR, y - xVAR, Screen, character, colorFront, colorBack);//upper upper right
-			sysDrawPoint(x + xVAR, y - yVAR, Screen, character, colorFront, colorBack);//upper right right
-			sysDrawPoint(x - xVAR, y + yVAR, Screen, character, colorFront, colorBack);//lower left left
-			sysDrawPoint(x - yVAR, y + xVAR, Screen, character, colorFront, colorBack);//lower lower left
-			sysDrawPoint(x + yVAR, y + xVAR, Screen, character, colorFront, colorBack);//lower lower right
-			sysDrawPoint(x + xVAR, y + yVAR, Screen, character, colorFront, colorBack);//lower right right
-			if (p < 0) p += 4 * xVAR++ + 6;
-			else p += 4 * (xVAR++ - yVAR--) + 10;
-		}
-		/*
-		if (filled)
-		{
-			// Taken from wikipedia
-			int xVAR = 0;
-			int yVAR = radius;
-			int p = 3 - 2 * radius;
-
-			auto drawline = [&](int sx, int ex, int ny)
-			{
-				for (int i = sx; i <= ex; i++)
-					Draw(i, ny, c, col);
-			};
-
-			while (y >= x)
+			if (filled)
 			{
 				// Modified to draw scan-lines instead of edges
-				drawline(xc - x, xc + x, yc - y);
-				drawline(xc - y, xc + y, yc - x);
-				drawline(xc - x, xc + x, yc + y);
-				drawline(xc - y, xc + y, yc + x);
-				if (p < 0) p += 4 * x++ + 6;
-				else p += 4 * (x++ - y--) + 10;
+				for (int ia = x - xa; ia < x + xa; ia++)
+				{
+					sysDrawPoint(ia, y - ya, screenSpace, character, colorFront, colorBack);
+					sysDrawPoint(ia, y + ya, screenSpace, character, colorFront, colorBack);
+				}
+				for (int ia = x - ya; ia < x + ya; ia++)
+				{
+					sysDrawPoint(ia, y - xa, screenSpace, character, colorFront, colorBack);
+					sysDrawPoint(ia, y + xa, screenSpace, character, colorFront, colorBack);
+				}
 			}
-		}*/
+			else
+			{
+				sysDrawPoint(x - xa, y - ya, screenSpace, character, colorFront, colorBack);//upper left left
+				sysDrawPoint(x - ya, y - xa, screenSpace, character, colorFront, colorBack);//upper upper left
+				sysDrawPoint(x + ya, y - xa, screenSpace, character, colorFront, colorBack);//upper upper right
+				sysDrawPoint(x + xa, y - ya, screenSpace, character, colorFront, colorBack);//upper right right
+				sysDrawPoint(x - xa, y + ya, screenSpace, character, colorFront, colorBack);//lower left left
+				sysDrawPoint(x - ya, y + xa, screenSpace, character, colorFront, colorBack);//lower lower left
+				sysDrawPoint(x + ya, y + xa, screenSpace, character, colorFront, colorBack);//lower lower right
+				sysDrawPoint(x + xa, y + ya, screenSpace, character, colorFront, colorBack);//lower right right
+			}
+			if (pa < 0) pa += 4 * xa++ + 6;
+			else pa += 4 * (xa++ - ya--) + 10;
+		}
 		return circleSpace;
 	}
+	
 	Space sysDrawImage(int x, int y, Space screenSpace, Image inputImage)
 	{
 		Space rectLocation = getSpace(screenSpace, x, y, (x == Centered) ? inputImage.width : x + inputImage.width,
@@ -736,29 +909,30 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 		}
 		return rectLocation;
 	}
-	Space sysDrawFontChar(int x, int y, Space screenSpace, char character, int colorFront, int colorBack)
+
+	Space sysDrawFontChar(int x, int y, Space screenSpace, Font font, char character, int colorFront, int colorBack)
 	{
+		character = character - ' ';
 		Space letterSpace = { x, y, x + 8, y + 8 };
-		const unsigned char* letter = font8x8_basic[character];
-		for (int i = 0; i < 8; i++) {
-			for (int j = 0; j < 8; j++) {
+		const unsigned char* letter = (font.dat + character*font.w);
+		
+		for (int i = 0; i < font.w; i++)
+			for (int j = 0; j < 8; j++)
+			{
 				int set = letter[i] & 1 << j;
-				sysDrawPoint(x + j, y + i, screenSpace, Default, colorFront, set ? colorBack : Default);
+				int addX = (font.dat == (const unsigned char*)font8x8_basic) ? j : i;
+				int addY = (font.dat == (const unsigned char*)font8x8_basic) ? i : j;
+				sysDrawPoint(x + addX, y + addY, screenSpace, Default, colorFront, set ? colorBack : Default);
 			}
-		}
 		return letterSpace;
 	}
-	Space sysDrawText(int x, int y, Space screenSpace, const char* text, int fontType, int colorFront, int colorBack)
+	Space sysDrawText(int x, int y, Space screenSpace, const char* text, Font fontType, int colorFront, int colorBack)
 	{
 		int i = 0;
-		while (text[i] != '\n' && text[i] != 0)
-			i++;
+		while (text[i] != '\n' && text[i] != 0) i++;
+		int textWidth = i * (fontType.displayW);
 
-		int textWidth = i * ((fontType == EightBit) ? 8 : 1);
-		if (fontType == EightBit)
-			textWidth -= 2;
-
-		Space textSpace = getSpace(screenSpace, x, y, (x == Centered) ? textWidth : x + textWidth, (fontType == EightBit) ? 8 : 1);
+		Space textSpace = getSpace(screenSpace, x, y, (x == Centered) ? textWidth : x + textWidth, fontType.displayW);
 
 		int slot = 0;
 		x = textSpace.startX, y = textSpace.startY;
@@ -767,28 +941,39 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 		while (text[slot] != 0)
 		{
 			if (text[slot] == '\n')
-				x = xPrev, y += (fontType == EightBit) ? 8 : 1;
+				x = xPrev, y += fontType.displayW;
 
 			else
 			{
-				if (fontType == EightBit) sysDrawFontChar(x, y, Screen, text[slot], colorFront, colorBack);
-				else sysDrawPoint(x, y, Screen, text[slot], colorFront, colorBack);
-				x += (fontType == EightBit) ? 8 : 1;
+				if (fontType.dat == NULL) sysDrawPoint(x, y, Screen, text[slot], colorFront, colorBack); 
+				else sysDrawFontChar(x, y, Screen, fontType, text[slot], colorFront, colorBack);
+				x += fontType.displayW;
 			}
 			slot++;
 		}
 		return textSpace;
 	}
-	Space sysDrawInt(int x, int y, Space screenSpace, int number, int fontType, int colorFront, int colorBack)
+	Space sysDrawNumber(int x, int y, Space screenSpace, double number, int numDecimal, Font fontType, int colorFront, int colorBack)
 	{
-		int numLength = 0, numCpy = number;
-		char text[30] = { 0 };
-		while (numCpy != 0)
+		if (numDecimal == Default)
 		{
-			numCpy = numCpy / 10;
-			numLength++;
+			if ((int)number == number)
+				numDecimal = 0;
+			else if (number < 1.0f && number > 0.0f)
+				numDecimal = 4;
+			else if ((int)number < number)
+				numDecimal = 2;
+			
 		}
-		_itoa(number, text, 10);
+		char text[30] = { 0 };
+		char formatText[10] = "%.";
+		char numDecimalText[10] = { 0 };
+
+		_itoa(numDecimal, numDecimalText, 10);
+		strcat(formatText, numDecimalText);
+		strcat(formatText, "f");
+
+		snprintf(text, 30, formatText, number);
 		return sysDrawText(x, y, screenSpace, text, fontType, colorFront, colorBack);
 	}
 	Space sysDrawColorBuffer(int x, int y, Space screenSpace, int* buffer, int width, int height)
@@ -803,26 +988,32 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 				sysDrawPoint(xi, yi, Screen, Default, Default, buffer[realY * width + realX]);
 				realY++;
 			}
-			realY = 0;
-			realX++;
+			realY = 0, realX++;
 		}
 		return buffSpace;
 	}
+	void clearScreen()
+	{
+		memset(backgroundBuffer, defaultBackColor, sizeof(unsigned char) * (buffW * buffH));
+		memset(foregroundBuffer, defaultFrontColor, sizeof(unsigned char) * (buffW * buffH));
+		memset(screenBuffer, DEFAULT_CHARACTER, sizeof(char) * (buffW * buffH));
+	}
 
-	void drawTriange(int x1, int y1, int x2, int y2, int x3, int y3, int color) { sysDrawTriange(x1, y1, x2, y2, x3, y3, Screen, Default, false, Default, color); }
+	void drawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, int color) { sysDrawTriangle(x1, y1, x2, y2, x3, y3, Screen, Default, false, Default, color); }
+	void drawTriangleFilled(int x1, int y1, int x2, int y2, int x3, int y3, int color) { sysDrawTriangle(x1, y1, x2, y2, x3, y3, Screen, Default, true, Default, color); }
 	void drawLine(int xStart, int yStart, int xEnd, int yEnd, int color) { sysDrawLine(xStart, yStart, xEnd, yEnd, Screen, Default, Default, color); }
 
 	Space drawRect(int xStart, int yStart, int xEnd, int yEnd, int color){return sysDrawRect(xStart, yStart, xEnd, yEnd, Screen, Default, false, Default, color);}
 	Space drawRectFilled(int xStart, int yStart, int xEnd, int yEnd, int color){return sysDrawRect(xStart, yStart, xEnd, yEnd, Screen, Default, true, Default, color);}
 	Space drawCircle(int x, int y, int radius, int color){return sysDrawCircle(x, y, Screen, radius, Default, false, Default, color);}
+	Space drawCircleFilled(int x, int y, int radius, int color) { return sysDrawCircle(x, y, Screen, radius, Default, true, Default, color); }
 	Space drawImage(int x, int y, Image img){return sysDrawImage(x, y, Screen, img);}
-	Space drawText(int x, int y, const char* text, int fontType, int color){return sysDrawText(x, y, Screen, text, fontType, (fontType == EightBit) ? defaultFrontColor : color, (fontType == EightBit) ? (color == Default) ? defaultFrontColor : color : defaultBackColor);}
+	Space drawText(int x, int y, const char* text, Font fontType, int color){return sysDrawText(x, y, Screen, text, fontType, (fontType.dat == NULL) ? color: defaultFrontColor, (fontType.dat != NULL) ? (color == Default) ? defaultFrontColor : color : defaultBackColor);}
 	Point drawPoint(int x, int y, int colorBack){return sysDrawPoint(x, y, Screen, Default, Default, colorBack);}
 	Point drawChar(int x, int y, char character, int colorFront){return sysDrawPoint(x, y, Screen, character, colorFront, Default);}
 
-	Space drawInt(int x, int y, int number, int fontType, int color){return sysDrawInt(x,y,Screen,number,fontType,(fontType==EightBit)?defaultFrontColor:color,(fontType==EightBit)?(color==Default)?defaultFrontColor:color:defaultBackColor);}
+	Space drawNumber(int x, int y, double number, Font fontType, int color){return sysDrawNumber(x,y,Screen,number,Default,fontType,(fontType.dat != NULL)?defaultFrontColor:color,(fontType.dat!=NULL)?(color==Default)?defaultFrontColor:color:defaultBackColor);}
 	Space drawColorBuffer(int x, int y, int* buffer, int width, int height){return sysDrawColorBuffer(x, y, Screen, buffer, width, height);}
-	void clearScreen(){sysDrawRect(0, 0, Width(Screen), Height(Screen), Screen, DEFAULT_CHARACTER, true, defaultFrontColor, defaultBackColor);}
 
 	/**************************************************************************************************
 	Input Functions (also related to windows, wont work cross platform)
@@ -910,57 +1101,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 		terminated = true;
 		if (SetConsoleOutputCP(65001) == 0) Error(L"Changing codepage back to default failed.");
 
-		//free(screenBufferFull);
-		//free(backgroundBuffer);
-		//free(foregroundBuffer);
-		//free(screenBuffer);
+		free(screenBufferFull);
+		free(backgroundBuffer);
+		free(foregroundBuffer);
+		free(screenBuffer);
 
 		return 0;
 	}
-	void initalize(const char* title, int width, int height, int bufferFontWidth, int bufferFontHeight, int defaultFront, int defaultBack)
+	void startKeys()
 	{
-		strcpy(windowTitle, title);
-		hConsoleOutput = GetStdHandle(STD_OUTPUT_HANDLE);
-
-		if (hConsoleOutput == 0) Error(L"Getting console output handle didnt work.\n");
-
-		hConsoleInput = GetStdHandle(STD_INPUT_HANDLE);
-		ConsoleWindow = GetConsoleWindow();
-
-		if (FULLSCREEN) checkActiveWindow = false;
-
-		//set default values
-		if (defaultFront != Default) defaultFrontColor = defaultFront;
-		if (defaultBack != Default) defaultBackColor = defaultBack;
-		if (width != Default) buffW = width;
-		if (height != Default) buffH = height;
-		if (bufferFontWidth != Default) fontWidth = bufferFontWidth;
-		if (bufferFontHeight != Default) fontHeight = bufferFontHeight;
-
-		SetFont(fontWidth, fontHeight, FONT_WEIGHT, 65001);
-		SetConsoleWindowSize(&buffW, &buffH);
-
-		Screen.startX = 0, Screen.startY = 0, Screen.endX = buffW, Screen.endY = buffH;
-
-		printf("\x1b[?25l"); // hide the console cursor
-		setRequiredModes();
-
-		if ((int)title != Default) SetConsoleTitleA(title);
-		else SetConsoleTitleA("AMZG Studio - ACREngine - Github");
-		if (terminated == false) terminate();
-
-		screenBufferFull = (char*)malloc(sizeof(char) * ((buffW * buffH) * ANSI_STR_LEN + 1));
-		screenBuffer = (char*)malloc(sizeof(char) * ((buffW * buffH) + 1));
-		foregroundBuffer = (int*)malloc(sizeof(int) * (buffW * buffH));
-		backgroundBuffer = (int*)malloc(sizeof(int) * (buffW * buffH));
-
-		for (int i = 0; i < ((buffW * buffH) * ANSI_STR_LEN + 1); i++) screenBufferFull[i] = 0;
-		for (int i = 0; i < (buffW * buffH); i++)
-		{
-			foregroundBuffer[i] = defaultFrontColor;
-			backgroundBuffer[i] = defaultBackColor;
-			screenBuffer[i] = DEFAULT_CHARACTER;
-		}
 		for (int i = 0; i < AMOUNT_KEYS; i++)
 		{
 			allKeys[i].held = false;
@@ -977,38 +1126,84 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 		}
 		allKeys[Up].letter = VK_UP, allKeys[Down].letter = VK_DOWN, allKeys[Left].letter = VK_LEFT, allKeys[Right].letter = VK_RIGHT;
 		allKeys[Enter].letter = VK_RETURN, allKeys[Esc].letter = VK_ESCAPE, allKeys[LeftM].letter = VK_LBUTTON, allKeys[RightM].letter = VK_RBUTTON;
-		allKeys[Spacebar].letter = VK_SPACE, allKeys[Shift].letter = VK_SHIFT, allKeys[Alt].letter = VK_MENU, allKeys[Comma].letter = VK_OEM_COMMA, allKeys[Period].letter = VK_OEM_PERIOD, 
-		allKeys[Colon].letter = VK_OEM_1, allKeys[Slash].letter = VK_OEM_2, allKeys[QuestionMark].letter = '?', allKeys[Backspace].letter = VK_BACK;
-		
-		allKeys[Num0].letter = '0', allKeys[Num1].letter = '1', allKeys[Num2].letter = '2', allKeys[Num3].letter = '3', allKeys[Num4].letter = '4';
-		allKeys[Num5].letter = '5', allKeys[Num6].letter = '6', allKeys[Num7].letter = '7', allKeys[Num8].letter = '8', allKeys[Num9].letter = '9', 
-		terminated = false;
+		allKeys[Spacebar].letter = VK_SPACE, allKeys[Shift].letter = VK_SHIFT, allKeys[Alt].letter = VK_MENU, allKeys[Tab].letter = VK_TAB, allKeys[Comma].letter = VK_OEM_COMMA, allKeys[Period].letter = VK_OEM_PERIOD,
+			allKeys[Colon].letter = VK_OEM_1, allKeys[Slash].letter = VK_OEM_2, allKeys[QuestionMark].letter = '?', allKeys[Backspace].letter = VK_BACK;
 
+		allKeys[Num0].letter = '0', allKeys[Num1].letter = '1', allKeys[Num2].letter = '2', allKeys[Num3].letter = '3', allKeys[Num4].letter = '4';
+		allKeys[Num5].letter = '5', allKeys[Num6].letter = '6', allKeys[Num7].letter = '7', allKeys[Num8].letter = '8', allKeys[Num9].letter = '9',
+			terminated = false;
+	}
+	void initalize(const char* title, int width, int height, int fontWidth, int fontHeight, int defaultFront, int defaultBack)
+	{
+		strcpy(windowTitle, title);
+		hConsoleOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+		hConsoleInput = GetStdHandle(STD_INPUT_HANDLE);
+
+		ConsoleWindow = GetConsoleWindow();
+
+		if (FULLSCREEN) checkActiveWindow = false;
+
+		//set default values
+		if (defaultFront != Default) defaultFrontColor = defaultFront;
+		if (defaultBack != Default) defaultBackColor = defaultBack;
+		if (width != Default) buffW = width;
+		if (height != Default) buffH = height;
+		if (fontWidth != Default) globalFontWidth = fontWidth;
+		if (fontHeight != Default) globalFontHeight = fontHeight;
+
+		SetFont(globalFontWidth, globalFontHeight, FONT_WEIGHT, 65001);
+		SetConsoleWindowSize(&buffW, &buffH);
+
+		Screen.startX = 0, Screen.startY = 0, Screen.endX = buffW, Screen.endY = buffH;
+
+		printf("\x1b[?25l"); // hide the console cursor
+		setRequiredModes();
+
+		if ((int)title != Default) SetConsoleTitleA(title);
+		else SetConsoleTitleA("AMZG Studio - ACREngine - Github");
+		if (terminated == false) terminate();
+
+		screenBufferFull = (char*)malloc(sizeof(char) * ((buffW * buffH) * ANSI_STR_LEN + 1));
+		screenBuffer = (char*)malloc(sizeof(char) * ((buffW * buffH) + 1));
+		foregroundBuffer = (unsigned char*)malloc(sizeof(unsigned char) * (buffW * buffH));
+		backgroundBuffer = (unsigned char*)malloc(sizeof(unsigned char) * (buffW * buffH));
+
+		for (int i = 0; i < ((buffW * buffH) * ANSI_STR_LEN + 1); i++) screenBufferFull[i] = 0;
+		for (int i = 0; i < (buffW * buffH); i++)
+		{
+			foregroundBuffer[i] = defaultFrontColor;
+			backgroundBuffer[i] = defaultBackColor;
+			screenBuffer[i] = DEFAULT_CHARACTER;
+		}
+		if(roundOne)
+			startKeys();
+		
 		QueryPerformanceCounter(&start);
 		srand((unsigned int)start.QuadPart);
+
+		roundOne = false;
 	}
 
 	void addColorToBuffer(int foregroundColor, int backgroundColor)
 	{
 		screenBufferFull[nextOpenSlot] = '\033', screenBufferFull[nextOpenSlot + 1] = '[';
 		nextOpenSlot += 2;
+
 		if (foregroundColor != -1)
 		{
-			screenBufferFull[nextOpenSlot] = '3', screenBufferFull[nextOpenSlot + 1] = '8';
-			screenBufferFull[nextOpenSlot + 2] = ';', screenBufferFull[nextOpenSlot + 3] = '5';
-			screenBufferFull[nextOpenSlot + 4] = ';';
-			nextOpenSlot += 5;
+			memcpy(&screenBufferFull[nextOpenSlot], "38;5;", 5);
 			char buffer[4] = { 0 };
+			nextOpenSlot += 5;
 			_itoa(foregroundColor, buffer, 10);
 			strncpy(screenBufferFull + nextOpenSlot, buffer, 3);
-			nextOpenSlot += 3;
+			nextOpenSlot += 3; 
 		}
-		if (foregroundColor != -1 && backgroundColor != -1) screenBufferFull[nextOpenSlot] = ';', nextOpenSlot++;
+		if (foregroundColor != -1 && backgroundColor != -1) 
+			screenBufferFull[nextOpenSlot] = ';', nextOpenSlot++;
+		
 		if (backgroundColor != -1)
 		{
-			screenBufferFull[nextOpenSlot] = '4', screenBufferFull[nextOpenSlot + 1] = '8';
-			screenBufferFull[nextOpenSlot + 2] = ';', screenBufferFull[nextOpenSlot + 3] = '5';
-			screenBufferFull[nextOpenSlot + 4] = ';';
+			memcpy(&screenBufferFull[nextOpenSlot], "48;5;", 5);
 			nextOpenSlot += 5;
 			char buffer[4] = { 0 };
 			_itoa(backgroundColor, buffer, 10);
@@ -1018,11 +1213,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 		screenBufferFull[nextOpenSlot] = 'm';
 		nextOpenSlot++;
 	}
-
-	void render(bool clear)
+	void mouseEvents()
 	{
 		//get mouse location
-		POINT cursor_pos = { 0, 0 };
 		INPUT_RECORD irInBuf[32];
 		DWORD events = 0;
 
@@ -1071,11 +1264,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 			Mouse.scrollH = 0;
 		if (!scrollWMOVED)
 			Mouse.scrollW = 0;
-		// create buffer to render
-		screenBufferFull[0] = '\033', screenBufferFull[1] = '[', screenBufferFull[2] = '0';
-		screenBufferFull[3] = ';', screenBufferFull[4] = '0', screenBufferFull[5] = 'H';
+	}
+	
+	void render(bool clear)
+	{
+		mouseEvents();
+
+		memcpy(screenBufferFull, "\033[0;0H", 6);
 		nextOpenSlot = 6;
+
 		int currentForeground = -1, currentBackground = -1;
+		
 		for (int i = 0; i < buffW * buffH; i++)
 		{
 			if (foregroundBuffer[i] != currentForeground && backgroundBuffer[i] != currentBackground)
@@ -1097,12 +1296,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 			screenBufferFull[nextOpenSlot] = screenBuffer[i];
 			nextOpenSlot++;
 		}
-
 		//render	
 		if (!WriteConsoleA(hConsoleOutput, screenBufferFull, nextOpenSlot, NULL, NULL))
 			Error(L"Rendering failed.");
 
-		if (clear == true) 
+		if (clear) 
 			clearScreen();
 
 		if (!QueryPerformanceFrequency(&frequency))
