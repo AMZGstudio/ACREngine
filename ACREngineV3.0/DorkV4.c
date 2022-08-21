@@ -1,6 +1,7 @@
-//#define FULLSCREEN
+#define FULLSCREEN
 #define SHOW_FPS
 #define ACRE_START
+//#define ALLOW_WINDOW_RESIZE
 #include "../ACREngine.h"
 
 #define ACRE_FONTS

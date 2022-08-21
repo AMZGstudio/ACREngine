@@ -1,0 +1,43 @@
+﻿  DorkV4.c
+D:\Documents\Programming\ACREngineV3.0\ACREngine\ACREngine.h(455,17): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+D:\Documents\Programming\ACREngineV3.0\ACREngine\ACREngine.h(457,17): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+D:\Documents\Programming\ACREngineV3.0\ACREngine\ACREngine.h(472,9): warning C4244: '=': conversion from 'float' to 'short', possible loss of data
+D:\Documents\Programming\ACREngineV3.0\ACREngine\ACREngine.h(518,9): warning C4244: 'function': conversion from 'int' to 'float', possible loss of data
+D:\Documents\Programming\ACREngineV3.0\ACREngine\ACREngine.h(519,9): warning C4244: 'function': conversion from 'int' to 'float', possible loss of data
+D:\Documents\Programming\ACREngineV3.0\ACREngine\ACREngine.h(520,9): warning C4244: 'function': conversion from 'int' to 'float', possible loss of data
+D:\Documents\Programming\ACREngineV3.0\ACREngine\ACREngine.h(756,38): warning C4028: formal parameter 3 different from declaration
+D:\Documents\Programming\ACREngineV3.0\ACREngine\ACREngine.h(757,2): warning C4029: declared formal parameter list different from definition
+D:\Documents\Programming\ACREngineV3.0\ACREngine\ACREngine.h(976,16): warning C4018: '>=': signed/unsigned mismatch
+D:\Documents\Programming\ACREngineV3.0\ACREngine\ACREngine.h(989,16): warning C4018: '>=': signed/unsigned mismatch
+D:\Documents\Programming\ACREngineV3.0\ACREngine\ACREngine.h(1025,31): warning C4018: '<=': signed/unsigned mismatch
+D:\Documents\Programming\ACREngineV3.0\ACREngine\ACREngine.h(1030,14): warning C4018: '<': signed/unsigned mismatch
+D:\Documents\Programming\ACREngineV3.0\ACREngine\ACREngine.h(1032,16): warning C4018: '>=': signed/unsigned mismatch
+D:\Documents\Programming\ACREngineV3.0\ACREngine\ACREngine.h(1039,12): warning C4018: '<': signed/unsigned mismatch
+D:\Documents\Programming\ACREngineV3.0\ACREngine\ACREngine.h(1045,16): warning C4018: '>=': signed/unsigned mismatch
+D:\Documents\Programming\ACREngineV3.0\ACREngine\ACREngine.h(1064,11): warning C4018: '>': signed/unsigned mismatch
+D:\Documents\Programming\ACREngineV3.0\ACREngine\ACREngine.h(1116,74): warning C4098: 'sysDrawNumber': 'void' function returning a value
+D:\Documents\Programming\ACREngineV3.0\ACREngine\ACREngine.h(1311,18): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+D:\Documents\Programming\ACREngineV3.0\ACREngine\ACREngine.h(1579,18): warning C4311: 'type cast': pointer truncation from 'const char *' to 'int'
+D:\Documents\Programming\ACREngineV3.0\ACREngine\ACRE_Transform.h(36,15): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+D:\Documents\Programming\ACREngineV3.0\ACREngine\ACRE_Transform.h(37,15): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+D:\Documents\Programming\ACREngineV3.0\ACREngine\ACRE_Transform.h(38,18): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+D:\Documents\Programming\ACREngineV3.0\ACREngine\ACRE_Transform.h(39,18): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+D:\Documents\Programming\ACREngineV3.0\ACREngine\ACRE_Transform.h(54,20): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+D:\Documents\Programming\ACREngineV3.0\ACREngine\ACRE_Transform.h(54,41): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+D:\Documents\Programming\ACREngineV3.0\ACREngine\ACRE_Transform.h(60,20): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+D:\Documents\Programming\ACREngineV3.0\ACREngine\ACRE_Transform.h(60,41): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+D:\Documents\Programming\ACREngineV3.0\ACREngine\ACRE_Transform.h(67,35): warning C4244: '*=': conversion from 'double' to 'float', possible loss of data
+D:\Documents\Programming\ACREngineV3.0\ACREngine\ACREngineV3.0\menu.h(48,121): warning C4244: 'function': conversion from 'float' to 'int', possible loss of data
+D:\Documents\Programming\ACREngineV3.0\ACREngine\ACREngineV3.0\menu.h(48,139): warning C4244: 'function': conversion from 'float' to 'int', possible loss of data
+D:\Documents\Programming\ACREngineV3.0\ACREngine\ACREngineV3.0\menu.h(48,157): warning C4244: 'function': conversion from 'float' to 'int', possible loss of data
+D:\Documents\Programming\ACREngineV3.0\ACREngine\ACREngineV3.0\menu.h(41,48): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+D:\Documents\Programming\ACREngineV3.0\ACREngine\ACREngineV3.0\menu.h(85,16): warning C4244: 'function': conversion from 'float' to 'int', possible loss of data
+D:\Documents\Programming\ACREngineV3.0\ACREngine\ACREngineV3.0\menu.h(85,21): warning C4244: 'function': conversion from 'float' to 'int', possible loss of data
+D:\Documents\Programming\ACREngineV3.0\ACREngine\ACREngineV3.0\menu.h(88,62): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+D:\Documents\Programming\ACREngineV3.0\ACREngine\ACREngineV3.0\menu.h(136,31): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+x64\Release\screen.obj : warning LNK4042: object specified more than once; extras ignored
+  Generating code
+  Previous IPDB and IOBJ mismatch, fall back to full compilation.
+  All 62 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  Finished generating code
+  ACREngineV3.0.vcxproj -> D:\Documents\Programming\ACREngineV3.0\ACREngine\x64\Release\ACREngineV3.0.exe

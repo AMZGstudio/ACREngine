@@ -739,7 +739,7 @@
 
 	void setRequiredModes()
 	{
-		#ifdef ALLOW_WINDOW_RESIZE
+		#ifndef ALLOW_WINDOW_RESIZE
 				SetWindowLong(ConsoleWindow, GWL_STYLE, GetWindowLong(ConsoleWindow, GWL_STYLE) & ~WS_MAXIMIZEBOX & ~WS_SIZEBOX); //makes window not resizbale
 		#endif
 		// Set flags to allow mouse input, and disable selecting, and support for ANSI escape sequences.	
