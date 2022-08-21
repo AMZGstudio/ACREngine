@@ -2,7 +2,7 @@
 #include "../ACREngine.h"
 
 #include "screen.h"
-#include "ACRE_transform.h"
+#include "../ACRE_Transform.h"
 
 #define MENU_H 72
 #define NUM_OPS 4
@@ -95,7 +95,7 @@ menuData initalizeMenu(screenData* screenOn)
 	m.s = screenOn;
 
 	m.selectedOption = 0;
-	m.pointer = loadImage("pointer.acre");
+	m.pointer = loadImage("../Sprites/pointer.acre");
 
 	option op1 = { "Start", 255, 255, 255, false };
 	option op2 = { "Options", 255, 255, 255, false };
@@ -103,8 +103,8 @@ menuData initalizeMenu(screenData* screenOn)
 	option op4 = { "Exit", 255, 255, 255, false };
 	option ops[NUM_OPS] = { op1, op2, op3, op4 };
 
-	Image cl1 = loadImage("cloud1.acre");
-	Image cl2 = loadImage("cloud2.acre");
+	Image cl1 = loadImage("../Sprites/cloud1.acre");
+	Image cl2 = loadImage("../Sprites/cloud2.acre");
 
 	cloud c1 = { cl1, -5, 0, 7 }, c2 = { cl2, 50, 34, 9 }, c3 = { cl1, 64, 102, 6 };
 	cloud c4 = { cl1, 14, 70,10}, c5 = { cl2, 160, 24, 5 }, c6 = { cl1, 149, 69, 7 };

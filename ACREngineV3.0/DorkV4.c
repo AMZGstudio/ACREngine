@@ -4,10 +4,10 @@
 #include "../ACREngine.h"
 
 #define ACRE_FONTS
-#include "ACRE_Fonts.h"
+#include "../ACRE_Fonts.h"
 
 #define ACRE_TRANSFORM
-#include "ACRE_transform.h"
+#include "../ACRE_Transform.h"
 
 #include "screen.h"
 #include "menu.h"

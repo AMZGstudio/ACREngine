@@ -259,7 +259,7 @@
 	#define AMOUNT_KEYS 54
 
 	#ifndef FPS_TICKS
-		#define FPS_TICKS 50
+		#define FPS_TICKS 30
 	#endif
 	#ifndef FONT_WEIGHT
 		#define FONT_WEIGHT 500
@@ -349,7 +349,7 @@
 		swprintf_s(thing, 200, L"ACRError: (LINE:%d): %s", line, errorMsg);
 		
 		MessageBoxW(NULL, (LPCWSTR)thing, NULL, MB_OK);
-		//exit(EXIT_FAILURE);
+		exit(EXIT_FAILURE);
 	}
 
 	int center(int length, Space screenSpace, int mode)
