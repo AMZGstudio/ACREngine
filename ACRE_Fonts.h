@@ -17,10 +17,10 @@
 					Available Fonts
 		~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	
-		What to define:			What to use:
+		What to define:			What to use:	What They Look Like:
 			
-		RENEW_FONT:				Renew
-		FORMPLEX12_FONT:		FormPlex12
+		RENEW_FONT:				Renew			Tiny, crooked looking.
+		FORMPLEX12_FONT:		FormPlex12		
 		ACME_5_FONT:			Acme5
 		MINIMUM_FONT:			Minimum
 		CRACKERS_FONT:			Crackers

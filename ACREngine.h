@@ -1,4 +1,4 @@
-		/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		*
 		*	   ___  _____ ______ _____            _
 		*	  / _ \/  __ \| ___ \  ___|          (_)
@@ -50,7 +50,43 @@
 		OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 		OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-		~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+		~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		
+		/*
+		Changelog:
+
+		MAJOR:
+		space functions.
+		Areas (and their functions).
+		Image routines. (making, loading, etc).
+
+		Fixed Bugs in triangle routines.
+		Removed sysDrawColorBuffer.
+		Removed sysDrawFontChar, now sysDrawText is used.
+		drawPoint now called drawPixel.
+		More functions work when using ACRE on mutliple files.
+		Fixed user input, when window is not selected one. to allow that to happen define: NO_WINDOW_ACTIVE
+		added makeImage()
+		Renamed Screen to ScreenSpace.
+		Screen is now an Area.
+		added Areas.
+		renamed clearScreen to clear() (now takes in an area).
+		changed getting functions.
+
+		No value needs to be assigned to FULLSCREEN. now just #define FULLSCREEN
+		Clamp function works with floats now.
+
+		added Areas.
+		added Xterm(), which converts a xterm color to rgb.
+		changed colors to look more consistent on different devices.
+		changed color system, to now have more colors, and different colors.
+		map function works with floats now.
+		Error functions now show which line error was caused.
+		resizing console window can now be activated with ALLOW_WINDOW_RESIZE
+		use #define FPS_TICKS val to define how many ticks the fps will be averaged over.
+		dont touch for default
+		*/
+		
 #ifndef ACRE_INCLUDES
 #define ACRE_INCLUDES
 	#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
@@ -88,27 +124,24 @@
 #ifndef ACRE_DECLARATIONS
 #define ACRE_DECLARATIONS
 	
+	// used for triangle drawing
+	#define SWAP(x,y) do { (x)=(x)^(y); (y)=(x)^(y); (x)=(x)^(y); } while(0)
+
 	// all structs used by ACRE
 	typedef struct Point { int x, y; } Point;
 	typedef struct Space { int startX, startY, endX, endY; } Space;
 	typedef struct MOUSE { int x, y; int scrollH, scrollW; } MOUSE;
 	typedef struct Font { int w, displayW; const unsigned char *dat; } Font;
-
-	typedef struct Key {
-		bool pressed, held, released;
-		int letter;} Key;
+	typedef struct Area { short* colFront, * colBack; char* characters; int width, height; } Area;
+	typedef struct Key {bool pressed, held, released; int letter;} Key;
+	typedef struct Timer { double elapsedTime; } Timer;
 
 	typedef struct Image {
-		char** characterArray;
-		int width, height;
-		int** colorArray;
-		int** colorArrayBack;
+		Area imgData;
 		bool asciitext;} Image;
 
-	typedef struct Timer {
-		double elapsedTime;
-	} Timer;
-	Space Screen;
+	Area Screen;
+	Space ScreenSpace;
 	// all enums
 	enum KEYS {
 		A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z, Up, Down, Left, Right,
@@ -116,75 +149,118 @@
 		Num0, Num1, Num2, Num3, Num4, Num5, Num6, Num7, Num8, Num9
 	};
 	enum ACRE_TYPES {Thirds = -502, Centered = -501, Default = -1 };
-	enum COLORS { Black, Red, Green, Yellow, Blue, Magenta, Cyan, White, Grey, DarkGrey = 237, VeryDarkGrey = 235 };
+	enum COLORS { 
+		Black = 16, VeryDarkGrey = 235, DarkGrey = 237, Grey, LightGrey, White = 255,
+		
+		Red = 196, Maroon = 52,		   DarkRed = 124,  Pink = 218,
+		Orange=202,Brown = 130,		   DarkOrange=166, Tan = 180,
+		Yellow=226,Olive=100,		   DarkYellow=184, LightYellow=228,
+		Green=40,  VeryDarkGreen=22,   DarkGreen=34,   LightGreen=83, 
+		Cyan=37,   VeryDarkCyan=24,    DarkCyan=31,    LightCyan=44,
+		Blue=33,   Navy=17,		       DarkBlue=20,    LightBlue=75,
+		Purple=93, VeryDarkPurple=54,  DarkPurple=91,  LightPurple=129,
+		
+		Magenta=127
+	};
+
 
 	enum SPECIAL_CHARS {
 		LightShade = 176, MediumShade = 177, DarkShade = 178, FullBlock = 219, LowerHalfBlock = 220,
 		LeftHalfBlock = 221, RightHalfBlock = 222, UpperHalfBlock = 223
 	};
+
 	// function declarations
+	
 	Image loadImage(const char* imageFilePath);
-	void saveImage(Image imgToSave, char* imageFilePath);
-	int Width(Space screenSpace);
-	int Height(Space screenSpace);
+	void makeImage(Area areaToMakeImg, char* imageFilePath, bool containChars);
+
+	int Width(Area area);
+	int Height(Area area);
 	int Random(int rangeStart, int rangeEnd);
 	float timePerSec(float amount);
-	void timePerSecInt(float amount);
 	Space getSpace(Space prevSpace, int xStart, int yStart, int xEnd, int yEnd);
-	int map(int numberToMap, int numberBegin, int numberEnd, int numberMapStart, int numberMapEnd);
+	void calculateTimer(Timer* timer);
+	Timer createTimer();
 	int strToInt(char* string);
-	int clamp(int numToClamp, int min, int max);
+	void intToStr(char* string, int num);
+	float map(float numberToMap, int numberBegin, int numberEnd, int numberMapStart, int numberMapEnd);
+	float clamp(float numToClamp, int min, int max);
+	void Xterm(short col, short* r, short* g, short* b);
 	int Color(int r, int g, int b);
 	int stringLength(const char* string, Font fontType);
+	void onResize(int* newWidth, int* newHeight);
 	bool pointSpaceCollide(int x, int y, Space screenSpace);
 	bool rectangleCollide(int xStart1, int yStart1, int xEnd1, int yEnd1, int xStart2, int yStart2, int xEnd2, int yEnd2);
 	bool spaceCollide(Space space1, Space space2);
+
+	void sysGetPoint(int x, int y, int data[3]);
 	char getChar(int x, int y);
 	int getPointFront(int x, int y);
 	int getPointBack(int x, int y);
-	Point sysDrawPoint(int x, int y, Space screenSpace, char character, int colorFront, int colorBack);
-	Space sysDrawRect(int xStart, int yStart, int xEnd, int yEnd, Space screenSpace, char character, bool filled, int colorFront, int colorBack);
-	Space sysDrawLine(int xStart, int yStart, int xEnd, int yEnd, Space screenSpace, char character, int colorFront, int colorBack);
-	void sysDrawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, Space screenSpace, char character, bool filled, int colorFront, int colorBack);
-	Space sysDrawCircle(int x, int y, Space screenSpace, int radius, char character, bool filled, int colorFront, int colorBack);
-	Space sysDrawImage(int x, int y, Space screenSpace, Image inputImage);
-	Space sysDrawFontChar(int x, int y, Space screenSpace, Font font, char character, int colorFront, int colorBack);
-	Space sysDrawText(int x, int y, Space screenSpace, const char* text, Font fontType, int colorFront, int colorBack);
-	Space sysDrawNumber(int x, int y, Space screenSpace, double number, int numDecimal, Font fontType, int colorFront, int colorBack);
-	Space sysDrawColorBuffer(int x, int y, Space screenSpace, int* buffer, int width, int height);
-	void drawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, int color);
-	void drawTriangleFilled(int x1, int y1, int x2, int y2, int x3, int y3, int color);
-	void drawLine(int xStart, int yStart, int xEnd, int yEnd, int color);
+	
+	Point sysDrawPoint(int x, int y, Area area, char character, int colorFront, int colorBack);
+	void sysDrawRect(int xStart, int yStart, int xEnd, int yEnd, Area area, char character, bool filled, int colorFront, int colorBack);
+	void sysDrawCircle(int x, int y, Area area, int radius, char character, bool filled, int colorFront, int colorBack);
+	void sysDrawImage(int x, int y, Area area, Image inputImage);
+	void sysDrawLine(int xStart, int yStart, int xEnd, int yEnd, Area area, char character, int colorFront, int colorBack);
+	void sysDrawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, Area area, char character, bool filled, int colorFront, int colorBack);
+	void sysDrawText(int x, int y, Area area, const char* text, Font fontType, int colorFront, int colorBack);
+	void sysDrawNumber(int x, int y, Area area, double number, int numDecimal, Font fontType, int colorFront, int colorBack);
+	void sysDrawArea(int x, int y, Area area, Area areaToDraw);
 
+	Space spDrawPixel(int x, int y, Space space, int color);
+	Space spDrawChar(int x, int y, Space space, char character, int color);
+	Space spDrawRect(int xStart, int yStart, int xEnd, int yEnd, Space space, int color);
+	Space spDrawRectFilled(int xStart, int yStart, int xEnd, int yEnd, Space space, int color);
+	Space spDrawCircle(int x, int y, Space space, int radius, short color);
+	Space spDrawCircleFilled(int x, int y, Space space, int radius, short color);
+	Space spDrawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, Space space, int color);
+	Space spDrawTriangleFilled(int x1, int y1, int x2, int y2, int x3, int y3, Space space, int color);
+	Space spDrawImage(int x, int y, Space space, Image img);
+	Space spDrawLine(int xStart, int yStart, int xEnd, int yEnd, Space space, int color);
+	Space spDrawText(int x, int y, Space space, const char* text, Font fontType, int color);
+	Space spDrawNumber(int x, int y, Space space, double number, int numDecimal, Font fontType, int color);
+	Space spDrawArea(int x, int y, Space space, Area areaToDraw);
+
+	Space drawPixel(int x, int y, int color);
+	Space drawChar(int x, int y, char character, int color);
 	Space drawRect(int xStart, int yStart, int xEnd, int yEnd, int color);
 	Space drawRectFilled(int xStart, int yStart, int xEnd, int yEnd, int color);
 	Space drawCircle(int x, int y, int radius, int color);
 	Space drawCircleFilled(int x, int y, int radius, int color);
-	Space drawImage(int x, int y, Image img);
-	Space drawText(int x, int y, const char* text, Font fontType, int color);
-	Point drawPoint(int x, int y, int colorBack);
-	Point drawChar(int x, int y, char character, int colorFront);
 
+	void drawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, int color);
+	void drawTriangleFilled(int x1, int y1, int x2, int y2, int x3, int y3, int color);
+
+	Space drawImage(int x, int y, Image img);
+	Space drawLine(int xStart, int yStart, int xEnd, int yEnd, int color);
+	Space drawText(int x, int y, const char* text, Font fontType, int color);
 	Space drawNumber(int x, int y, double number, Font fontType, int color);
-	Space drawOutline(int xStart, int yStart, int xEnd, int yEnd, int color);
-	Space drawColorBuffer(int x, int y, int* buffer, int width, int height);
-	void clearScreen();
+	Space drawArea(int x, int y, Area areaToDraw);
+
+	void clear(Area area);
 	Key key(int whichKey);
 	bool textBoxInput(char* outputString, int outputStringLength);
 
-	int terminate(void);
+	Area createArea(int width, int height, short colorFront, short colorBack);
+	void deleteArea(Area* area);
 	void initalize(const char* title, int width, int height, int fontWidth, int fontHeight, int defaultFront, int defaultBack);
-	void render(bool clear);
+	void render(bool clearScreen);
+	int terminate(void);
+
 #endif
 
 #ifdef ACRE_START
 	#undef ACRE_START
 	#ifndef ACRE_SYS_DEFS
 		#define ACRE_SYS_DEFS
-		#define ACRE_VER 2.3
+	#define ACRE_3_COMPATIBLE
 		#define ANSI_STR_LEN 24
 	#define AMOUNT_KEYS 54
 
+	#ifndef FPS_TICKS
+		#define FPS_TICKS 50
+	#endif
 	#ifndef FONT_WEIGHT
 		#define FONT_WEIGHT 500
 	#endif
@@ -194,19 +270,19 @@
 	#ifndef MOUSE_HWHEELED
 		#define MOUSE_HWHEELED 0x0008
 	#endif
-	#ifndef FULLSCREEN
-		#define FULLSCREEN false
-	#endif
 #endif
-	char* screenBuffer =    NULL, * screenBufferFull = NULL, windowTitle[200] = { 0 };
-	unsigned char* backgroundBuffer = NULL, * foregroundBuffer = NULL;
+	char* screenBufferFull = NULL, windowTitle[200] = { 0 };
 
 	int nextOpenSlot = 0, buffW = 100, buffH = 50, globalFontWidth = 12, globalFontHeight = 12;
 	int defaultFrontColor = White, defaultBackColor = Black;
 	float fps = -1;
+	float totalTimes = 0;
+	int currFPSslot = 0;
 	bool checkActiveWindow = false, terminated = true;
 	bool roundOne = true;
-
+	bool needsResizeCorrection = false;
+	bool hasBeenResized = false;
+	bool showDefaultFPS = true;
 	//windows handles
 	HANDLE hConsoleOutput, hConsoleInput;
 	HWND ConsoleWindow;
@@ -254,91 +330,26 @@
 	};
 	Font EightBit = { 8, 8, (const unsigned char*)font8x8_basic }; //sysDrawFontChar(x, y, Screen, EIGHT_BIT, text[slot], colorFront, colorBack);
 	Font DefaultFont = { 1, 1, NULL };
+	Timer time = { 0 };
+	/*-------------------------------------------*\
+	|			 System Only Functions   		  |
+	\*-------------------------------------------*/
 
-	/**************************************************************************************************
-	General functions
-	******************************************************************************************************/
-	void Error(const wchar_t* errorMsg)
+	// used for sysDrawTri-angle
+	void simple_draw_line(int x1, int x2, unsigned int y, Area area, char charater, int colorFront, int colorBack)
 	{
-		wchar_t thing[200] = L"ACRError: ";
-		wcscat(thing, errorMsg);
-		MessageBoxW(NULL, (LPCWSTR)thing, NULL, MB_OK);
-		exit(EXIT_FAILURE);
+		if (x1 >= x2) SWAP(x1, x2);
+		for (; x1 <= x2; x1++) sysDrawPoint(x1, y, area, charater, colorFront, colorBack);
 	}
-
-	int readColor(FILE* imageFile)
+	
+	void Error(const wchar_t* errorMsg, int line)
 	{
-		int selected = 0;
-		char ch, color[5] = { 0 };
-		while ((ch = fgetc(imageFile)) != ';' && ch != '\n')
-			color[selected] = ch, selected++;
 
-		return atoi(color);
-	}
-
-	Image loadImage(const char* imageFilePath)
-	{
-		char supportedVersion[] = "acrev2.0", ch, currentVersion[10] = { 0 }, width[5] = { 0 }, height[5] = { 0 };
-		FILE* image = fopen(imageFilePath, "r");
+		wchar_t thing[200] = { 0 };
+		swprintf_s(thing, 200, L"ACRError: (LINE:%d): %s", line, errorMsg);
 		
-		if (image == NULL)
-		{
-			wchar_t msg[100] = { L"Opening ACRE file: "};
-			wchar_t wszDest[100];
-			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, imageFilePath, -1, wszDest, 100);
-			wcscat(msg, wszDest);
-			Error(msg);
-		}
-		Image image1;
-
-		while ((ch = fgetc(image)) != ';');
-		int nWidth = readColor(image), nHeight = readColor(image);
-		image1.width = nWidth, image1.height = nHeight;
-
-		image1.colorArray = (int**)malloc(sizeof(int*) * nWidth);
-		for (int i = 0; i < nWidth; i++)
-		{
-			image1.colorArray[i] = (int*)malloc(sizeof(int) * nHeight);
-			for (int j = 0; j < nHeight; j++)
-				image1.colorArray[i][j] = 0;
-		}
-		for (int j = 0; j < nHeight; j++)
-		{
-			for (int i = 0; i < nWidth; i++)
-			{
-				image1.colorArray[i][j] = readColor(image);
-				char letter = fgetc(image);
-			}
-			fgetc(image);
-		}
-		return image1;
-	}
-
-	void saveImage(Image imgToSave, char* imageFilePath)
-	{
-
-	}
-
-	int Width(Space screenSpace)
-	{
-		return screenSpace.endX - screenSpace.startX;
-	}
-
-	int Height(Space screenSpace)
-	{
-		return screenSpace.endY - screenSpace.startY;
-	}
-
-	int xyLoc(int x, int y)
-	{
-		if (x < buffW && x >= 0 && y < buffH && y >= 0)
-			return ((y * buffW) + x);
-		return -1;
-	}
-
-	int Random(int rangeStart, int rangeEnd)
-	{
-		return (rand() % (rangeEnd - rangeStart + 1)) + rangeStart;
+		MessageBoxW(NULL, (LPCWSTR)thing, NULL, MB_OK);
+		//exit(EXIT_FAILURE);
 	}
 
 	int center(int length, Space screenSpace, int mode)
@@ -360,35 +371,6 @@
 			return (int)(halfWayThrough - halfText);
 		}
 		return -1;
-	}
-	int stringLength(const char* string, Font fontType)
-	{
-		return strlen(string) * fontType.displayW;
-	}
-	int thirds(int firstOrSecond, int mode)
-	{
-		//TODO
-		return 0;
-	}
-
-	float timePerSec(float amount)
-	{
-		return amount * deltaTime;
-	}
-	void timePerSecInt(float amount)
-	{
-		/*float howOftenToReturn = 1 / amount;
-		if(deltaTime)*/
-	}
-	Timer createTimer()
-	{
-		Timer timer;
-		timer.elapsedTime = 0.0f;
-		return timer;
-	}
-	void calculateTimer(Timer* timer)
-	{
-		timer->elapsedTime += deltaTime;
 	}
 
 	Space getSpace(Space prevSpace, int xStart, int yStart, int xEnd, int yEnd)
@@ -417,13 +399,57 @@
 		}
 		return Location;
 	}
+	
+	/*-------------------------------------------*\
+	|		 General Functions / Miscelanous   	  |
+	\*-------------------------------------------*/
 
-	int map(int numberToMap, int numberBegin, int numberEnd, int numberMapStart, int numberMapEnd)
+	int Width(Area area)
 	{
-		int output = numberMapStart + ((numberMapEnd - numberMapStart) / (numberEnd - numberBegin)) * (numberToMap - numberBegin);
+		return area.width;
+	}
+	int Height(Area area)
+	{
+		return area.height;
+	}
+
+	int Random(int rangeStart, int rangeEnd)
+	{
+		return (rand() % (rangeEnd - rangeStart + 1)) + rangeStart;
+	}
+
+	int stringLength(const char* string, Font fontType)
+	{
+		return (int)strlen(string) * fontType.displayW;
+	}
+
+	void onResize(int* newWidth, int* newHeight)
+	{
+		
+	}
+
+	float timePerSec(float amount)
+	{
+		return amount * deltaTime;
+	}
+
+	Timer createTimer()
+	{
+		Timer timer;
+		timer.elapsedTime = 0.0f;
+		return timer;
+	}
+	void calculateTimer(Timer* timer)
+	{
+		timer->elapsedTime += deltaTime;
+	}
+
+	float map(float numberToMap, int numberBegin, int numberEnd, int numberMapStart, int numberMapEnd)
+	{
+		float output = (float)numberMapStart + (((float)numberMapEnd - (float)numberMapStart) / ((float)numberEnd - (float)numberBegin)) * ((float)numberToMap - (float)numberBegin);
 		return output;
 	}
-	int clamp(int numToClamp, int min, int max)
+	float clamp(float numToClamp, int min, int max)
 	{
 		if (numToClamp < min)
 			numToClamp = min;
@@ -431,6 +457,7 @@
 			numToClamp = max;
 		return numToClamp;
 	}
+
 	int strToInt(char* string)
 	{
 		return atoi(string);
@@ -440,6 +467,52 @@
 		_itoa(num, string, 10);
 	}
 	
+	void Xterm(short col, short* r, short* g, short* b)
+	{
+		col = clamp(col, 0, 255);
+		int vals[6] = { 0,95,135,175,215,255 };
+
+		if (col < 16)
+		{
+			switch(col)
+			{
+			case 0: *r = 0, *g = 0, *b = 0; break;
+			case 1: *r = 128, *g = 0, *b = 0; break;
+			case 2: *r = 0, *g = 128, *b = 0; break;
+			case 3: *r = 128, *g = 128, *b = 0; break;
+			case 4: *r = 0, *g = 0, *b = 128; break;
+			case 5: *r = 128, *g = 0, *b = 128; break;
+			case 6: *r = 0, *g = 128, *b = 128; break;
+			case 7: *r = 192, *g = 192, *b = 192; break;
+			case 8: *r = 128, *g = 128, *b = 128; break;
+			case 9: *r = 255, *g = 0, *b = 0; break;
+			case 10: *r = 0, *g = 255, *b = 0; break;
+			case 11: *r = 255, *g = 255, *b = 0; break;
+			case 12: *r = 0, *g = 0, *b = 255; break;
+			case 13: *r = 255, *g = 255, *b = 255; break;
+			case 14: *r = 0, *g = 255, *b = 255; break;
+			case 15: *r = 255, *g = 255, *b = 255; break;
+			}	
+		}
+		else if (col >= 16 && col <= 231)
+		{
+			col -= 16;
+			int num6s = (int)(col / 6.0f);
+			*b = vals[col % 6];
+			*r = (int)(num6s / 6.0f); // keep as a 0...5 number, to be used for green.
+			*g = vals[num6s - ((*r) * 6)];
+			*r = vals[*r]; // then convert it to 0...255;
+		}
+		else if (col > 231)
+		{
+			col -= 232;
+			*r = 8, * g = 8, * b = 8;
+			*r += col * 10;
+			*g += col * 10;
+			*b += col * 10;
+		}
+	}
+
 	int Color(int r, int g, int b) // this code is not mine
 	{
 		clamp(r, 0, 255);
@@ -463,6 +536,93 @@
 		return color_err <= gray_err ? 16 + color_index() : 232 + gray_index;
 	} // removed static int, and replaced with int
 
+	/*-------------------------------------------*\
+	|		    Image Handling Functions		  |
+	\*-------------------------------------------*/
+
+	int readColor(FILE* imageFile)
+	{
+		int selected = 0;
+		char ch, color[5] = { 0 };
+		while ((ch = fgetc(imageFile)) != ';' && ch != '\n')
+			color[selected] = ch, selected++;
+
+		return atoi(color);
+	}
+
+	Image loadImage(const char* imageFilePath)
+	{
+		char ch;
+		FILE* imageFile = fopen(imageFilePath, "r");
+		bool includeText = false;
+		if (imageFile == NULL)
+		{
+			wchar_t msg[100] = { L"Opening ACRE file: "};
+			wchar_t wszDest[100];
+			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, imageFilePath, -1, wszDest, 100);
+			wcscat(msg, wszDest);
+			Error(msg, __LINE__);
+		}
+		Image image;
+
+		while ((ch = fgetc(imageFile)) != ';')
+		{
+			if(ch == ':')
+				if(fgetc(imageFile) == 'T')
+					includeText = true;
+		}
+		int nWidth = readColor(imageFile), nHeight = readColor(imageFile);
+		image.imgData = createArea(nWidth, nHeight, Default, Default);
+		image.asciitext = includeText;
+
+		for (int j = 0; j < nHeight; j++)
+		{
+			for (int i = 0; i < nWidth; i++)
+			{
+				image.imgData.colBack[j * nWidth + i] = readColor(imageFile);
+				image.imgData.characters[j * nWidth + i] = fgetc(imageFile);
+			}
+			fgetc(imageFile);
+		}
+		fclose(imageFile);
+		return image;
+	}
+
+	void makeImage(Area areaToMakeImg, char* imageFilePath, bool containChars)
+	{
+		char newPath[200] = { 0 };
+		strcat(newPath, imageFilePath);
+
+		bool foundDot = false;
+		for (int i = 0; i < 200; i++)
+		{
+			if (newPath[i] == '.') foundDot = true;
+			if (foundDot) newPath[i] = 0;
+		}
+		strcat(newPath, ".acre");
+		char extraModes[5] = { 0 };
+
+		if (containChars)
+			strcat(extraModes, ":T");
+
+		FILE* file = fopen(newPath, "w");
+		fprintf(file, "acrev3.0%s;%d;%d\n", extraModes, areaToMakeImg.width, areaToMakeImg.height);
+		
+		for (int y = 0; y < areaToMakeImg.height; y++)
+		{
+			for (int x = 0; x < areaToMakeImg.width; x++)
+				fprintf(file, "%d;%c", areaToMakeImg.colBack[y * areaToMakeImg.width + x], areaToMakeImg.characters[y * areaToMakeImg.width + x]);
+			
+			if (y != areaToMakeImg.height - 1)
+				fwrite("\n", 1, 1, file);
+		}
+		fclose(file);
+	}
+
+	/*-------------------------------------------*\
+	|		       Collision Functions	     	  |
+	\*-------------------------------------------*/
+
 	bool pointSpaceCollide(int x, int y, Space screenSpace)
 	{
 		if (x < screenSpace.startX || x >= screenSpace.endX || y < screenSpace.startY || y >= screenSpace.endY)
@@ -475,15 +635,15 @@
 			return false;
 		return true;
 	}
-
 	bool spaceCollide(Space space1, Space space2)
 	{
 		return(rectangleCollide(space1.startX, space1.startY, space1.endX, space1.endY, space2.startX, space2.startY, space2.endX, space2.endY));
 	}
 
-	/**************************************************************************************************
-	Windows Functions
-	**************************************************************************************************/
+	/*-------------------------------------------*\
+	|		    Windows Console Functions   	  |
+	\*-------------------------------------------*/
+
 	void SetFont(int fontSizeX, int fontSizeY, int fontWeight, UINT codePage)
 	{
 		CONSOLE_FONT_INFOEX info = { 0 };
@@ -493,163 +653,232 @@
 		info.FontWeight = FONT_WEIGHT;
 		info.FontFamily = FF_DONTCARE;
 		wcscpy(info.FaceName, L"Consolas");
-		if (!SetConsoleOutputCP(codePage)) Error(L"Setting consoles codepage failed.");
+		if (!SetConsoleOutputCP(codePage)) Error(L"Setting consoles codepage failed.", __LINE__);
 
-		if (!SetCurrentConsoleFontEx(hConsoleOutput, 0, &info)) Error(L"Setting console font failed.");
+		if (!SetCurrentConsoleFontEx(hConsoleOutput, 0, &info)) Error(L"Setting console font failed.", __LINE__);
 
 	}
 
-	void SetConsoleWindowSize(int* x, int* y)
+	void getConsoleWindowSize(int* w, int* h)
 	{
-		if (FULLSCREEN) SetConsoleDisplayMode(hConsoleOutput, CONSOLE_FULLSCREEN_MODE, 0);
-		if (hConsoleOutput == INVALID_HANDLE_VALUE) Error(L"Unable to get stdout handle.");
+		CONSOLE_SCREEN_BUFFER_INFO csbi;
+
+		if (!GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi))
+			Error(L"Unable to get the current console window size", __LINE__);
+
+		*w = csbi.srWindow.Right - csbi.srWindow.Left + 1;
+		*h = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
+	}
+
+	void SetConsoleWindowSize(int* x, int* y, bool Errors)
+	{
+		#ifdef FULLSCREEN
+			SetConsoleDisplayMode(hConsoleOutput, CONSOLE_FULLSCREEN_MODE, 0);
+		#endif
 		{
 			COORD largestSize = GetLargestConsoleWindowSize(hConsoleOutput);
-			if (FULLSCREEN)
-			{
+			
+			#ifdef FULLSCREEN
 				(*x) = largestSize.X;
 				(*y) = largestSize.Y;
-			}
+			#endif
+
 			if ((*x) > largestSize.X)
 			{
+				if (!Errors) return;
 				wchar_t errMsg[200] = { 0 };
 				#ifdef __GNUC__ // gcc uses different swprintf declaration.
 					swprintf(errMsg, L"X dimension too big (%d > %d)", (*x), largestSize.X);
 				#else
 					swprintf(errMsg, 200, L"X dimension too big (%d > %d)", (*x), largestSize.X);
 				#endif
-				Error(errMsg);
+
+				Error(errMsg, __LINE__);
 			}
 			if ((*y) > largestSize.Y)
 			{
+				if (!Errors) return;
 				wchar_t errMsg[200] = { 0 };
 				#ifdef __GNUC__ // gcc uses different swprintf declaration.
 					swprintf(errMsg, L"Y dimension too big (%d > %d)", (*y), largestSize.Y);
 				#else
 					swprintf(errMsg, 200, L"Y dimension too big (%d > %d)", (*y), largestSize.Y);
 				#endif
-				Error(errMsg);
+				Error(errMsg, __LINE__);
 			}
 		}
-		CONSOLE_SCREEN_BUFFER_INFO bufferInfo;
-		if (!GetConsoleScreenBufferInfo(hConsoleOutput, &bufferInfo))
-			Error(L"Unable to retrieve screen buffer info");
 
-		SMALL_RECT winInfo = bufferInfo.srWindow;
-		COORD windowSize = { winInfo.Right - winInfo.Left + 1, winInfo.Bottom - winInfo.Top + 1 };
-
-		if (windowSize.X > (*x) || windowSize.Y > (*y))
+		int width, height;
+		getConsoleWindowSize(&width, &height);
+		
+		if (width > (*x) || height > (*y))
 		{
 			// window size needs to be adjusted before the buffer size can be reduced.
-			SMALL_RECT info = { 0,0,(short)(*x) < windowSize.X ? (short)(*x) - 1 : windowSize.X - 1,(short)(*y) < windowSize.Y ? (short)(*y) - 1 : windowSize.Y - 1 };
+			SMALL_RECT info = { 0,0,(short)(*x) < width ? (short)(*x) - 1 : width - 1,(short)(*y) < height ? (short)(*y) - 1 : height - 1 };
 			if (!SetConsoleWindowInfo(hConsoleOutput, TRUE, &info))
-				Error(L"Resizing window failed!");
+				if (!Errors) return; else Error(L"Resizing window failed!", __LINE__);
 		}
+		
 		COORD size = { (short)(*x), (short)(*y) };
 		if (!SetConsoleScreenBufferSize(hConsoleOutput, size))
-			Error(L"Unable to resize screen buffer!");
+			if (!Errors) return; else Error(L"Unable to resize screen buffer!", __LINE__);
 
 		SMALL_RECT info = { 0, 0, (short)(*x) - (short)1, (short)(*y) - (short)1 };
 		if (!SetConsoleWindowInfo(hConsoleOutput, TRUE, &info))
-			Error(L"Unable to resize window after resizing buffer!");
-	}
-
-	void setMouse(bool visible) {
-		if (!visible)
-			while (ShowCursor(false) >= 0);
+			if (!Errors) return; else Error(L"Unable to resize window after resizing buffer!", __LINE__);
 	}
 
 	bool windowActive()
 	{
-		#ifndef NO_WINDOW_ACTIVE
+		#ifdef NO_WINDOW_ACTIVE
 			return true;
 		#endif
 			if (ConsoleWindow == GetForegroundWindow()) return true;
+			return false;
 	}
 
 	void setRequiredModes()
 	{
-		SetWindowLong(ConsoleWindow, GWL_STYLE, GetWindowLong(ConsoleWindow, GWL_STYLE) & ~WS_MAXIMIZEBOX & ~WS_SIZEBOX); //makes window not resizbale
+		#ifdef ALLOW_WINDOW_RESIZE
+				SetWindowLong(ConsoleWindow, GWL_STYLE, GetWindowLong(ConsoleWindow, GWL_STYLE) & ~WS_MAXIMIZEBOX & ~WS_SIZEBOX); //makes window not resizbale
+		#endif
 		// Set flags to allow mouse input, and disable selecting, and support for ANSI escape sequences.	
 		if (!SetConsoleMode(hConsoleInput, ENABLE_EXTENDED_FLAGS | ENABLE_WINDOW_INPUT | ENABLE_MOUSE_INPUT))
-			Error(L"Setting The consoles Input modes did not work.");
+			Error(L"Setting The consoles Input modes did not work.", __LINE__);
 		if (!SetConsoleMode(hConsoleOutput, ENABLE_PROCESSED_OUTPUT | ENABLE_VIRTUAL_TERMINAL_PROCESSING | ENABLE_WRAP_AT_EOL_OUTPUT | DISABLE_NEWLINE_AUTO_RETURN))
-			Error(L"Setting The consoles Output modes did not work.");
+			Error(L"Setting The consoles Output modes did not work.", __LINE__);
 	}
 
-	/**************************************************************************************************
-	Drawing to the screen functions (draw functions
-	**************************************************************************************************/
+	/*-------------------------------------------*\
+	|		       Getting Functions	     	  |
+	\*-------------------------------------------*/
 
-	void sysGetPoint(int x, int y, int data[3])
+	void sysGetPoint(int x, int y, Area area, int data[3])
 	{
-		int slot = xyLoc(x, y);
-		data[0] = screenBuffer[slot];
-		data[1] = foregroundBuffer[slot];
-		data[2] = backgroundBuffer[slot];
+		int slot = y * (buffW) + x;
+		data[0] = area.characters[slot];
+		data[1] = area.colFront[slot];
+		data[2] = area.colBack[slot];
 	}
+	
 	char getChar(int x, int y)
 	{
 		int data[3] = { 0 };
-		sysGetPoint(x, y, data);
+		sysGetPoint(x, y, Screen, data);
 		return data[0];
 	}
+	
 	int getPointFront(int x, int y)
 	{
 		int data[3] = { 0 };
-		sysGetPoint(x, y, data);
+		sysGetPoint(x, y, Screen, data);
 		return data[1];
 	}
+	
 	int getPointBack(int x, int y)
 	{
 		int data[3] = { 0 };
-		sysGetPoint(x, y, data);
+		sysGetPoint(x, y, Screen, data);
 		return data[2];
 	}
-	Point sysDrawPoint(int x, int y, Space screenSpace, char character, int colorFront, int colorBack)
+
+	/*-------------------------------------------*\
+	|		   System Drawing Functions			  |
+	\*-------------------------------------------*/
+
+	Point sysDrawPoint(int x, int y, Area area, char character, int colorFront, int colorBack)
 	{
+		Point loc = { x, y };
+		if (x < 0 || y < 0 || x >= area.width || y >= area.height) return loc;
+
 		if (((character == '\n' || character > 256 || character <= 0) && character != -1) ||
 		   ((colorFront < 0 || colorFront > 255) && colorFront != -1) ||
 		   ((colorBack  < 0 || colorBack  > 255) && colorBack  != -1))
-				Error(L"Tried to add newline (\'\\n\'), invalid character, or invalid colors, to the screen buffer!");
+				Error(L"Tried to add newline (\'\\n\'), invalid character, or invalid color, to the screen buffer!", __LINE__);
 
-		int slot = xyLoc(screenSpace.startX + x, screenSpace.startY + y);
-		if (character != Default) screenBuffer[slot] = character;
-		if (colorFront != Default) foregroundBuffer[slot] = colorFront;
-		if (colorBack != Default) backgroundBuffer[slot] = colorBack;
-		Point loc = { x, y };
+		int slot = y * (area.width) + x;
+		
+		if (character != Default) area.characters[slot] = character;
+		if (colorFront != Default) area.colFront[slot] = colorFront;
+		if (colorBack != Default) area.colBack[slot] = colorBack;
 		return loc;
 	}
-	Space sysDrawRect(int xStart, int yStart, int xEnd, int yEnd, Space screenSpace, char character, bool filled, int colorFront, int colorBack)
+	
+	void sysDrawRect(int xStart, int yStart, int xEnd, int yEnd, Area area, char character, bool filled, int colorFront, int colorBack)
 	{
-		Space rectLocation = getSpace(screenSpace, xStart, yStart, xEnd, yEnd);
-
-		for (int x = rectLocation.startX; x < rectLocation.endX; x++)
-			for (int y = rectLocation.startY; y < rectLocation.endY; y++)
-				if (filled || ((x == rectLocation.startX || x == rectLocation.endX-1) || (y == rectLocation.startY || y == rectLocation.endY-1)))
-					sysDrawPoint(x, y, Screen, character, colorFront, colorBack);
-
-		return rectLocation;
+		for (int x = xStart; x < xEnd; x++)
+			for (int y = yStart; y < yEnd; y++)
+				if (filled || ((x == xStart || x == xEnd-1) || (y == yStart || y == yEnd-1)))
+					sysDrawPoint(x, y, area, character, colorFront, colorBack);
 	}
-	Space sysDrawLine(int xStart, int yStart, int xEnd, int yEnd, Space screenSpace, char character, int colorFront, int colorBack)
+
+	void sysDrawCircle(int x, int y, Area area, int radius, char character, bool filled, int colorFront, int colorBack)
 	{
-		Space line = getSpace(screenSpace, xStart, yStart, xEnd, yEnd);
-			
+		// this code was modified from the olcConsoleGameEngine on github
+		int xa = 0, ya = radius;
+		int pa = 3 - 2 * radius;
+
+		while (ya >= xa) // only formulate 1/8 of circle
+		{
+			if (filled)
+			{
+				// Modified to draw scan-lines instead of edges
+				for (int ia = x - xa; ia < x + xa; ia++)
+				{
+					sysDrawPoint(ia, y - ya, area, character, colorFront, colorBack);
+					sysDrawPoint(ia, y + ya, area, character, colorFront, colorBack);
+				}
+				for (int ia = x - ya; ia < x + ya; ia++)
+				{
+					sysDrawPoint(ia, y - xa, area, character, colorFront, colorBack);
+					sysDrawPoint(ia, y + xa, area, character, colorFront, colorBack);
+				}
+			}
+			else
+			{
+				sysDrawPoint(x - xa, y - ya, area, character, colorFront, colorBack);//upper left left
+				sysDrawPoint(x - ya, y - xa, area, character, colorFront, colorBack);//upper upper left
+				sysDrawPoint(x + ya, y - xa, area, character, colorFront, colorBack);//upper upper right
+				sysDrawPoint(x + xa, y - ya, area, character, colorFront, colorBack);//upper right right
+				sysDrawPoint(x - xa, y + ya, area, character, colorFront, colorBack);//lower left left
+				sysDrawPoint(x - ya, y + xa, area, character, colorFront, colorBack);//lower lower left
+				sysDrawPoint(x + ya, y + xa, area, character, colorFront, colorBack);//lower lower right
+				sysDrawPoint(x + xa, y + ya, area, character, colorFront, colorBack);//lower right right
+			}
+			if (pa < 0) pa += 4 * xa++ + 6;
+			else pa += 4 * (xa++ - ya--) + 10;
+		}
+	}
+
+	void sysDrawImage(int x, int y, Area area, Image inputImage)
+	{
+		for (int xs = 0; xs < inputImage.imgData.width; xs++)
+			for (int ys = 0; ys < inputImage.imgData.height; ys++)
+			{
+				int color = inputImage.imgData.colBack[ys * inputImage.imgData.width + xs];
+				if (color == -1) color = Default;
+				char character = (inputImage.asciitext) ? inputImage.imgData.characters[ys * inputImage.imgData.width + xs] : Default;
+				sysDrawPoint(x + xs, y + ys, area, character, Default, color);
+			}
+	}
+
+	void sysDrawLine(int xStart, int yStart, int xEnd, int yEnd, Area area, char character, int colorFront, int colorBack)
+	{
 		// this code is a variation of code written by oneLoneCoder
 		int x, y, dx, dy, dx1, dy1, px, py, xe, ye, i;
-		dx = line.endX - line.startX; dy = line.endY - line.startY;
-		
+		dx = xEnd - xStart; dy = yEnd - yStart;
+
 		dx1 = abs(dx); dy1 = abs(dy);
 		px = 2 * dy1 - dx1;	py = 2 * dx1 - dy1;
 		if (dy1 <= dx1)
 		{
 			if (dx >= 0)
-				x = line.startX, y = line.startY, xe = line.endX;
+				x = xStart, y = yStart, xe = xEnd;
 
 			else
-				x = line.endX, y = line.endY, xe = line.startX;
+				x = xEnd, y = yEnd, xe = xStart;
 
-			sysDrawPoint(x, y, screenSpace, character, colorFront, colorBack);
+			sysDrawPoint(x, y, Screen, character, colorFront, colorBack);
 
 			for (i = 0; x < xe; i++)
 			{
@@ -661,20 +890,20 @@
 					if ((dx < 0 && dy < 0) || (dx > 0 && dy > 0)) y = y + 1; else y = y - 1;
 					px = px + 2 * (dy1 - dx1);
 				}
-				sysDrawPoint(x, y, screenSpace, character, colorFront, colorBack);
+				sysDrawPoint(x, y, Screen, character, colorFront, colorBack);
 			}
 		}
 		else
 		{
 			if (dy >= 0)
 			{
-				x = line.startX; y = line.startY; ye = line.endY;
+				x = xStart; y = yStart; ye = yEnd;
 			}
 			else
 			{
-				x = line.endX; y = line.endY; ye = line.startY;
+				x = xEnd; y = yEnd; ye = yStart;
 			}
-			sysDrawPoint(x, y, screenSpace, character, colorFront, colorBack);
+			sysDrawPoint(x, y, Screen, character, colorFront, colorBack);
 
 			for (i = 0; y < ye; i++)
 			{
@@ -686,25 +915,18 @@
 					if ((dx < 0 && dy < 0) || (dx > 0 && dy > 0)) x = x + 1; else x = x - 1;
 					py = py + 2 * (dx1 - dy1);
 				}
-				sysDrawPoint(x, y, screenSpace, character, colorFront, colorBack);
+				sysDrawPoint(x, y, Screen, character, colorFront, colorBack);
 			}
 		}
-		return line;
 	}
 
-	// these are both used for sysDrawTri-angle
-	#define SWAP(x,y) do { (x)=(x)^(y); (y)=(x)^(y); (x)=(x)^(y); } while(0)
-	void simple_draw_line(int x1, int x2, unsigned int y, Space screenSpace, char charater, int colorFront, int colorBack) {
-		if (x1 >= x2) SWAP(x1, x2);
-		for (; x1 <= x2; x1++) sysDrawPoint(x1, y, screenSpace, charater, colorFront, colorBack);
-	}
-	void sysDrawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, Space screenSpace, char character, bool filled, int colorFront, int colorBack)
+	void sysDrawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, Area area, char character, bool filled, int colorFront, int colorBack)
 	{
 		if (!filled)
 		{
-			sysDrawLine(x1, y1, x2, y2, screenSpace, character, colorFront, colorBack);
-			sysDrawLine(x2, y2, x3, y3, screenSpace, character, colorFront, colorBack);
-			sysDrawLine(x1, y1, x3, y3, screenSpace, character, colorFront, colorBack);
+			sysDrawLine(x1, y1, x2, y2, area, character, colorFront, colorBack);
+			sysDrawLine(x2, y2, x3, y3, area, character, colorFront, colorBack);
+			sysDrawLine(x1, y1, x3, y3, area, character, colorFront, colorBack);
 
 		}
 		else //https://www.avrfreaks.net/sites/default/files/triangles.c
@@ -743,12 +965,12 @@
 			if (y1 == y2) goto next;
 			e1 = (unsigned int)(dx1 >> 1);
 
-			for (unsigned int i = 0; i < dx1;) {
+			for (unsigned int i = 0; i < (unsigned int)dx1;) {
 				t1xp = 0; t2xp = 0;
 				if (t1x < t2x) { minx = t1x; maxx = t2x; }
 				else { minx = t2x; maxx = t1x; }
 				// process first line until y value is about to change
-				while (i < dx1) {
+				while (i < (unsigned int)dx1) {
 					i++;
 					e1 += dy1;
 					while (e1 >= dx1) {
@@ -760,184 +982,93 @@
 					else t1x += signx1;
 				}
 				// Move line
-				next1:
-					// process second line until y value is about to change
-					while (1) {
-						e2 += dy2;
-						while (e2 >= dx2) {
-							e2 -= dx2;
-							if (changed2) t2xp = signx2;//t2x += signx2;
-							else          goto next2;
-						}
-						if (changed2)     break;
-						else              t2x += signx2;
+			next1:
+				// process second line until y value is about to change
+				while (1) {
+					e2 += dy2;
+					while (e2 >= dx2) {
+						e2 -= dx2;
+						if (changed2) t2xp = signx2;//t2x += signx2;
+						else          goto next2;
 					}
-				next2:
-					if (minx > t1x) minx = t1x; if (minx > t2x) minx = t2x;
-					if (maxx < t1x) maxx = t1x; if (maxx < t2x) maxx = t2x;
-					simple_draw_line(minx, maxx, y, screenSpace, character, colorFront, colorBack);    // Draw line from min to max points found on the y
-					// Now increase y
-					if (!changed1) t1x += signx1;
-					t1x += t1xp;
-					if (!changed2) t2x += signx2;
-					t2x += t2xp;
-					y += 1;
-					if (y == y2) break;
-
+					if (changed2)     break;
+					else              t2x += signx2;
 				}
-			next:
-				// Second half
-				dx1 = (int)(x3 - x2); if (dx1 < 0) { dx1 = -dx1; signx1 = -1; }
-				else signx1 = 1;
-				dy1 = (int)(y3 - y2);
-				t1x = x2;
+			next2:
+				if (minx > t1x) minx = t1x; if (minx > t2x) minx = t2x;
+				if (maxx < t1x) maxx = t1x; if (maxx < t2x) maxx = t2x;
+				simple_draw_line(minx, maxx, y, area, character, colorFront, colorBack);    // Draw line from min to max points found on the y
+				// Now increase y
+				if (!changed1) t1x += signx1;
+				t1x += t1xp;
+				if (!changed2) t2x += signx2;
+				t2x += t2xp;
+				y += 1;
+				if (y == y2) break;
 
-				if (dy1 > dx1) {   // swap values
-					SWAP(dy1, dx1);
-					changed1 = true;
-				}
-				else changed1 = false;
+			}
+		next:
+			// Second half
+			dx1 = (int)(x3 - x2); if (dx1 < 0) { dx1 = -dx1; signx1 = -1; }
+			else signx1 = 1;
+			dy1 = (int)(y3 - y2);
+			t1x = x2;
 
-				e1 = (unsigned int)(dx1 >> 1);
+			if (dy1 > dx1) {   // swap values
+				SWAP(dy1, dx1);
+				changed1 = true;
+			}
+			else changed1 = false;
 
-				for (unsigned int i = 0; i <= dx1; i++) {
-					t1xp = 0; t2xp = 0;
-					if (t1x < t2x) { minx = t1x; maxx = t2x; }
-					else { minx = t2x; maxx = t1x; }
-					// process first line until y value is about to change
-					while (i < dx1) {
-						e1 += dy1;
-						while (e1 >= dx1) {
-							e1 -= dx1;
-							if (changed1) { t1xp = signx1; break; }//t1x += signx1;
-							else          goto next3;
-						}
-						if (changed1) break;
-						else   	   	  t1x += signx1;
-						if (i < dx1) i++;
+			e1 = (unsigned int)(dx1 >> 1);
+
+			for (unsigned int i = 0; i <= dx1; i++) {
+				t1xp = 0; t2xp = 0;
+				if (t1x < t2x) { minx = t1x; maxx = t2x; }
+				else { minx = t2x; maxx = t1x; }
+				// process first line until y value is about to change
+				while (i < dx1) {
+					e1 += dy1;
+					while (e1 >= dx1) {
+						e1 -= dx1;
+						if (changed1) { t1xp = signx1; break; }//t1x += signx1;
+						else          goto next3;
 					}
-				next3:
-					// process second line until y value is about to change
-					while (t2x != x3) {
-						e2 += dy2;
-						while (e2 >= dx2) {
-							e2 -= dx2;
-							if (changed2) t2xp = signx2;
-							else          goto next4;
-						}
-						if (changed2)     break;
-						else              t2x += signx2;
+					if (changed1) break;
+					else   	   	  t1x += signx1;
+					if (i < dx1) i++;
+				}
+			next3:
+				// process second line until y value is about to change
+				while (t2x != x3) {
+					e2 += dy2;
+					while (e2 >= dx2) {
+						e2 -= dx2;
+						if (changed2) t2xp = signx2;
+						else          goto next4;
 					}
-				next4:
-
-					if (minx > t1x) minx = t1x; if (minx > t2x) minx = t2x;
-					if (maxx < t1x) maxx = t1x; if (maxx < t2x) maxx = t2x;
-					simple_draw_line(minx, maxx, y, screenSpace, character, colorFront, colorBack);    // Draw line from min to max points found on the y
-					// Now increase y
-					if (!changed1) t1x += signx1;
-					t1x += t1xp;
-					if (!changed2) t2x += signx2;
-					t2x += t2xp;
-					y += 1;
-					if (y > y3) return;
+					if (changed2)     break;
+					else              t2x += signx2;
 				}
-			}
-	}
-	Space sysDrawCircle(int x, int y, Space screenSpace, int radius, char character, bool filled, int colorFront, int colorBack)
-	{
-		Space circleSpace = { 0, 0, 0, 0 };
-		if (x == Centered) x = center(1, screenSpace, X), circleSpace.startX = x - radius, circleSpace.endX = x + radius;
-		else x = screenSpace.startX + x - 1, circleSpace.startX = x, circleSpace.endX = x + radius * 2;
+			next4:
 
-		if (y == Centered) y = center(1, screenSpace, Y), circleSpace.startY = y - radius, circleSpace.endY = y + radius;
-		else y = screenSpace.startY + y - 1, circleSpace.startY = y, circleSpace.endY = y + radius * 2;
-		
-		// this code was modified from the olcConsoleGameEngine on github
-		int xa = 0, ya = radius;
-		int pa = 3 - 2 * radius;
-		if (!radius) return circleSpace;
-
-		while (ya >= xa) // only formulate 1/8 of circle
-		{
-			if (filled)
-			{
-				// Modified to draw scan-lines instead of edges
-				for (int ia = x - xa; ia < x + xa; ia++)
-				{
-					sysDrawPoint(ia, y - ya, screenSpace, character, colorFront, colorBack);
-					sysDrawPoint(ia, y + ya, screenSpace, character, colorFront, colorBack);
-				}
-				for (int ia = x - ya; ia < x + ya; ia++)
-				{
-					sysDrawPoint(ia, y - xa, screenSpace, character, colorFront, colorBack);
-					sysDrawPoint(ia, y + xa, screenSpace, character, colorFront, colorBack);
-				}
+				if (minx > t1x) minx = t1x; if (minx > t2x) minx = t2x;
+				if (maxx < t1x) maxx = t1x; if (maxx < t2x) maxx = t2x;
+				simple_draw_line(minx, maxx, y, area, character, colorFront, colorBack);    // Draw line from min to max points found on the y
+				// Now increase y
+				if (!changed1) t1x += signx1;
+				t1x += t1xp;
+				if (!changed2) t2x += signx2;
+				t2x += t2xp;
+				y += 1;
+				if (y > y3) return;
 			}
-			else
-			{
-				sysDrawPoint(x - xa, y - ya, screenSpace, character, colorFront, colorBack);//upper left left
-				sysDrawPoint(x - ya, y - xa, screenSpace, character, colorFront, colorBack);//upper upper left
-				sysDrawPoint(x + ya, y - xa, screenSpace, character, colorFront, colorBack);//upper upper right
-				sysDrawPoint(x + xa, y - ya, screenSpace, character, colorFront, colorBack);//upper right right
-				sysDrawPoint(x - xa, y + ya, screenSpace, character, colorFront, colorBack);//lower left left
-				sysDrawPoint(x - ya, y + xa, screenSpace, character, colorFront, colorBack);//lower lower left
-				sysDrawPoint(x + ya, y + xa, screenSpace, character, colorFront, colorBack);//lower lower right
-				sysDrawPoint(x + xa, y + ya, screenSpace, character, colorFront, colorBack);//lower right right
-			}
-			if (pa < 0) pa += 4 * xa++ + 6;
-			else pa += 4 * (xa++ - ya--) + 10;
 		}
-		return circleSpace;
-	}
-	
-	Space sysDrawImage(int x, int y, Space screenSpace, Image inputImage)
-	{
-		Space rectLocation = getSpace(screenSpace, x, y, (x == Centered) ? inputImage.width : x + inputImage.width,
-			(y == Centered) ? inputImage.height : y + inputImage.height);
-
-		int colorx = 0, colory = 0, y2, x2;
-		for (x2 = rectLocation.startX; x2 < rectLocation.endX; x2++)
-		{
-			for (y2 = rectLocation.startY; y2 < rectLocation.endY; y2++)
-			{
-				int color = inputImage.colorArray[colorx][colory];
-				if (color == -1) color = Default;
-				sysDrawPoint(x2, y2, Screen, Default, Default, color);
-				colory++;
-			}
-			colory = 0, colorx++;
-		}
-		return rectLocation;
 	}
 
-	Space sysDrawFontChar(int x, int y, Space screenSpace, Font font, char character, int colorFront, int colorBack)
+	void sysDrawText(int x, int y, Area area, const char* text, Font fontType, int colorFront, int colorBack)
 	{
-		character = character - ' ';
-		Space letterSpace = { x, y, x + 8, y + 8 };
-		const unsigned char* letter = (font.dat + character*font.w);
-		
-		for (int i = 0; i < font.w; i++)
-			for (int j = 0; j < 8; j++)
-			{
-				int set = letter[i] & 1 << j;
-				int addX = (font.dat == (const unsigned char*)font8x8_basic) ? j : i;
-				int addY = (font.dat == (const unsigned char*)font8x8_basic) ? i : j;
-				sysDrawPoint(x + addX, y + addY, screenSpace, Default, colorFront, set ? colorBack : Default);
-			}
-		return letterSpace;
-	}
-	Space sysDrawText(int x, int y, Space screenSpace, const char* text, Font fontType, int colorFront, int colorBack)
-	{
-		int i = 0;
-		while (text[i] != '\n' && text[i] != 0) i++;
-		int textWidth = i * (fontType.displayW);
-
-		Space textSpace = getSpace(screenSpace, x, y, (x == Centered) ? textWidth : x + textWidth, fontType.displayW);
-
-		int slot = 0;
-		x = textSpace.startX, y = textSpace.startY;
-
-		int xPrev = textSpace.startX;
+		int slot = 0, xPrev = x;
 		while (text[slot] != 0)
 		{
 			if (text[slot] == '\n')
@@ -945,25 +1076,33 @@
 
 			else
 			{
-				if (fontType.dat == NULL) sysDrawPoint(x, y, Screen, text[slot], colorFront, colorBack); 
-				else sysDrawFontChar(x, y, Screen, fontType, text[slot], colorFront, colorBack);
+				if (fontType.dat == NULL) sysDrawPoint(x, y, area, text[slot], colorFront, colorBack);
+				else
+				{
+					const unsigned char* letter = (fontType.dat + (((char)text[slot]) - ' ') * fontType.w);
+
+					for (int i = 0; i < fontType.w; i++)
+						for (int j = 0; j < 8; j++)
+						{
+							int set = letter[i] & 1 << j;
+							int addX = (fontType.dat == (const unsigned char*)font8x8_basic) ? j : i;
+							int addY = (fontType.dat == (const unsigned char*)font8x8_basic) ? i : j;
+							sysDrawPoint(x + addX, y + addY, area, Default, colorFront, set ? colorBack : Default);
+						}
+				}
 				x += fontType.displayW;
 			}
 			slot++;
 		}
-		return textSpace;
 	}
-	Space sysDrawNumber(int x, int y, Space screenSpace, double number, int numDecimal, Font fontType, int colorFront, int colorBack)
+
+	void sysDrawNumber(int x, int y, Area area, double number, int numDecimal, Font fontType, int colorFront, int colorBack)
 	{
 		if (numDecimal == Default)
 		{
-			if ((int)number == number)
-				numDecimal = 0;
-			else if (number < 1.0f && number > 0.0f)
-				numDecimal = 4;
-			else if ((int)number < number)
-				numDecimal = 2;
-			
+			if ((int)number == number) numDecimal = 0;
+			else if (number < 1.0f && number > 0.0f) numDecimal = 4;
+			else if ((int)number < number) numDecimal = 2;
 		}
 		char text[30] = { 0 };
 		char formatText[10] = "%.";
@@ -974,50 +1113,175 @@
 		strcat(formatText, "f");
 
 		snprintf(text, 30, formatText, number);
-		return sysDrawText(x, y, screenSpace, text, fontType, colorFront, colorBack);
+		return sysDrawText(x, y, Screen, text, fontType, colorFront, colorBack);
 	}
-	Space sysDrawColorBuffer(int x, int y, Space screenSpace, int* buffer, int width, int height)
-	{
-		Space buffSpace = getSpace(screenSpace, x, y, (x == Centered) ? width: x + width, (y == Centered) ? height : y + height);
 
-		int realX = 0, realY = 0;
-		for (int xi = buffSpace.startX; xi < buffSpace.endX; xi++)
-		{
-			for (int yi = buffSpace.startY; yi < buffSpace.endY; yi++)
+	void sysDrawArea(int x, int y, Area area, Area areaToDraw)
+	{
+		if (areaToDraw.width == -1 && areaToDraw.height == -1) Error(L"Can't draw deleted Area!", __LINE__);
+
+		for (int ys = 0; ys < areaToDraw.height; ys++)
+			for (int xs = 0; xs < areaToDraw.width; xs++)
 			{
-				sysDrawPoint(xi, yi, Screen, Default, Default, buffer[realY * width + realX]);
-				realY++;
+				int loc = ys * (areaToDraw.width) + xs;
+				sysDrawPoint(x + xs, y + ys, area, areaToDraw.characters[loc], areaToDraw.colFront[loc], areaToDraw.colBack[loc]);
 			}
-			realY = 0, realX++;
-		}
-		return buffSpace;
 	}
-	void clearScreen()
+
+	/*-------------------------------------------*\
+	|		   Space Drawing Functions			  |
+	\*-------------------------------------------*/
+
+	Space spDrawPixel(int x, int y, Space space, int color)
 	{
-		memset(backgroundBuffer, defaultBackColor, sizeof(unsigned char) * (buffW * buffH));
-		memset(foregroundBuffer, defaultFrontColor, sizeof(unsigned char) * (buffW * buffH));
-		memset(screenBuffer, DEFAULT_CHARACTER, sizeof(char) * (buffW * buffH));
+		Space pix = getSpace(space, x, y, x, y);
+		sysDrawPoint(pix.startX, pix.startY, Screen, Default, Default, color);
+		return pix;
+	}
+	Space spDrawChar(int x, int y, Space space, char character, int color)
+	{
+		Space chr = getSpace(space, x, y, x, y);
+		sysDrawPoint(chr.startX, chr.startY, Screen, character, color, Default);
+		return chr;
 	}
 
-	void drawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, int color) { sysDrawTriangle(x1, y1, x2, y2, x3, y3, Screen, Default, false, Default, color); }
-	void drawTriangleFilled(int x1, int y1, int x2, int y2, int x3, int y3, int color) { sysDrawTriangle(x1, y1, x2, y2, x3, y3, Screen, Default, true, Default, color); }
-	void drawLine(int xStart, int yStart, int xEnd, int yEnd, int color) { sysDrawLine(xStart, yStart, xEnd, yEnd, Screen, Default, Default, color); }
+	Space spDrawRect(int xStart, int yStart, int xEnd, int yEnd, Space space, int color)
+	{	
+		Space rectLocation = getSpace(space, xStart, yStart, xEnd, yEnd);
+		sysDrawRect(rectLocation.startX, rectLocation.startY, rectLocation.endX, rectLocation.endY, Screen, Default, false, Default, color);
+		return rectLocation;
+	}
+	Space spDrawRectFilled(int xStart, int yStart, int xEnd, int yEnd, Space space, int color)
+	{
+		Space rectLocation = getSpace(space, xStart, yStart, xEnd, yEnd);
+		sysDrawRect(rectLocation.startX, rectLocation.startY, rectLocation.endX, rectLocation.endY, Screen, Default, true, Default, color);
+		return rectLocation;
+	}
 
-	Space drawRect(int xStart, int yStart, int xEnd, int yEnd, int color){return sysDrawRect(xStart, yStart, xEnd, yEnd, Screen, Default, false, Default, color);}
-	Space drawRectFilled(int xStart, int yStart, int xEnd, int yEnd, int color){return sysDrawRect(xStart, yStart, xEnd, yEnd, Screen, Default, true, Default, color);}
-	Space drawCircle(int x, int y, int radius, int color){return sysDrawCircle(x, y, Screen, radius, Default, false, Default, color);}
-	Space drawCircleFilled(int x, int y, int radius, int color) { return sysDrawCircle(x, y, Screen, radius, Default, true, Default, color); }
-	Space drawImage(int x, int y, Image img){return sysDrawImage(x, y, Screen, img);}
-	Space drawText(int x, int y, const char* text, Font fontType, int color){return sysDrawText(x, y, Screen, text, fontType, (fontType.dat == NULL) ? color: defaultFrontColor, (fontType.dat != NULL) ? (color == Default) ? defaultFrontColor : color : defaultBackColor);}
-	Point drawPoint(int x, int y, int colorBack){return sysDrawPoint(x, y, Screen, Default, Default, colorBack);}
-	Point drawChar(int x, int y, char character, int colorFront){return sysDrawPoint(x, y, Screen, character, colorFront, Default);}
+	Space spDrawCircle(int x, int y, Space space, int radius, short color)
+	{
+		Space circleSpace = getSpace(space, x - radius, y - radius, x + radius, y + radius);
+		sysDrawCircle(x, y, Screen, radius, Default, false, Default, color);
+		return circleSpace;
+	}
+	Space spDrawCircleFilled(int x, int y, Space space, int radius, short color)
+	{
+		Space circleSpace = getSpace(space, x - radius, y - radius, x + radius, y + radius);
+		sysDrawCircle(x, y, Screen, radius, Default, true, Default, color);
+		return circleSpace;
+	}
+	
+	Space spDrawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, Space space, int color)
+	{
+		int closestX = x1, closestY = y1;
+		int furthestX = x1, furthestY = y1;
 
-	Space drawNumber(int x, int y, double number, Font fontType, int color){return sysDrawNumber(x,y,Screen,number,Default,fontType,(fontType.dat != NULL)?defaultFrontColor:color,(fontType.dat!=NULL)?(color==Default)?defaultFrontColor:color:defaultBackColor);}
-	Space drawColorBuffer(int x, int y, int* buffer, int width, int height){return sysDrawColorBuffer(x, y, Screen, buffer, width, height);}
+		if (x2 < closestX) closestX = x2;
+		if (x3 < closestX) closestX = x3;
+		if (y2 < closestY) closestY = y2;
+		if (y3 < closestY) closestY = y3;
 
-	/**************************************************************************************************
-	Input Functions (also related to windows, wont work cross platform)
-	**************************************************************************************************/
+		if (x2 > furthestX) furthestX = x2;
+		if (x3 > furthestX) furthestX = x3;
+		if (y2 > furthestY) furthestY = y2;
+		if (y3 > furthestY) furthestY = y3;
+
+		Space triLocation = getSpace(space, closestX, closestY, furthestX, furthestY);
+		sysDrawTriangle(triLocation.startX + x1, triLocation.startY + y1, triLocation.startX + x2, triLocation.startY + y2,
+			triLocation.startX + x3, triLocation.startY + y3, Screen, Default, false, Default, color);
+		return triLocation;
+	}
+	Space spDrawTriangleFilled(int x1, int y1, int x2, int y2, int x3, int y3, Space space, int color)
+	{
+		int closestX = x1, closestY = y1;
+		int furthestX = x1, furthestY = y1;
+
+		if (x2 < closestX) closestX = x2;
+		if (x3 < closestX) closestX = x3;
+		if (y2 < closestY) closestY = y2;
+		if (y3 < closestY) closestY = y3;
+
+		if (x2 > furthestX) furthestX = x2;
+		if (x3 > furthestX) furthestX = x3;
+		if (y2 > furthestY) furthestY = y2;
+		if (y3 > furthestY) furthestY = y3;
+
+		Space triLocation = getSpace(space, closestX, closestY, furthestX, furthestY);
+		sysDrawTriangle(triLocation.startX + x1, triLocation.startY + y1, triLocation.startX + x2, triLocation.startY + y2,
+			triLocation.startX + x3, triLocation.startY + y3, Screen, Default, false, Default, color);
+		return triLocation;
+	}
+
+	Space spDrawImage(int x, int y, Space space, Image img)
+	{
+		Space imgSpace = getSpace(space, x, y, x != Centered ? x + img.imgData.width : img.imgData.width, y != Centered ? y + img.imgData.height : img.imgData.height);
+		sysDrawImage(imgSpace.startX, imgSpace.startY, Screen, img);
+		return imgSpace;
+	}
+	Space spDrawLine(int xStart, int yStart, int xEnd, int yEnd, Space space, int color)
+	{
+		Space line = getSpace(space, xStart, yStart, xEnd, yEnd);
+		sysDrawLine(line.startX, line.startY, line.endX, line.endY, Screen, Default, Default, color);
+		return line;
+	}
+	Space spDrawText(int x, int y, Space space, const char* text, Font fontType, int color)
+	{
+		int i = 0;
+		while (text[i] != '\n' && text[i] != 0) i++;
+		int textWidth = i * (fontType.displayW);
+
+		Space textSpace = getSpace(space, x, y, (x == Centered) ? textWidth : x + textWidth, fontType.displayW);
+		sysDrawText(textSpace.startX, textSpace.startY, Screen, text, fontType, fontType.dat == NULL ? color : Default, fontType.dat == NULL ? Default : color);
+		return textSpace;
+	}
+	Space spDrawNumber(int x, int y, Space space, double number, int numDecimal, Font fontType, int color)
+	{
+		Space numSpace = getSpace(space, x, y, x + 8, y + 8);
+		sysDrawNumber(numSpace.startX, numSpace.startY, Screen, number, numDecimal, fontType, Default, color);
+		return numSpace;
+	}
+
+	Space spDrawArea(int x, int y, Space space, Area areaToDraw)
+	{
+		Space areaSpace = getSpace(space, x, y, x == Centered ? areaToDraw.width : x + areaToDraw.width, y == Centered ? areaToDraw.height : y + areaToDraw.height);
+		sysDrawArea(areaSpace.startX, areaSpace.startY, Screen, areaToDraw);
+		return areaSpace;
+	}
+	void clear(Area area)
+	{
+		for (int i = 0; i < (buffW * buffH); i++)
+			area.colBack[i] = defaultBackColor, area.colFront[i] = defaultFrontColor;
+		
+		memset(area.characters, DEFAULT_CHARACTER, sizeof(char) * (buffW * buffH));
+	}
+
+	/*-------------------------------------------*\
+	|		   User Drawing Functions			  |
+	\*-------------------------------------------*/
+
+	Space drawPixel(int x, int y, int color)									{ return spDrawPixel(x, y, ScreenSpace, color); }
+	Space drawChar(int x, int y, char character, int color)						{ return spDrawChar(x, y, ScreenSpace, character, color); }
+
+	Space drawRect(int xStart, int yStart, int xEnd, int yEnd, int color)       { return spDrawRect(xStart, yStart, xEnd, yEnd, ScreenSpace, color); }
+	Space drawRectFilled(int xStart, int yStart, int xEnd, int yEnd, int color) { return spDrawRectFilled(xStart, yStart, xEnd, yEnd, ScreenSpace, color); }
+	  
+	Space drawCircle(int x, int y, int radius, int color)                       { return spDrawCircle(x, y, ScreenSpace, radius, color);       }
+	Space drawCircleFilled(int x, int y, int radius, int color)                 { return spDrawCircleFilled(x, y, ScreenSpace, radius, color); }
+
+	void drawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, int color) { spDrawTriangle(x1, y1, x2, y2, x3, y3, ScreenSpace, color); }
+	void drawTriangleFilled(int x1, int y1, int x2, int y2, int x3, int y3, int color) { spDrawTriangleFilled(x1, y1, x2, y2, x3, y3, ScreenSpace, color); }
+	
+	Space drawImage(int x, int y, Image img)									{ return spDrawImage(x, y, ScreenSpace, img); }
+	Space drawLine(int xStart, int yStart, int xEnd, int yEnd, int color)		{ return spDrawLine(xStart, yStart, xEnd, yEnd, ScreenSpace, color); }
+	Space drawText(int x, int y, const char* text, Font fontType, int color)	{ return spDrawText(x, y, ScreenSpace, text, fontType, color); }
+
+	Space drawNumber(int x, int y, double number, Font fontType, int color)		{ return spDrawNumber(x,y,ScreenSpace,number,Default,fontType,color);}
+	Space drawArea(int x, int y, Area areaToDraw)								{ return spDrawArea(x, y, ScreenSpace, areaToDraw); }
+	
+	/*-------------------------------------------*\
+	|		       Input Functions			  	  |
+	\*-------------------------------------------*/
+
 	Key key(int whichKey)
 	{
 		bool pressed = false;
@@ -1092,138 +1356,95 @@
 		return true;
 	}
 
-	/**************************************************************************************************
-	Handing console (creating buffers, destroying buffers, rendering buffers, etc).
-	**************************************************************************************************/
+	/*-------------------------------------------*\
+	|		 Creating And Destroying Areas        |
+	\*-------------------------------------------*/
 
-	int terminate(void)
+	Area createArea(int width, int height, short colorFront, short colorBack)
 	{
-		terminated = true;
-		if (SetConsoleOutputCP(65001) == 0) Error(L"Changing codepage back to default failed.");
+		Area area;
+		area.width = width;
+		area.height = height;
 
-		free(screenBufferFull);
-		free(backgroundBuffer);
-		free(foregroundBuffer);
-		free(screenBuffer);
+		area.characters = (char*)malloc((sizeof(char) * width * height) + 1);
+		area.colFront = (short*)malloc((sizeof(short) * width * height));
+		area.colBack = (short*)malloc((sizeof(short) * width * height));
 
-		return 0;
-	}
-	void startKeys()
-	{
-		for (int i = 0; i < AMOUNT_KEYS; i++)
+		for (int i = 0; i < (width * height); i++)
 		{
-			allKeys[i].held = false;
-			allKeys[i].pressed = false;
-			allKeys[i].released = false;
-			allKeys[i].letter = 0;
+			area.colFront[i] = colorFront;
+			area.colBack[i] = colorBack;
+			area.characters[i] = DEFAULT_CHARACTER;
 		}
-
-		int select = 0;
-		for (char letter = 'A'; letter <= 'Z'; letter++)
-		{
-			allKeys[select].letter = letter;
-			select++;
-		}
-		allKeys[Up].letter = VK_UP, allKeys[Down].letter = VK_DOWN, allKeys[Left].letter = VK_LEFT, allKeys[Right].letter = VK_RIGHT;
-		allKeys[Enter].letter = VK_RETURN, allKeys[Esc].letter = VK_ESCAPE, allKeys[LeftM].letter = VK_LBUTTON, allKeys[RightM].letter = VK_RBUTTON;
-		allKeys[Spacebar].letter = VK_SPACE, allKeys[Shift].letter = VK_SHIFT, allKeys[Alt].letter = VK_MENU, allKeys[Tab].letter = VK_TAB, allKeys[Comma].letter = VK_OEM_COMMA, allKeys[Period].letter = VK_OEM_PERIOD,
-			allKeys[Colon].letter = VK_OEM_1, allKeys[Slash].letter = VK_OEM_2, allKeys[QuestionMark].letter = '?', allKeys[Backspace].letter = VK_BACK;
-
-		allKeys[Num0].letter = '0', allKeys[Num1].letter = '1', allKeys[Num2].letter = '2', allKeys[Num3].letter = '3', allKeys[Num4].letter = '4';
-		allKeys[Num5].letter = '5', allKeys[Num6].letter = '6', allKeys[Num7].letter = '7', allKeys[Num8].letter = '8', allKeys[Num9].letter = '9',
-			terminated = false;
-	}
-	void initalize(const char* title, int width, int height, int fontWidth, int fontHeight, int defaultFront, int defaultBack)
-	{
-		strcpy(windowTitle, title);
-		hConsoleOutput = GetStdHandle(STD_OUTPUT_HANDLE);
-		hConsoleInput = GetStdHandle(STD_INPUT_HANDLE);
-
-		ConsoleWindow = GetConsoleWindow();
-
-		if (FULLSCREEN) checkActiveWindow = false;
-
-		//set default values
-		if (defaultFront != Default) defaultFrontColor = defaultFront;
-		if (defaultBack != Default) defaultBackColor = defaultBack;
-		if (width != Default) buffW = width;
-		if (height != Default) buffH = height;
-		if (fontWidth != Default) globalFontWidth = fontWidth;
-		if (fontHeight != Default) globalFontHeight = fontHeight;
-
-		SetFont(globalFontWidth, globalFontHeight, FONT_WEIGHT, 65001);
-		SetConsoleWindowSize(&buffW, &buffH);
-
-		Screen.startX = 0, Screen.startY = 0, Screen.endX = buffW, Screen.endY = buffH;
-
-		printf("\x1b[?25l"); // hide the console cursor
-		setRequiredModes();
-
-		if ((int)title != Default) SetConsoleTitleA(title);
-		else SetConsoleTitleA("AMZG Studio - ACREngine - Github");
-		if (terminated == false) terminate();
-
-		screenBufferFull = (char*)malloc(sizeof(char) * ((buffW * buffH) * ANSI_STR_LEN + 1));
-		screenBuffer = (char*)malloc(sizeof(char) * ((buffW * buffH) + 1));
-		foregroundBuffer = (unsigned char*)malloc(sizeof(unsigned char) * (buffW * buffH));
-		backgroundBuffer = (unsigned char*)malloc(sizeof(unsigned char) * (buffW * buffH));
-
-		for (int i = 0; i < ((buffW * buffH) * ANSI_STR_LEN + 1); i++) screenBufferFull[i] = 0;
-		for (int i = 0; i < (buffW * buffH); i++)
-		{
-			foregroundBuffer[i] = defaultFrontColor;
-			backgroundBuffer[i] = defaultBackColor;
-			screenBuffer[i] = DEFAULT_CHARACTER;
-		}
-		if(roundOne)
-			startKeys();
-		
-		QueryPerformanceCounter(&start);
-		srand((unsigned int)start.QuadPart);
-
-		roundOne = false;
+		return area;
 	}
 
-	void addColorToBuffer(int foregroundColor, int backgroundColor)
+	void resizeArea(int width, int height, Area area)
 	{
-		screenBufferFull[nextOpenSlot] = '\033', screenBufferFull[nextOpenSlot + 1] = '[';
-		nextOpenSlot += 2;
+		area.width = width;
+		area.height = height;
 
-		if (foregroundColor != -1)
+		if (area.characters == NULL)
+			Error(L"NULL AREA", __LINE__);
+
+
+		char* newVal = (char*)realloc(NULL, (sizeof(char) * width * height) + 1);
+
+		if (newVal != NULL)
+			area.characters = newVal;
+
+		area.colFront = (short*)realloc(area.colFront, (sizeof(short) * width * height));
+		area.colBack = (short*)realloc(area.colBack, (sizeof(short) * width * height));
+
+		for (int i = 0; i < (width * height); i++)
 		{
-			memcpy(&screenBufferFull[nextOpenSlot], "38;5;", 5);
-			char buffer[4] = { 0 };
-			nextOpenSlot += 5;
-			_itoa(foregroundColor, buffer, 10);
-			strncpy(screenBufferFull + nextOpenSlot, buffer, 3);
-			nextOpenSlot += 3; 
+			area.colFront[i] = defaultFrontColor;
+			area.colBack[i] = defaultBackColor;
+			area.characters[i] = DEFAULT_CHARACTER;
 		}
-		if (foregroundColor != -1 && backgroundColor != -1) 
-			screenBufferFull[nextOpenSlot] = ';', nextOpenSlot++;
-		
-		if (backgroundColor != -1)
-		{
-			memcpy(&screenBufferFull[nextOpenSlot], "48;5;", 5);
-			nextOpenSlot += 5;
-			char buffer[4] = { 0 };
-			_itoa(backgroundColor, buffer, 10);
-			strncpy(screenBufferFull + nextOpenSlot, buffer, 3);
-			nextOpenSlot += 3;
-		}
-		screenBufferFull[nextOpenSlot] = 'm';
-		nextOpenSlot++;
 	}
+
+	void deleteArea(Area* area)
+	{
+		free(area->characters);
+		free(area->colFront);
+		free(area->colBack);
+		area->width = -1;
+		area->height = -1;
+		area->characters = NULL;
+		area->colFront = NULL;
+		area->colBack = NULL;
+	}
+
+	/*-------------------------------------------*\
+	|	 Functions For Starting And Stoping		  |
+	\*-------------------------------------------*/
+
+	WINDOW_BUFFER_SIZE_RECORD wbsr = { 0 };
+
+	void resizeCorrect()
+	{
+		//if (needsResizeCorrection)
+		//{
+			int w, h;
+			getConsoleWindowSize(&w, &h);
+			SetConsoleWindowSize(&w, &h, true);
+
+			needsResizeCorrection = false;
+		//}
+	}
+
 	void mouseEvents()
 	{
 		//get mouse location
-		INPUT_RECORD irInBuf[32];
+		INPUT_RECORD irInBuf[300];
 		DWORD events = 0;
 
 		// Wait for the events.
 		GetNumberOfConsoleInputEvents(hConsoleInput, &events);
 		if (events > 0)
 			if (!ReadConsoleInput(hConsoleInput, irInBuf, events, &events))
-				Error(L"failed reading console inputs\n");
+				Error(L"failed reading console inputs\n", __LINE__);
 
 		bool scrollWMOVED = false, scrollHMOVED = false;
 		// get mouse events
@@ -1250,14 +1471,37 @@
 					scrollHMOVED = true;
 					break;
 
-				default:
-					break;
+				default: break;
 				}
 			}
 			break;
+#ifdef ALLOW_WINDOW_RESIZE
+			case WINDOW_BUFFER_SIZE_EVENT:
+			{
+				needsResizeCorrection = true;
+				wbsr = irInBuf[i].Event.WindowBufferSizeEvent;
 
-			default:
-				break;
+				buffW = wbsr.dwSize.X;
+				buffH = wbsr.dwSize.Y;
+
+				deleteArea(&Screen);
+				Screen = createArea(buffW, buffH, Yellow, Red);
+				ScreenSpace.startX = 0, ScreenSpace.startY = 0, ScreenSpace.endX = buffW, ScreenSpace.endY = buffH;
+				//resizeArea(buffW, buffH, Screen);
+				screenBufferFull = (char*)realloc(screenBufferFull, sizeof(char) * ((buffW * buffH) * ANSI_STR_LEN + 1));
+				for (int i = 0; i < ((buffW * buffH) * ANSI_STR_LEN + 1); i++) screenBufferFull[i] = 0;
+				
+				hasBeenResized = true;
+				resizeCorrect();
+				//SetConsoleWindowSize(&buffW, &buffH, false);
+				//COORD size = {(short)buffW, (short)buffH};
+				//SetConsoleScreenBufferSize(hConsoleOutput, size);
+				//{
+				//}
+					//Error(L"Unable to resize screen buffer!");
+			}
+#endif
+			default: break;//resizeCorrect(); break;
 			}
 		}
 		if (!scrollHMOVED)
@@ -1265,11 +1509,130 @@
 		if (!scrollWMOVED)
 			Mouse.scrollW = 0;
 	}
-	
-	void render(bool clear)
-	{
-		mouseEvents();
 
+	int terminate(void)
+	{
+		terminated = true;
+		if (SetConsoleOutputCP(65001) == 0)
+			Error(L"Changing codepage back to default failed.", __LINE__);
+
+		free(screenBufferFull);
+		deleteArea(&Screen);
+
+		return 0;
+	}
+	
+	void startKeys()
+	{
+		for (int i = 0; i < AMOUNT_KEYS; i++)
+		{
+			allKeys[i].held = false;
+			allKeys[i].pressed = false;
+			allKeys[i].released = false;
+			allKeys[i].letter = 0;
+		}
+
+		int select = 0;
+		for (char letter = 'A'; letter <= 'Z'; letter++)
+		{
+			allKeys[select].letter = letter;
+			select++;
+		}
+		allKeys[Up].letter = VK_UP, allKeys[Down].letter = VK_DOWN, allKeys[Left].letter = VK_LEFT, allKeys[Right].letter = VK_RIGHT;
+		allKeys[Enter].letter = VK_RETURN, allKeys[Esc].letter = VK_ESCAPE, allKeys[LeftM].letter = VK_LBUTTON, allKeys[RightM].letter = VK_RBUTTON;
+		allKeys[Spacebar].letter = VK_SPACE, allKeys[Shift].letter = VK_SHIFT, allKeys[Alt].letter = VK_MENU, allKeys[Tab].letter = VK_TAB, allKeys[Comma].letter = VK_OEM_COMMA, allKeys[Period].letter = VK_OEM_PERIOD,
+			allKeys[Colon].letter = VK_OEM_1, allKeys[Slash].letter = VK_OEM_2, allKeys[QuestionMark].letter = '?', allKeys[Backspace].letter = VK_BACK;
+
+		allKeys[Num0].letter = '0', allKeys[Num1].letter = '1', allKeys[Num2].letter = '2', allKeys[Num3].letter = '3', allKeys[Num4].letter = '4';
+		allKeys[Num5].letter = '5', allKeys[Num6].letter = '6', allKeys[Num7].letter = '7', allKeys[Num8].letter = '8', allKeys[Num9].letter = '9',
+			terminated = false;
+	}
+
+	void initalize(const char* title, int width, int height, int fontWidth, int fontHeight, int defaultFront, int defaultBack)
+	{
+		strcpy(windowTitle, title);
+		hConsoleOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+		hConsoleInput = GetStdHandle(STD_INPUT_HANDLE);
+
+		if (hConsoleOutput == INVALID_HANDLE_VALUE) Error(L"Retreiving Console Output Handle Failed", __LINE__);
+		if (hConsoleInput == INVALID_HANDLE_VALUE) Error(L"Retreiving Console Input Handle Failed", __LINE__);
+
+		ConsoleWindow = GetConsoleWindow();
+
+		#ifdef FULLSCREEN
+			checkActiveWindow = false;
+		#endif
+		//set default values
+		if (defaultFront != Default) defaultFrontColor = defaultFront;
+		if (defaultBack != Default) defaultBackColor = defaultBack;
+		if (width != Default) buffW = width;
+		if (height != Default) buffH = height;
+		if (fontWidth != Default) globalFontWidth = fontWidth;
+		if (fontHeight != Default) globalFontHeight = fontHeight;
+
+		SetFont(globalFontWidth, globalFontHeight, FONT_WEIGHT, 65001);
+		SetConsoleWindowSize(&buffW, &buffH, true);
+
+		setRequiredModes();
+		printf("\x1b[?25l"); // hide the console cursor
+
+		if ((int)title != Default) SetConsoleTitleA(title);
+		else SetConsoleTitleA("AMZG Studio - ACREngine - Github");
+		if (terminated == false) terminate();
+
+		screenBufferFull = (char*)malloc(sizeof(char) * ((buffW * buffH) * ANSI_STR_LEN + 1));
+
+		Screen = createArea(buffW, buffH, defaultFrontColor, defaultBackColor);
+		ScreenSpace.startX = 0, ScreenSpace.startY = 0, ScreenSpace.endX = buffW, ScreenSpace.endY = buffH;
+		
+		for (int i = 0; i < ((buffW * buffH) * ANSI_STR_LEN + 1); i++) screenBufferFull[i] = 0;
+
+		if(roundOne)
+			startKeys();
+		
+		resizeCorrect();
+		QueryPerformanceCounter(&start);
+		srand((unsigned int)start.QuadPart);
+
+		roundOne = false;
+	}
+
+	/*-------------------------------------------*\
+	|		     Functions for Rendering	  	  |
+	\*-------------------------------------------*/
+
+	void addColorToBuffer(int foregroundColor, int backgroundColor)
+	{
+		screenBufferFull[nextOpenSlot] = '\033', screenBufferFull[nextOpenSlot + 1] = '[';
+		nextOpenSlot += 2;
+
+		if (foregroundColor != -1)
+		{
+			memcpy(&screenBufferFull[nextOpenSlot], "38;5;", 5);
+			char buffer[8] = { 0 };
+			nextOpenSlot += 5;
+			_itoa((int)foregroundColor, buffer, 10);
+			strncpy(screenBufferFull + nextOpenSlot, buffer, 3);
+			nextOpenSlot += 3; 
+		}
+		if (foregroundColor != -1 && backgroundColor != -1) 
+			screenBufferFull[nextOpenSlot] = ';', nextOpenSlot++;
+		
+		if (backgroundColor != -1)
+		{
+			memcpy(&screenBufferFull[nextOpenSlot], "48;5;", 5);
+			nextOpenSlot += 5;
+			char buffer[8] = { 0 };
+			_itoa((int)backgroundColor, buffer, 10);
+			strncpy(screenBufferFull + nextOpenSlot, buffer, 3);
+			nextOpenSlot += 3;
+		}
+		screenBufferFull[nextOpenSlot] = 'm';
+		nextOpenSlot++;
+	}
+	
+	void render(bool clearScreen)
+	{
 		memcpy(screenBufferFull, "\033[0;0H", 6);
 		nextOpenSlot = 6;
 
@@ -1277,50 +1640,61 @@
 		
 		for (int i = 0; i < buffW * buffH; i++)
 		{
-			if (foregroundBuffer[i] != currentForeground && backgroundBuffer[i] != currentBackground)
+			if (Screen.colFront[i] != currentForeground && Screen.colBack[i] != currentBackground)
 			{
-				currentForeground = foregroundBuffer[i];
-				currentBackground = backgroundBuffer[i];
-				addColorToBuffer(foregroundBuffer[i], backgroundBuffer[i]);
+				currentForeground = Screen.colFront[i];
+				currentBackground = Screen.colBack[i];
+				addColorToBuffer(Screen.colFront[i], Screen.colBack[i]);
 			}
-			else if (backgroundBuffer[i] != currentBackground)
+			else if (Screen.colBack[i] != currentBackground)
 			{
-				currentBackground = backgroundBuffer[i];
-				addColorToBuffer(-1, backgroundBuffer[i]);
+				currentBackground = Screen.colBack[i];
+				addColorToBuffer(-1, Screen.colBack[i]);
 			}
-			else if (foregroundBuffer[i] != currentForeground)
+			else if (Screen.colFront[i] != currentForeground)
 			{
-				currentForeground = foregroundBuffer[i];
-				addColorToBuffer(foregroundBuffer[i], -1);
+				currentForeground = Screen.colFront[i];
+				addColorToBuffer(Screen.colFront[i], -1);
 			}
-			screenBufferFull[nextOpenSlot] = screenBuffer[i];
+			screenBufferFull[nextOpenSlot] = Screen.characters[i];
 			nextOpenSlot++;
 		}
 		//render	
 		if (!WriteConsoleA(hConsoleOutput, screenBufferFull, nextOpenSlot, NULL, NULL))
-			Error(L"Rendering failed.");
+			Error(L"Rendering failed.", __LINE__);
 
-		if (clear) 
-			clearScreen();
+		if (clearScreen) 
+			clear(Screen);
 
 		if (!QueryPerformanceFrequency(&frequency))
-			Error(L"Getting Performance Frequency Failed!");
+			Error(L"Getting Performance Frequency Failed!", __LINE__);
 
 		if (!QueryPerformanceCounter(&end))
-			Error(L"Getting Performace Counter Failed!");
+			Error(L"Getting Performace Counter Failed!", __LINE__);
 
 		deltaTime = (float)(end.QuadPart - start.QuadPart) / (float)frequency.QuadPart;
-		
 		start = end;
-		fps = 1.0f / deltaTime;
+
+		if (currFPSslot >= FPS_TICKS)
+		{
+			fps = 1.0f / (totalTimes / currFPSslot);
+			totalTimes = 0;
+			currFPSslot = 0;
+			showDefaultFPS = false;
+		}
+		else if (showDefaultFPS)
+		{
+			fps = 1.0f / (totalTimes / currFPSslot);
+		}
+		
 
 		char currentTitle[200] = { 0 };
 		
 	#if defined(SHOW_FPS) && !defined(NO_ACRE_WATERMARK)
-		sprintf(currentTitle, "%s - ACREngine - %.2f fps", windowTitle, fps);
+		sprintf(currentTitle, "%s - ACREngine - %.1f fps", windowTitle, fps);
 		
 	#elif defined(SHOW_FPS) && defined(NO_ACRE_WATERMARK)
-		sprintf(currentTitle, "%s - %.2f fps", windowTitle, fps);
+		sprintf(currentTitle, "%s - %.1f fps", windowTitle, fps);
 
 	#elif !defined(NO_ACRE_WATERMARK)
 		sprintf(currentTitle, "%s - ACREngine", windowTitle);
@@ -1331,5 +1705,15 @@
 	#endif
 		SetConsoleTitleA(currentTitle);
 
-		}
+		totalTimes += deltaTime;
+		currFPSslot++;
+
+	mouseEvents();
+	}
 #endif
+
+// BEFORE: 1431 Lines
+
+// TIME AFTER: 1408 Lines
+
+// TIME AFTER 1554
