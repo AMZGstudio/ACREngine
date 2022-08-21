@@ -14,8 +14,6 @@
 *.db
 *.db-shm
 *.ipch
-*.db
-.vs/ACREngineV3.0/v16/.suo
 .vs/ACREngineV3.0/v16/Browse.VC.db
 .vs/ACREngineV3.0/v16/ipch/AutoPCH/34c33bd3377017a4/DORKV4.ipch
 .vs/ACREngineV3.0/v16/ipch/AutoPCH/8ee2f5f4d685a29c/SCREEN.ipch
