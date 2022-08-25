@@ -1,4 +1,4 @@
-#define FULLSCREEN
+//#define FULLSCREEN
 #define SHOW_FPS
 #define ACRE_START
 //#define ALLOW_WINDOW_RESIZE
@@ -10,25 +10,30 @@
 #define ACRE_TRANSFORM
 #include "../ACRE_Transform.h"
 
+#include "gameState.h"
 #include "screen.h"
-#include "menu.h"
 
 int main()
 {
-	initalize("Dork", 200, 110, 8, 8, Default, Blue);
+	initalize("Dork", 200, 110, 6, 6, Default, Blue);
 	
+	gameState gd = { MENU_STATE };
 	screenData sd = initalizeScreen();
 	menuData md = initalizeMenu(&sd);
 
+	bool gameStart = false;
 	while (!key(Esc).pressed)
 	{
 		clear(sd.area);
-		menuCalculations(&md);
 
-		if (key(Enter).pressed) sd.doFade = true, sd.fadeProgress = 0;
+		switch (gd.state)
+		{
+		case MENU_STATE: menuStateActions(&gd, &md); break;
+		case GAME_STATE: sysDrawText(40, 40, sd.area, "TEXT HERE", EightBit, Default, Yellow); break;
+		}
 		
 		drawScreen(&sd);
-		drawNumber(0, 0, fps, EightBit, Red);
+		//drawNumber(0, 0, fps, EightBit, Red);
 		render(true);
 	}
 	return terminate();

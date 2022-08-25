@@ -85,6 +85,8 @@
 		resizing console window can now be activated with ALLOW_WINDOW_RESIZE
 		use #define FPS_TICKS val to define how many ticks the fps will be averaged over.
 		dont touch for default
+
+		added max time step
 		*/
 		
 #ifndef ACRE_INCLUDES
@@ -1211,7 +1213,7 @@
 		strcat(formatText, "f");
 
 		snprintf(text, 30, formatText, number);
-		return sysDrawText(x, y, Screen, text, fontType, colorFront, colorBack);
+		return sysDrawText(x, y, area, text, fontType, colorFront, colorBack);
 	}
 
 	void sysDrawArea(int x, int y, Area area, Area areaToDraw)
@@ -1771,6 +1773,8 @@
 			Error(L"Getting Performace Counter Failed!", __LINE__);
 
 		deltaTime = (float)(end.QuadPart - start.QuadPart) / (float)frequency.QuadPart;
+		//		deltaTime = clamp((float)(end.QuadPart - start.QuadPart) / (float)frequency.QuadPart, 0, 1);
+
 		start = end;
 
 		if (currFPSslot >= FPS_TICKS)
