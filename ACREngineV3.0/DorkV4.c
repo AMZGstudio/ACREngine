@@ -1,4 +1,4 @@
-//#define FULLSCREEN
+#define FULLSCREEN
 #define SHOW_FPS
 #define ACRE_START
 #include "../ACREngine.h"
@@ -14,7 +14,7 @@
 
 int main()
 {
-	initalize("Dork", 200, 110, 6, 6, Default, Blue);
+	initalize("Dork", 200, 110, 4, 4, Default, Blue);
 	
 	screenData sd = initalizeScreen();
 	menuData md = initalizeMenu(&sd);
@@ -27,8 +27,7 @@ int main()
 		if (key(Enter).pressed) sd.doFade = true, sd.fadeProgress = 0;
 		
 		drawScreen(&sd);
-		drawNumber(0, 0, fps, EightBit, Red);
-		drawLine(0, 0, Mouse.x, Mouse.y, Green);
+		//drawNumber(0, 0, fps, EightBit, Red);
 		render(true);
 	}
 	return terminate();

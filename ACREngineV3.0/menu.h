@@ -85,7 +85,8 @@ void cloudsCalculations(menuData* m)
 		sysDrawImage(rcx, rcy, m->s->area, m->clouds[i].img);
 		m->clouds[i].x += timePerSec(m->clouds[i].vx);
 		
-		if (m->clouds[i].x > Width(m->s->area)) m->clouds[i].x = 0 - m->clouds[i].img.imgData.width;
+		if (map(m->clouds[i].x, 0, 240, 0, Width(m->s->area)) > Width(m->s->area))
+			m->clouds[i].x = 0 - m->clouds[i].img.imgData.width;
 	}
 }
 
