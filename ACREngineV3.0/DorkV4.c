@@ -28,7 +28,7 @@ int main()
 		if (key(Enter).pressed) sd.doFade = true, sd.fadeProgress = 0;
 		
 		drawScreen(&sd);
-		//drawNumber(0, 0, fps, EightBit, Red);
+		drawNumber(0, 0, fps, EightBit, Red);
 		render(true);
 	}
 	return terminate();

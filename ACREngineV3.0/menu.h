@@ -54,8 +54,14 @@ void optionCalculations(menuData* m)
 		collide.endY = collide.startY + 8;
 
 		if (leftMPressed && pointSpaceCollide(Mouse.x, Mouse.y, collide))
-			m->selectedOption = i, m->ops[m->selectedOption].colorB = 120, m->ops[m->selectedOption].colorG = 120, m->ops[m->selectedOption].fading = true;
+		{	
+			if (m->selectedOption == i)
+				m->s->doFade = true, m->s->fadeProgress = 0;
 
+			m->selectedOption = i, m->ops[m->selectedOption].colorB = 120, m->ops[m->selectedOption].colorG = 120, m->ops[m->selectedOption].fading = true;
+			
+		}
+			
 		if (i == m->selectedOption)
 		{
 			sysDrawImage(Width(ar) / 2 - (strLen / 2) - 10, y + i * 10, ar, m->pointer);
