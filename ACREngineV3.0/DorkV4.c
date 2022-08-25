@@ -11,11 +11,11 @@
 #include "../ACRE_Transform.h"
 
 #include "gameState.h"
-#include "screen.h"
+#include "screen.c"
 
 int main()
 {
-	initalize("Dork", 200, 110, 6, 6, Default, Blue);
+	initalize("Dork", 200, 110, 5, 5, Default, Blue);
 	
 	gameState gd = { MENU_STATE };
 	screenData sd = initalizeScreen();
