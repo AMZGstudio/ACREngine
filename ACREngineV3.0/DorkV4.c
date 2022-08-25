@@ -15,7 +15,7 @@
 
 int main()
 {
-	initalize("Dork", 200, 110, 6, 6, Default, Blue);
+	initalize("Dork", 200, 110, 8, 8, Default, Blue);
 	
 	screenData sd = initalizeScreen();
 	menuData md = initalizeMenu(&sd);
@@ -29,7 +29,6 @@ int main()
 		
 		drawScreen(&sd);
 		//drawNumber(0, 0, fps, EightBit, Red);
-
 		render(true);
 	}
 	return terminate();

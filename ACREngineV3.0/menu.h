@@ -40,12 +40,21 @@ void optionCalculations(menuData* m)
 {
 	int y = m->tv.y + m->tv.area.height*m->tv.zoom+5;
 	Area ar = m->s->area;
+	bool leftMPressed = key(LeftM).pressed;
+
 	for (int i = 0; i < NUM_OPS; i++)
 	{
 		int strLen = (stringLength(m->ops[i].text, EightBit) + 1);
 
 		sysDrawText(Width(ar) / 2 - (strLen / 2), y + i * 10, ar, m->ops[i].text, EightBit, Default, DarkGrey);
 		sysDrawText(Width(ar) / 2 - (strLen / 2) - 1, (y + i * 10) - 1, ar, m->ops[i].text, EightBit, Default, Color(m->ops[i].colorR, m->ops[i].colorG, m->ops[i].colorB));
+
+		Space collide = { Width(ar) / 2 - (strLen / 2) - 1, (y + i * 10) - 1, 0, 0 };
+		collide.endX = collide.startX + stringLength(m->ops[i].text, EightBit);
+		collide.endY = collide.startY + 8;
+
+		if (leftMPressed && pointSpaceCollide(Mouse.x, Mouse.y, collide))
+			m->selectedOption = i, m->ops[m->selectedOption].colorB = 120, m->ops[m->selectedOption].colorG = 120, m->ops[m->selectedOption].fading = true;
 
 		if (i == m->selectedOption)
 		{
@@ -56,8 +65,9 @@ void optionCalculations(menuData* m)
 		}
 	}
 	int selB = m->selectedOption;
-	if (key(S).pressed && m->selectedOption < NUM_OPS - 1) m->selectedOption += 1;
-	if (key(W).pressed && m->selectedOption > 0) m->selectedOption -= 1;
+	if ((key(S).pressed || key(Down).pressed) && m->selectedOption < NUM_OPS - 1) m->selectedOption += 1;
+	if ((key(W).pressed || key(Up).pressed) && m->selectedOption > 0) m->selectedOption -= 1;
+
 
 	if (selB != m->selectedOption)
 	{
