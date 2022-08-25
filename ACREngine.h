@@ -259,7 +259,7 @@
 	#define AMOUNT_KEYS 54
 
 	#ifndef FPS_TICKS
-		#define FPS_TICKS 30
+		#define FPS_TICKS 20
 	#endif
 	#ifndef FONT_WEIGHT
 		#define FONT_WEIGHT 500
@@ -665,33 +665,50 @@
 
 		if (!GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi))
 			Error(L"Unable to get the current console window size", __LINE__);
-
+		
 		*w = csbi.srWindow.Right - csbi.srWindow.Left + 1;
 		*h = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
 	}
 
 	void SetConsoleWindowSize(int* x, int* y, bool Errors)
 	{
+		bool fullscreenFailed = false;
 		#ifdef FULLSCREEN
-			SetConsoleDisplayMode(hConsoleOutput, CONSOLE_FULLSCREEN_MODE, 0);
+		if (!SetConsoleDisplayMode(hConsoleOutput, CONSOLE_FULLSCREEN_MODE, 0))
+		{
+			DWORD dwStyle = GetWindowLong(ConsoleWindow, GWL_STYLE);
+			SetWindowLong(ConsoleWindow, GWL_STYLE, dwStyle & ~WS_OVERLAPPEDWINDOW);
+			SendMessage(ConsoleWindow, WM_SYSCOMMAND, SC_MAXIMIZE, 0);
+			fullscreenFailed = true;
+		}		
 		#endif
+
 		{
 			COORD largestSize = GetLargestConsoleWindowSize(hConsoleOutput);
-			
-			#ifdef FULLSCREEN
-				(*x) = largestSize.X;
-				(*y) = largestSize.Y;
-			#endif
+			if (fullscreenFailed)
+			{
+				DWORD dwWidth = GetSystemMetrics(SM_CXSCREEN) / globalFontWidth;
+				DWORD dwHeight = GetSystemMetrics(SM_CYSCREEN) / globalFontHeight;
+				
+				float ratio = (float)dwWidth / (float)largestSize.X;
+				int yNew = dwHeight / ratio;
+				largestSize.X -= 1;
+				//largestSize.Y += 1;
+			}
+#ifdef FULLSCREEN
+			(*x) = largestSize.X;
+			(*y) = largestSize.Y;
+#endif
 
 			if ((*x) > largestSize.X)
 			{
 				if (!Errors) return;
 				wchar_t errMsg[200] = { 0 };
-				#ifdef __GNUC__ // gcc uses different swprintf declaration.
-					swprintf(errMsg, L"X dimension too big (%d > %d)", (*x), largestSize.X);
-				#else
-					swprintf(errMsg, 200, L"X dimension too big (%d > %d)", (*x), largestSize.X);
-				#endif
+#ifdef __GNUC__ // gcc uses different swprintf declaration.
+				swprintf(errMsg, L"X dimension too big (%d > %d)", (*x), largestSize.X);
+#else
+				swprintf(errMsg, 200, L"X dimension too big (%d > %d)", (*x), largestSize.X);
+#endif
 
 				Error(errMsg, __LINE__);
 			}
@@ -699,18 +716,18 @@
 			{
 				if (!Errors) return;
 				wchar_t errMsg[200] = { 0 };
-				#ifdef __GNUC__ // gcc uses different swprintf declaration.
-					swprintf(errMsg, L"Y dimension too big (%d > %d)", (*y), largestSize.Y);
-				#else
-					swprintf(errMsg, 200, L"Y dimension too big (%d > %d)", (*y), largestSize.Y);
-				#endif
+#ifdef __GNUC__ // gcc uses different swprintf declaration.
+				swprintf(errMsg, L"Y dimension too big (%d > %d)", (*y), largestSize.Y);
+#else
+				swprintf(errMsg, 200, L"Y dimension too big (%d > %d)", (*y), largestSize.Y);
+#endif
 				Error(errMsg, __LINE__);
 			}
 		}
 
 		int width, height;
 		getConsoleWindowSize(&width, &height);
-		
+
 		if (width > (*x) || height > (*y))
 		{
 			// window size needs to be adjusted before the buffer size can be reduced.
@@ -718,7 +735,7 @@
 			if (!SetConsoleWindowInfo(hConsoleOutput, TRUE, &info))
 				if (!Errors) return; else Error(L"Resizing window failed!", __LINE__);
 		}
-		
+
 		COORD size = { (short)(*x), (short)(*y) };
 		if (!SetConsoleScreenBufferSize(hConsoleOutput, size))
 			if (!Errors) return; else Error(L"Unable to resize screen buffer!", __LINE__);
@@ -727,6 +744,87 @@
 		if (!SetConsoleWindowInfo(hConsoleOutput, TRUE, &info))
 			if (!Errors) return; else Error(L"Unable to resize window after resizing buffer!", __LINE__);
 	}
+
+
+
+
+
+
+	//	void SetConsoleWindowSize(int* x, int* y, bool Errors)
+//	{
+//		bool fullscreenFailed = false;
+//		
+//		#ifdef FULLSCREEN
+//
+//		if (!SetConsoleDisplayMode(hConsoleOutput, CONSOLE_FULLSCREEN_MODE, 0)) // if the normal way of setting the size fails
+//		{																		// then use a different way.
+//			DWORD dwStyle = GetWindowLong(ConsoleWindow, GWL_STYLE);
+//			SetWindowLong(ConsoleWindow, GWL_STYLE, dwStyle & ~WS_OVERLAPPEDWINDOW);
+//			SendMessage(ConsoleWindow, WM_SYSCOMMAND, SC_MAXIMIZE, 0);
+//			fullscreenFailed = true;
+//		}
+//		#endif
+//		COORD largestSize = GetLargestConsoleWindowSize(hConsoleOutput);
+//
+//		if (fullscreenFailed)
+//		{
+//			DWORD dwWidth = GetSystemMetrics(SM_CXSCREEN) / globalFontWidth;
+//			DWORD dwHeight = GetSystemMetrics(SM_CYSCREEN) / globalFontHeight;
+//			
+//			float ratio = (float)dwWidth / (float)largestSize.X;
+//			int yNew = dwHeight / ratio;
+//			largestSize.Y = yNew;
+//		}
+//		
+//		#ifdef FULLSCREEN
+//			(*x) = largestSize.X;
+//			(*y) = largestSize.Y;
+//		#endif
+//			//if ((*x) > largestSize.X)
+//			//{
+//			//	if (!Errors) return;
+//			//	wchar_t errMsg[200] = { 0 };
+//			//	#ifdef __GNUC__ // gcc uses different swprintf declaration.
+//			//		swprintf(errMsg, L"X dimension too big (%d > %d)", (*x), largestSize.X);
+//			//	#else
+//			//		swprintf(errMsg, 200, L"X dimension too big (%d > %d)", (*x), largestSize.X);
+//			//	#endif
+//			//		Error(errMsg, __LINE__);
+//			//}
+//			//if ((*y) > largestSize.Y)
+//			//{
+//			//	if (!Errors) return;
+//			//	wchar_t errMsg[200] = { 0 };
+//			//	#ifdef __GNUC__ // gcc uses different swprintf declaration.
+//			//		swprintf(errMsg, L"Y dimension too big (%d > %d)", (*y), largestSize.Y);
+//			//	#else
+//			//		swprintf(errMsg, 200, L"Y dimension too big (%d > %d)", (*y), largestSize.Y);
+//			//	#endif
+//			//	Error(errMsg, __LINE__);
+//			//}
+//
+//		int width, height;
+//		getConsoleWindowSize(&width, &height);
+//		
+//		if ((width) > (*x) || (height) > (*y))
+//		{
+//			// window size needs to be adjusted before the buffer size can be reduced.
+//			SMALL_RECT info = { 0,0,(short)(*x) < width ? (short)(*x) - 1 : width - 1,(short)(*y) < height ? (short)(*y) - 1 : height - 1 };
+//			if (!SetConsoleWindowInfo(hConsoleOutput, TRUE, &info))
+//				if (!Errors) return; else Error(L"Resizing window failed!", __LINE__);
+//		}
+//
+//		COORD size = { (short)(*x), (short)(*y) };
+//		if (!SetConsoleScreenBufferSize(hConsoleOutput, size))
+//			if (!Errors) return; else Error(L"Unable to resize screen buffer!", __LINE__);
+//
+//#ifndef FULLSCREEN
+//		SMALL_RECT info = { 0, 0, (short)(*x)-1, (short)(*y)-1 };
+//		if (!SetConsoleWindowInfo(hConsoleOutput, TRUE, &info))
+//			if (!Errors) return; else Error(L"Unable to resize window after resizing buffer!", __LINE__);
+//#endif
+//
+//	}
 
 	bool windowActive()
 	{
@@ -1717,3 +1815,35 @@
 // TIME AFTER: 1408 Lines
 
 // TIME AFTER 1554
+
+
+// GET LAST ERROR
+	/*
+LPTSTR errorText = NULL;
+
+			FormatMessage(
+				// use system message tables to retrieve error text
+				FORMAT_MESSAGE_FROM_SYSTEM
+				// allocate buffer on local heap for error text
+				| FORMAT_MESSAGE_ALLOCATE_BUFFER
+				// Important! will fail otherwise, since we're not
+				// (and CANNOT) pass insertion parameters
+				| FORMAT_MESSAGE_IGNORE_INSERTS,
+				NULL,    // unused with FORMAT_MESSAGE_FROM_SYSTEM
+				GetLastError(),
+				MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+				(LPTSTR)&errorText,  // output
+				0, // minimum size for output buffer
+				NULL);   // arguments - see note
+
+			if (NULL != errorText)
+			{
+				// ... do something with the string `errorText` - log it, display it to the user, etc.
+
+				// release memory allocated by FormatMessage()
+				LocalFree(errorText);
+				errorText = NULL;
+			}
+	
+	
+	*/
