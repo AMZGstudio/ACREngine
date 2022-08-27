@@ -1,15 +1,18 @@
 #pragma once
-#include "menu.h"
 
-#define MENU_STATE 0
-#define GAME_STATE 1
+#include "screen.h"
+
+#include "menu.h"
+#include "game.h"
+
+enum states {MENU_STATE, GAME_STATE, OPTIONS_STATE, CREDITS_STATE, EXIT_STATE};
 
 typedef struct gameState
 {
 	int state;
 } gameState;
 
-void menuStateActions(gameState* gd, menuData* md)
+void menuStateActions(gameState* gs, menuData* md)
 {
 	menuCalculations(md);
 
@@ -18,7 +21,12 @@ void menuStateActions(gameState* gd, menuData* md)
 
 	if (md->s->fadeEnd)
 	{
-		gd->state = GAME_STATE;
+		gs->state = md->selectedOption + 1;
 		startReverseFade(md->s);
 	}
+}
+
+void gameStateActions(gameData* gd)
+{
+	gameCalculations(gd);
 }

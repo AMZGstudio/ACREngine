@@ -1,6 +1,7 @@
 #include "screen.h"
 
 #define TIME_DEFAULT 3
+
 screenData initalizeScreen()
 {
 	screenData s;
@@ -32,10 +33,10 @@ void drawScreen(screenData* s)
 			drawRectFilled(0, 0, Width(s->area), Height(s->area), Black);
 
 		s->fadeProgress += timePerSec(s->fadeIncrement);
-		if (s->fadeProgress >= (s->fadeIncrement > 0) ? s->fadeEndTime : s->fadeStartTime)
+		if (s->fadeProgress > (s->fadeIncrement > 0) ? s->fadeEndTime : s->fadeStartTime)
 			s->doFade = false, s->fadeEnd = true, s->fadeProgress = 0;
 	}
-	else
+	else if(!s->fadeEnd)
 	{
 		drawArea(0, 0, s->area);
 		if (s->fadeEnd == true)

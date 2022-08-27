@@ -1,7 +1,6 @@
 #pragma once
 #include "../ACREngine.h"
 
-#include "screen.h"
 #include "../ACRE_Transform.h"
 
 #define MENU_H 72
@@ -18,7 +17,7 @@ typedef struct option {
 } option;
 
 typedef struct cloud {
-	Image img;
+	Area sprite;
 	float x, y;
 	float vx;
 } cloud;
@@ -31,7 +30,7 @@ typedef struct menuData {
 	//int menuHeight;
 	char* title;
 	cloud clouds[NUM_CLDS];
-	Image pointer;
+	Area pointer;
 	option ops[NUM_OPS];
 	
 } menuData;
@@ -64,10 +63,10 @@ void optionCalculations(menuData* m)
 			
 		if (i == m->selectedOption)
 		{
-			sysDrawImage(Width(ar) / 2 - (strLen / 2) - 10, y + i * 10, ar, m->pointer);
-			flipImage(m->pointer);
-			sysDrawImage(Width(ar) / 2 + (strLen / 2) + 3,y + i * 10, ar, m->pointer);
-			flipImage(m->pointer);
+			sysDrawArea(Width(ar) / 2 - (strLen / 2) - 10, y + i * 10, ar, m->pointer);
+			flipArea(m->pointer);
+			sysDrawArea(Width(ar) / 2 + (strLen / 2) + 3,y + i * 10, ar, m->pointer);
+			flipArea(m->pointer);
 		}
 	}
 	int selB = m->selectedOption;
@@ -98,11 +97,11 @@ void cloudsCalculations(menuData* m)
 		float rcx = m->clouds[i].x >= 0 ? map(m->clouds[i].x, 0, 240, 0, Width(Screen)) : m->clouds[i].x;
 		float rcy = m->clouds[i].y >= 0 ? map(m->clouds[i].y, 0, 135, 0, Height(Screen)) : m->clouds[i].y;
 
-		sysDrawImage(rcx, rcy, m->s->area, m->clouds[i].img);
+		sysDrawArea(rcx, rcy, m->s->area, m->clouds[i].sprite);
 		m->clouds[i].x += timePerSec(m->clouds[i].vx);
 		
 		if (map(m->clouds[i].x, 0, 240, 0, Width(m->s->area)) > Width(m->s->area))
-			m->clouds[i].x = 0 - m->clouds[i].img.imgData.width;
+			m->clouds[i].x = 0 - m->clouds[i].sprite.width;
 	}
 }
 
@@ -112,7 +111,7 @@ menuData initalizeMenu(screenData* screenOn)
 	m.s = screenOn;
 
 	m.selectedOption = 0;
-	m.pointer = loadImage("../Sprites/pointer.acre");
+	m.pointer = loadSprite("../Sprites/pointer.acre");
 
 	option op1 = { "Start", 255, 255, 255, false };
 	option op2 = { "Options", 255, 255, 255, false };
@@ -120,8 +119,8 @@ menuData initalizeMenu(screenData* screenOn)
 	option op4 = { "Exit", 255, 255, 255, false };
 	option ops[NUM_OPS] = { op1, op2, op3, op4 };
 
-	Image cl1 = loadImage("../Sprites/cloud1.acre");
-	Image cl2 = loadImage("../Sprites/cloud2.acre");
+	Area cl1 = loadSprite("../Sprites/cloud1.acre");
+	Area cl2 = loadSprite("../Sprites/cloud2.acre");
 
 	cloud c1 = { cl1, -5, 0, 7 }, c2 = { cl2, 50, 34, 9 }, c3 = { cl1, 64, 102, 6 };
 	cloud c4 = { cl1, 14, 70,10}, c5 = { cl2, 160, 24, 5 }, c6 = { cl1, 149, 69, 7 };

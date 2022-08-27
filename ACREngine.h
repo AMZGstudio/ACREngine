@@ -85,8 +85,16 @@
 		resizing console window can now be activated with ALLOW_WINDOW_RESIZE
 		use #define FPS_TICKS val to define how many ticks the fps will be averaged over.
 		dont touch for default
-
+		added sysDrawPartialArea() function.
 		added max time step
+
+		removed Images, Areas are now used exclusivly.
+			Image struct gone. Image functions, now use sprite name instead, and return Areas.
+			Removed sysDrawImage()
+			Removed drawImage()
+			flipImage now called flipArea
+
+		TODO: Add other drawPartialArea functions.
 		*/
 		
 #ifndef ACRE_INCLUDES
@@ -134,13 +142,13 @@
 	typedef struct Space { int startX, startY, endX, endY; } Space;
 	typedef struct MOUSE { int x, y; int scrollH, scrollW; } MOUSE;
 	typedef struct Font { int w, displayW; const unsigned char *dat; } Font;
-	typedef struct Area { short* colFront, * colBack; char* characters; int width, height; } Area;
+	typedef struct Area { short* colFront, * colBack; char* characters; int width, height; bool drawFront, drawBack, drawText; } Area;
 	typedef struct Key {bool pressed, held, released; int letter;} Key;
 	typedef struct Timer { double elapsedTime; } Timer;
 
-	typedef struct Image {
+	/*typedef struct Image {
 		Area imgData;
-		bool asciitext;} Image;
+		bool asciitext;} Image;*/
 
 	Area Screen;
 	Space ScreenSpace;
@@ -173,8 +181,8 @@
 
 	// function declarations
 	
-	Image loadImage(const char* imageFilePath);
-	void makeImage(Area areaToMakeImg, char* imageFilePath, bool containChars);
+	Area loadSprite(const char* spriteFilePath);
+	void makeSprite(Area areaToMakeSprite, char* spriteFilePath);
 
 	int Width(Area area);
 	int Height(Area area);
@@ -203,12 +211,12 @@
 	Point sysDrawPoint(int x, int y, Area area, char character, int colorFront, int colorBack);
 	void sysDrawRect(int xStart, int yStart, int xEnd, int yEnd, Area area, char character, bool filled, int colorFront, int colorBack);
 	void sysDrawCircle(int x, int y, Area area, int radius, char character, bool filled, int colorFront, int colorBack);
-	void sysDrawImage(int x, int y, Area area, Image inputImage);
 	void sysDrawLine(int xStart, int yStart, int xEnd, int yEnd, Area area, char character, int colorFront, int colorBack);
 	void sysDrawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, Area area, char character, bool filled, int colorFront, int colorBack);
 	void sysDrawText(int x, int y, Area area, const char* text, Font fontType, int colorFront, int colorBack);
 	void sysDrawNumber(int x, int y, Area area, double number, int numDecimal, Font fontType, int colorFront, int colorBack);
 	void sysDrawArea(int x, int y, Area area, Area areaToDraw);
+	void sysDrawPartialArea(int x, int y, Area area, Area areaToDraw, int startAreaX, int startAreaY, int endAreaX, int endAreaY);
 
 	Space spDrawPixel(int x, int y, Space space, int color);
 	Space spDrawChar(int x, int y, Space space, char character, int color);
@@ -218,7 +226,6 @@
 	Space spDrawCircleFilled(int x, int y, Space space, int radius, short color);
 	Space spDrawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, Space space, int color);
 	Space spDrawTriangleFilled(int x1, int y1, int x2, int y2, int x3, int y3, Space space, int color);
-	Space spDrawImage(int x, int y, Space space, Image img);
 	Space spDrawLine(int xStart, int yStart, int xEnd, int yEnd, Space space, int color);
 	Space spDrawText(int x, int y, Space space, const char* text, Font fontType, int color);
 	Space spDrawNumber(int x, int y, Space space, double number, int numDecimal, Font fontType, int color);
@@ -234,7 +241,6 @@
 	void drawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, int color);
 	void drawTriangleFilled(int x1, int y1, int x2, int y2, int x3, int y3, int color);
 
-	Space drawImage(int x, int y, Image img);
 	Space drawLine(int xStart, int yStart, int xEnd, int yEnd, int color);
 	Space drawText(int x, int y, const char* text, Font fontType, int color);
 	Space drawNumber(int x, int y, double number, Font fontType, int color);
@@ -542,58 +548,58 @@
 	|		    Image Handling Functions		  |
 	\*-------------------------------------------*/
 
-	int readColor(FILE* imageFile)
+	int readColor(FILE* spriteFile)
 	{
 		int selected = 0;
 		char ch, color[5] = { 0 };
-		while ((ch = fgetc(imageFile)) != ';' && ch != '\n')
+		while ((ch = fgetc(spriteFile)) != ';' && ch != '\n')
 			color[selected] = ch, selected++;
 
 		return atoi(color);
 	}
 
-	Image loadImage(const char* imageFilePath)
+	Area loadSprite(const char* spriteFilePath)
 	{
 		char ch;
-		FILE* imageFile = fopen(imageFilePath, "r");
+		FILE* spriteFile = fopen(spriteFilePath, "r");
 		bool includeText = false;
-		if (imageFile == NULL)
+		if (spriteFile == NULL)
 		{
 			wchar_t msg[100] = { L"Opening ACRE file: "};
 			wchar_t wszDest[100];
-			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, imageFilePath, -1, wszDest, 100);
+			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, spriteFilePath, -1, wszDest, 100);
 			wcscat(msg, wszDest);
 			Error(msg, __LINE__);
 		}
-		Image image;
 
-		while ((ch = fgetc(imageFile)) != ';')
+		while ((ch = fgetc(spriteFile)) != ';')
 		{
 			if(ch == ':')
-				if(fgetc(imageFile) == 'T')
+				if(fgetc(spriteFile) == 'T')
 					includeText = true;
 		}
-		int nWidth = readColor(imageFile), nHeight = readColor(imageFile);
-		image.imgData = createArea(nWidth, nHeight, Default, Default);
-		image.asciitext = includeText;
+		int nWidth = readColor(spriteFile), nHeight = readColor(spriteFile);
+
+		Area sprite = createArea(nWidth, nHeight, Default, Default);
+		sprite.drawText = includeText;
 
 		for (int j = 0; j < nHeight; j++)
 		{
 			for (int i = 0; i < nWidth; i++)
 			{
-				image.imgData.colBack[j * nWidth + i] = readColor(imageFile);
-				image.imgData.characters[j * nWidth + i] = fgetc(imageFile);
+				sprite.colBack[j * nWidth + i] = readColor(spriteFile);
+				sprite.characters[j * nWidth + i] = fgetc(spriteFile);
 			}
-			fgetc(imageFile);
+			fgetc(spriteFile);
 		}
-		fclose(imageFile);
-		return image;
+		fclose(spriteFile);
+		return sprite;
 	}
 
-	void makeImage(Area areaToMakeImg, char* imageFilePath, bool containChars)
+	void makeSprite(Area areaToMakeSprite, char* spriteFilePath)
 	{
 		char newPath[200] = { 0 };
-		strcat(newPath, imageFilePath);
+		strcat(newPath, spriteFilePath);
 
 		bool foundDot = false;
 		for (int i = 0; i < 200; i++)
@@ -604,18 +610,18 @@
 		strcat(newPath, ".acre");
 		char extraModes[5] = { 0 };
 
-		if (containChars)
+		if (areaToMakeSprite.drawText)
 			strcat(extraModes, ":T");
 
 		FILE* file = fopen(newPath, "w");
-		fprintf(file, "acrev3.0%s;%d;%d\n", extraModes, areaToMakeImg.width, areaToMakeImg.height);
+		fprintf(file, "acrev3.0%s;%d;%d\n", extraModes, areaToMakeSprite.width, areaToMakeSprite.height);
 		
-		for (int y = 0; y < areaToMakeImg.height; y++)
+		for (int y = 0; y < areaToMakeSprite.height; y++)
 		{
-			for (int x = 0; x < areaToMakeImg.width; x++)
-				fprintf(file, "%d;%c", areaToMakeImg.colBack[y * areaToMakeImg.width + x], areaToMakeImg.characters[y * areaToMakeImg.width + x]);
+			for (int x = 0; x < areaToMakeSprite.width; x++)
+				fprintf(file, "%d;%c", areaToMakeSprite.colBack[y * areaToMakeSprite.width + x], areaToMakeSprite.characters[y * areaToMakeSprite.width + x]);
 			
-			if (y != areaToMakeImg.height - 1)
+			if (y != areaToMakeSprite.height - 1)
 				fwrite("\n", 1, 1, file);
 		}
 		fclose(file);
@@ -891,16 +897,23 @@
 		Point loc = { x, y };
 		if (x < 0 || y < 0 || x >= area.width || y >= area.height) return loc;
 
-		if (((character == '\n' || character > 256 || character <= 0) && character != -1) ||
-		   ((colorFront < 0 || colorFront > 255) && colorFront != -1) ||
-		   ((colorBack  < 0 || colorBack  > 255) && colorBack  != -1))
-				Error(L"Tried to add newline (\'\\n\'), invalid character, or invalid color, to the screen buffer!", __LINE__);
-
 		int slot = y * (area.width) + x;
-		
-		if (character != Default) area.characters[slot] = character;
-		if (colorFront != Default) area.colFront[slot] = colorFront;
-		if (colorBack != Default) area.colBack[slot] = colorBack;
+
+		if (character != Default)// or invalid color
+			if ((character == '\n' || character > 256 || character <= 0) && character != -1)
+				Error(L"Tried to add newline (\'\\n\'), or invalid character, to the screen buffer!", __LINE__);
+		else area.characters[slot] = character;
+
+		if (colorFront != Default)
+			if ((colorFront < 0 || colorFront > 255) && colorFront != -1)
+				Error(L"Tried to add invalid foreground color, to the screen buffer!", __LINE__);
+		else area.colFront[slot] = colorFront;
+
+		if (colorBack != Default)
+			if ((colorBack < 0 || colorBack  > 255) && colorBack != -1)
+				Error(L"Tried to add invalid background color, to the screen buffer!", __LINE__);
+		else area.colBack[slot] = colorBack;
+			
 		return loc;
 	}
 	
@@ -948,18 +961,6 @@
 			if (pa < 0) pa += 4 * xa++ + 6;
 			else pa += 4 * (xa++ - ya--) + 10;
 		}
-	}
-
-	void sysDrawImage(int x, int y, Area area, Image inputImage)
-	{
-		for (int xs = 0; xs < inputImage.imgData.width; xs++)
-			for (int ys = 0; ys < inputImage.imgData.height; ys++)
-			{
-				int color = inputImage.imgData.colBack[ys * inputImage.imgData.width + xs];
-				if (color == -1) color = Default;
-				char character = (inputImage.asciitext) ? inputImage.imgData.characters[ys * inputImage.imgData.width + xs] : Default;
-				sysDrawPoint(x + xs, y + ys, area, character, Default, color);
-			}
 	}
 
 	void sysDrawLine(int xStart, int yStart, int xEnd, int yEnd, Area area, char character, int colorFront, int colorBack)
@@ -1224,8 +1225,26 @@
 			for (int xs = 0; xs < areaToDraw.width; xs++)
 			{
 				int loc = ys * (areaToDraw.width) + xs;
-				sysDrawPoint(x + xs, y + ys, area, areaToDraw.characters[loc], areaToDraw.colFront[loc], areaToDraw.colBack[loc]);
+				sysDrawPoint(x + xs, y + ys, area, (area.drawText) ? areaToDraw.characters[loc] : Default, (area.drawFront) ? areaToDraw.colFront[loc] : Default, (area.drawBack) ? areaToDraw.colBack[loc] : Default);
 			}
+	}
+
+	void sysDrawPartialArea(int x, int y, Area area, Area areaToDraw, int startAreaX, int startAreaY, int endAreaX, int endAreaY)
+	{
+		if (areaToDraw.width == -1 && areaToDraw.height == -1) Error(L"Can't draw deleted Area!", __LINE__);
+		if (endAreaX > areaToDraw.width || endAreaY > areaToDraw.height) Error(L"Can't draw partial Area bigger than area itself.", __LINE__);
+
+		for (int ys = startAreaY; ys < endAreaY; ys++)
+		{
+
+			for (int xs = startAreaX; xs < endAreaX; xs++)
+			{
+				int loc = ys * (areaToDraw.width) + xs;
+				sysDrawPoint(x, y, area, areaToDraw.characters[loc], areaToDraw.colFront[loc], areaToDraw.colBack[loc]);
+				x++;
+			}
+			x=0, y++;
+		}
 	}
 
 	/*-------------------------------------------*\
@@ -1312,12 +1331,6 @@
 		return triLocation;
 	}
 
-	Space spDrawImage(int x, int y, Space space, Image img)
-	{
-		Space imgSpace = getSpace(space, x, y, x != Centered ? x + img.imgData.width : img.imgData.width, y != Centered ? y + img.imgData.height : img.imgData.height);
-		sysDrawImage(imgSpace.startX, imgSpace.startY, Screen, img);
-		return imgSpace;
-	}
 	Space spDrawLine(int xStart, int yStart, int xEnd, int yEnd, Space space, int color)
 	{
 		Space line = getSpace(space, xStart, yStart, xEnd, yEnd);
@@ -1371,7 +1384,6 @@
 	void drawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, int color) { spDrawTriangle(x1, y1, x2, y2, x3, y3, ScreenSpace, color); }
 	void drawTriangleFilled(int x1, int y1, int x2, int y2, int x3, int y3, int color) { spDrawTriangleFilled(x1, y1, x2, y2, x3, y3, ScreenSpace, color); }
 	
-	Space drawImage(int x, int y, Image img)									{ return spDrawImage(x, y, ScreenSpace, img); }
 	Space drawLine(int xStart, int yStart, int xEnd, int yEnd, int color)		{ return spDrawLine(xStart, yStart, xEnd, yEnd, ScreenSpace, color); }
 	Space drawText(int x, int y, const char* text, Font fontType, int color)	{ return spDrawText(x, y, ScreenSpace, text, fontType, color); }
 
@@ -1465,6 +1477,9 @@
 		Area area;
 		area.width = width;
 		area.height = height;
+		area.drawText = false;
+		area.drawFront = false;
+		area.drawBack = true;
 
 		area.characters = (char*)malloc((sizeof(char) * width * height) + 1);
 		area.colFront = (short*)malloc((sizeof(short) * width * height));

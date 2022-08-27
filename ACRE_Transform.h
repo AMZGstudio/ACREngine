@@ -73,16 +73,16 @@ void areaCalculations(AreaTrans* area)
 	}
 }
 
-void flipImage(Image img)
+void flipArea(Area ar)
 {
-	for(int y = 0; y<img.imgData.height; y++)
-		for (int x = 0; x < img.imgData.width/2; x++)
+	for(int y = 0; y<ar.height; y++)
+		for (int x = 0; x < ar.width/2; x++)
 		{
-			short sideOne = img.imgData.colBack[y * img.imgData.width + x];
-			short sideTwo = img.imgData.colBack[y * img.imgData.width + (img.imgData.width-x-1)];
+			short sideOne = ar.colBack[y * ar.width + x];
+			short sideTwo = ar.colBack[y * ar.width + (ar.width-x-1)];
 			
-			img.imgData.colBack[y * img.imgData.width + x] = sideTwo;
-			img.imgData.colBack[y * img.imgData.width + (img.imgData.width - x - 1)] = sideOne;
+			ar.colBack[y * ar.width + x] = sideTwo;
+			ar.colBack[y * ar.width + (ar.width - x - 1)] = sideOne;
 		}
 }
 
