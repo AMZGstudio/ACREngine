@@ -95,6 +95,9 @@
 			flipImage now called flipArea
 
 		TODO: Add other drawPartialArea functions.
+		TODO: onResize() function.
+		TODO: Change how fps works, instead of ticks, it goes by time.
+		TODO: Finish textBoxInput
 		*/
 		
 #ifndef ACRE_INCLUDES
@@ -146,10 +149,6 @@
 	typedef struct Key {bool pressed, held, released; int letter;} Key;
 	typedef struct Timer { double elapsedTime; } Timer;
 
-	/*typedef struct Image {
-		Area imgData;
-		bool asciitext;} Image;*/
-
 	Area Screen;
 	Space ScreenSpace;
 	// all enums
@@ -160,7 +159,7 @@
 	};
 	enum ACRE_TYPES {Thirds = -502, Centered = -501, Default = -1 };
 	enum COLORS { 
-		Black = 16, VeryDarkGrey = 235, DarkGrey = 237, Grey, LightGrey, White = 255,
+		Black = 16, VeryDarkGrey = 235, DarkGrey = 237, Grey = 243, LightGrey = 247, White = 255,
 		
 		Red = 196, Maroon = 52,		   DarkRed = 124,  Pink = 218,
 		Orange=202,Brown = 130,		   DarkOrange=166, Tan = 180,
@@ -203,7 +202,7 @@
 	bool rectangleCollide(int xStart1, int yStart1, int xEnd1, int yEnd1, int xStart2, int yStart2, int xEnd2, int yEnd2);
 	bool spaceCollide(Space space1, Space space2);
 
-	void sysGetPoint(int x, int y, int data[3]);
+	void sysGetPoint(int x, int y, Area area, int data[3]);
 	char getChar(int x, int y);
 	int getPointFront(int x, int y);
 	int getPointBack(int x, int y);
@@ -481,7 +480,6 @@
 		int vals[6] = { 0,95,135,175,215,255 };
 
 		if (col < 16)
-		{
 			switch(col)
 			{
 			case 0: *r = 0, *g = 0, *b = 0; break;
@@ -501,7 +499,6 @@
 			case 14: *r = 0, *g = 255, *b = 255; break;
 			case 15: *r = 255, *g = 255, *b = 255; break;
 			}	
-		}
 		else if (col >= 16 && col <= 231)
 		{
 			col -= 16;
@@ -1232,7 +1229,7 @@
 	void sysDrawPartialArea(int x, int y, Area area, Area areaToDraw, int startAreaX, int startAreaY, int endAreaX, int endAreaY)
 	{
 		if (areaToDraw.width == -1 && areaToDraw.height == -1) Error(L"Can't draw deleted Area!", __LINE__);
-		if (endAreaX > areaToDraw.width || endAreaY > areaToDraw.height) Error(L"Can't draw partial Area bigger than area itself.", __LINE__);
+		if (endAreaX > areaToDraw.width || endAreaY > areaToDraw.height || startAreaX < 0 || startAreaY < 0) Error(L"Can't draw partial Area bigger than area itself.", __LINE__);
 
 		for (int ys = startAreaY; ys < endAreaY; ys++)
 		{
@@ -1835,6 +1832,7 @@
 
 // TIME AFTER 1554
 
+// TIME AFTER 1827
 
 // GET LAST ERROR
 	/*
