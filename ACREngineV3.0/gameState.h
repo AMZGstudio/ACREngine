@@ -15,14 +15,14 @@ typedef struct gameState
 void menuStateActions(gameState* gs, menuData* md)
 {
 	menuCalculations(md);
-
+	
 	if (key(Enter).pressed || key(Spacebar).pressed)
-		startFade(md->s);
+		startFade(&sd);
 
-	if (md->s->fadeEnd)
+	if (sd.fadeEnd)
 	{
 		gs->state = md->selectedOption + 1;
-		startReverseFade(md->s);
+		startReverseFade(&sd);
 	}
 }
 

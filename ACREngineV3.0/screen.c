@@ -2,17 +2,16 @@
 
 #define TIME_DEFAULT 3
 
-screenData initalizeScreen()
+void initalizeScreen(screenData* s)
 {
-	screenData s;
-	s.fadeIncrement = TIME_DEFAULT;
-	s.fadeEndTime = TIME_DEFAULT;
-	s.fadeStartTime = 0;
+	surface = createArea(Width(Screen), Height(Screen), Default, Blue);
+	s->fadeIncrement = TIME_DEFAULT;
+	s->fadeEndTime = TIME_DEFAULT;
+	s->fadeStartTime = 0;
 
-	s.doFade = false;
-	s.fadeEnd = false;
-	s.fadeProgress = 0;
-	s.area = createArea(Width(Screen), Height(Screen), Default, Blue);
+	s->doFade = false;
+	s->fadeEnd = false;
+	s->fadeProgress = 0;
 
 	return s;
 }
@@ -26,19 +25,19 @@ void drawScreen(screenData* s)
 				for (int j = 0; j < Height(Screen); j++)
 				{
 					short r, g, b;
-					Xterm(s->area.colBack[j * Width(Screen) + i], &r, &g, &b);
-					drawPixel(i, j, Color(clamp(r - map(s->fadeProgress, 0, 1, 0, 255), 0, 255), clamp(g - map(s->fadeProgress, 0, 1, 0, 255), 0, 255), clamp(b - map(s->fadeProgress, 0, 1, 0, 255), 0, 255)));
+					Xterm(surface.colBack[j * Width(Screen) + i], &r, &g, &b);
+					sysDrawPoint(i, j, Screen, Default, Default, Color(clamp(r - map(s->fadeProgress, 0, 1, 0, 255), 0, 255), clamp(g - map(s->fadeProgress, 0, 1, 0, 255), 0, 255), clamp(b - map(s->fadeProgress, 0, 1, 0, 255), 0, 255)));
 				}
 		else
-			drawRectFilled(0, 0, Width(s->area), Height(s->area), Black);
+			drawRectFilled(0, 0, Width(surface), Height(surface), Black);
 
 		s->fadeProgress += timePerSec(s->fadeIncrement);
 		if (s->fadeProgress > (s->fadeIncrement > 0) ? s->fadeEndTime : s->fadeStartTime)
 			s->doFade = false, s->fadeEnd = true, s->fadeProgress = 0;
 	}
-	else if(!s->fadeEnd)
+	else// if(!s->fadeEnd)
 	{
-		drawArea(0, 0, s->area);
+		sysDrawArea(0, 0, Screen, surface);
 		if (s->fadeEnd == true)
 			s->fadeEnd = false;
 	}

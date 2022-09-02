@@ -1,6 +1,8 @@
 #pragma once
 #include "../ACREngine.h"
 
+Area surface;
+
 typedef struct screenData {
 	float fadeProgress;
 	float fadeIncrement;
@@ -8,10 +10,11 @@ typedef struct screenData {
 	float fadeStartTime;
 	bool doFade;
 	bool fadeEnd;
-	Area area;
 } screenData;
 
-screenData initalizeScreen();
+screenData sd;
+
+void initalizeScreen(screenData* s);
 void drawScreen(screenData* s);
 void startFade(screenData* s);
 void startReverseFade(screenData* s);

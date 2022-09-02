@@ -26,16 +26,16 @@
 		CRACKERS_FONT:			Crackers
 		BMSPA_FONT:				BMSPA
 		TAMA_MINI_FONT:			TamaMini
-		PZIM_FONT:				Pzim
-		M38_FONT:				M38
+		PZIM_FONT:				Pzim			Low res, some letters are skew.
+		M38_FONT:				M38				
 		BM_PLAIN_FONT:			BMPlain
 		HUNTER_FONT:			Hunter
 		HOMESPUN_FONT:			HomeSpun
-		FIVE_FONT:				Five
+		FIVE_FONT:				Five			
 		AZTECH_FONT:			Aztech
 		BUBBLES_STANDARD_FONT:  BubbleStandard
 		HISKY_FONT:				Hisky
-		ZXPIX_FONT:				ZXPix
+		ZXPIX_FONT:				ZXPix			Small, a little wonky.
 		FOANT_FONT:				Foant
 	
 	*/
