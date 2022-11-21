@@ -1,19 +1,25 @@
 #pragma once
 
 #ifdef ACRE_3_COMPATIBLE
+	#ifndef TRANSFORM_INCLUDES
+		#define TRANSFORM_INCLUDES
+		typedef struct AreaTrans {
+			Area area;
+			float x;
+			float y;
+			float zoom;
+			float spy;
+			float spx;
+			float szx;
+			float szy;
+		} AreaTrans;
+		AreaTrans createAreaTrans(Area areaData);
+		void drawAreaTransformed(AreaTrans area, Area areaToDrawOn);
+		void areaCalculations(AreaTrans* area);
+		void flipArea(Area ar);
 
+	#endif
 #ifdef ACRE_TRANSFORM
-typedef struct AreaTrans {
-	Area area;
-	float x;
-	float y;
-	float zoom;
-	float spy;
-	float spx;
-	float szx;
-	float szy;
-} AreaTrans;
-
 AreaTrans createAreaTrans(Area areaData)
 {
 	AreaTrans a;

@@ -2,8 +2,8 @@
 
 #include "screen.h"
 
-#include "menu.h"
-#include "game.h"
+#include "menu.cpp"
+#include "game.cpp"
 
 enum states {MENU_STATE, GAME_STATE, OPTIONS_STATE, CREDITS_STATE, EXIT_STATE};
 

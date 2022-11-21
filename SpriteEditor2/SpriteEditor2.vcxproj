@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{3d6ea154-3e64-4a72-b9e1-4020517ada2e}</ProjectGuid>
-    <RootNamespace>ACREngineV30</RootNamespace>
+    <ProjectGuid>{f3fd916c-e87b-4d2a-932f-2dedfc836c80}</ProjectGuid>
+    <RootNamespace>SpriteEditor2</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -139,21 +139,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\ACREngine.h" />
-    <ClInclude Include="..\ACRE_Fonts.h" />
-    <ClInclude Include="..\ACRE_Gui.h" />
-    <ClInclude Include="..\ACRE_Transform.h" />
-    <ClInclude Include="entites.h" />
-    <ClInclude Include="game.cpp" />
-    <ClInclude Include="gameState.h" />
-    <ClInclude Include="inventory.h" />
-    <ClInclude Include="menu.cpp" />
-    <ClInclude Include="physics.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="DorkV4.cpp" />
-    <ClCompile Include="screen.cpp" />
-    <ClCompile Include="screen.h" />
+    <ClCompile Include="main.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

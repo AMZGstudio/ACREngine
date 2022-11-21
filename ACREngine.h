@@ -87,6 +87,8 @@
 		dont touch for default
 		added sysDrawPartialArea() function.
 		added max time step
+		added center() function in the header mode of the file.
+		added extern variables.
 
 		removed Images, Areas are now used exclusivly.
 			Image struct gone. Image functions, now use sprite name instead, and return Areas.
@@ -96,14 +98,18 @@
 
 		added spWidth, and spHeight.
 		fixed bug in makeSprite()
+		fixed bug in spDrawNumber()
 
 		Changed ACRE_Window extension, now works like other extensions (#ifdef stuff)
+		Changed terminate() function, to terminateACRE(). it caused issues with cpp
 		renamed stringLength to stringWidth
 		ACRE_Window extension, is now called ACRE_Gui.
 
 		Default Area to draw on, is now configurable. call setDefaultDrawArea().
 			- Note: only draws on area specified, assuming no other draw area is set.
 			- Note: area rendered is still Screen, so you must draw to screen at the end, with sysDrawArea().
+
+		added legalArea() function. (it checks if a area is able to be drawn properly.
 
 		FINISHED: TODO: Add other drawPartialArea functions.
 
@@ -148,7 +154,8 @@
 
 #ifndef ACRE_DECLARATIONS
 #define ACRE_DECLARATIONS
-	
+	#define ACRE_3_COMPATIBLE // its in here, because we only want it to be defined once, regardless of if ACRE_START is defined.
+
 	// used for triangle drawing
 	#define SWAP(x,y) do { (x)=(x)^(y); (y)=(x)^(y); (x)=(x)^(y); } while(0)
 
@@ -189,9 +196,14 @@
 		LightShade = 176, MediumShade = 177, DarkShade = 178, FullBlock = 219, LowerHalfBlock = 220,
 		LeftHalfBlock = 221, RightHalfBlock = 222, UpperHalfBlock = 223
 	};
+	// variable declarations
+	extern int defaultFrontColor, defaultBackColor;
+	extern MOUSE Mouse;
+	extern Font EightBit;
 
 	// function declarations
-	
+	int center(int length, Space screenSpace, int mode);
+
 	Area loadSprite(const char* spriteFilePath);
 	void makeSprite(Area areaToMakeSprite, char* spriteFilePath);
 
@@ -212,6 +224,7 @@
 	int Color(int r, int g, int b);
 	int stringWidth(const char* string, Font fontType);
 	void setDefaultDrawArea(Area* ar);
+	bool legalArea(Area area);
 
 	void onResize(int* newWidth, int* newHeight);
 	bool pointSpaceCollide(int x, int y, Space screenSpace);
@@ -271,7 +284,7 @@
 	void deleteArea(Area* area);
 	void initalize(const char* title, int width, int height, int fontWidth, int fontHeight, int defaultFront, int defaultBack);
 	void render(bool clearScreen);
-	int terminate(void);
+	int terminateACRE(void);
 
 #endif
 
@@ -279,16 +292,15 @@
 	#undef ACRE_START
 	#ifndef ACRE_SYS_DEFS
 		#define ACRE_SYS_DEFS
-	#define ACRE_3_COMPATIBLE
 		#define ANSI_STR_LEN 24
-	#define AMOUNT_KEYS 54
+		#define AMOUNT_KEYS 54
 
-	#ifndef FPS_TICKS
-		#define FPS_TICKS 20
-	#endif
-	#ifndef FONT_WEIGHT
-		#define FONT_WEIGHT 500
-	#endif
+		#ifndef FPS_TICKS
+			#define FPS_TICKS 20
+		#endif
+		#ifndef FONT_WEIGHT
+			#define FONT_WEIGHT 500
+		#endif
 	#ifndef DEFAULT_CHARACTER
 		#define DEFAULT_CHARACTER ' '
 	#endif
@@ -373,8 +385,11 @@
 	{
 
 		wchar_t thing[200] = { 0 };
-		swprintf_s(thing, 200, L"ACRError: (LINE:%d): %s", line, errorMsg);
-		
+		#ifdef __GNUC__
+			swprintf(thing, L"ACRError: (LINE:%d): %s", line, errorMsg);
+		#else 
+			swprintf(thing, 200, L"ACRError: (LINE:%d): %s", line, errorMsg);
+		#endif
 		MessageBoxW(NULL, (LPCWSTR)thing, NULL, MB_OK);
 		exit(EXIT_FAILURE);
 	}
@@ -657,6 +672,12 @@
 	void setDefaultDrawArea(Area* ar)
 	{
 		areaToDrawOn = ar;
+	}
+	bool legalArea(Area area)
+	{
+		if (area.width == -1 && area.height == -1)
+			return false;
+		return true;
 	}
 
 	/*-------------------------------------------*\
@@ -1251,7 +1272,7 @@
 
 	void sysDrawArea(int x, int y, Area area, Area areaToDraw)
 	{
-		if (areaToDraw.width == -1 && areaToDraw.height == -1) Error(L"Can't draw deleted Area!", __LINE__);
+		if (!legalArea(areaToDraw)) Error(L"Can't draw deleted Area!", __LINE__);
 
 		for (int ys = 0; ys < areaToDraw.height; ys++)
 			for (int xs = 0; xs < areaToDraw.width; xs++)
@@ -1264,7 +1285,7 @@
 	void sysDrawPartialArea(int x, int y, Area area, Area areaToDraw, int startAreaX, int startAreaY, int endAreaX, int endAreaY)
 	{
 		int newX=0, newY=0;
-		if (areaToDraw.width == -1 && areaToDraw.height == -1) Error(L"Can't draw deleted Area!", __LINE__);
+		if (!legalArea(areaToDraw)) Error(L"Can't draw deleted Area!", __LINE__);
 		if (endAreaX > areaToDraw.width || endAreaY > areaToDraw.height || startAreaX < 0 || startAreaY < 0) Error(L"Can't draw partial Area bigger than area itself.", __LINE__);
 
 		for (int ys = startAreaY; ys < endAreaY; ys++)
@@ -1383,7 +1404,13 @@
 	}
 	Space spDrawNumber(int x, int y, Space space, double number, int numDecimal, Font fontType, int color)
 	{
-		Space numSpace = getSpace(space, x, y, x + 8, y + 8);
+		int count = 0;
+		int n = (int)number;
+		do {(int)(n = n/10), ++count;} 
+		while (n != 0);
+		int textWidth = (n + numDecimal) * fontType.displayW;
+
+		Space numSpace = getSpace(space, x, y, (x == Centered) ? textWidth : x + textWidth, (y == Centered) ? fontType.displayW : y + fontType.displayW);
 		sysDrawNumber(numSpace.startX, numSpace.startY, *areaToDrawOn, number, numDecimal, fontType, Default, color);
 		return numSpace;
 	}
@@ -1667,7 +1694,7 @@
 			Mouse.scrollW = 0;
 	}
 
-	int terminate(void)
+	int terminateACRE(void)
 	{
 		terminated = true;
 		if (SetConsoleOutputCP(65001) == 0)
@@ -1735,7 +1762,7 @@
 
 		if ((int)title != Default) SetConsoleTitleA(title);
 		else SetConsoleTitleA("AMZG Studio - ACREngine - Github");
-		if (terminated == false) terminate();
+		if (terminated == false) terminateACRE();
 
 		screenBufferFull = (char*)malloc(sizeof(char) * ((buffW * buffH) * ANSI_STR_LEN + 1));
 
@@ -1818,6 +1845,8 @@
 			nextOpenSlot++;
 		}
 		//render	
+		
+
 		if (!WriteConsoleA(hConsoleOutput, screenBufferFull, nextOpenSlot, NULL, NULL))
 			Error(L"Rendering failed.", __LINE__);
 
@@ -1839,7 +1868,7 @@
 
 		deltaTime = (float)(end.QuadPart - start.QuadPart) / (float)frequency.QuadPart;
 		//		deltaTime = clamp((float)(end.QuadPart - start.QuadPart) / (float)frequency.QuadPart, 0, 1);
-
+		
 		start = end;
 
 		if (currFPSslot >= FPS_TICKS)

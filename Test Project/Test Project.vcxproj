@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{3d6ea154-3e64-4a72-b9e1-4020517ada2e}</ProjectGuid>
-    <RootNamespace>ACREngineV30</RootNamespace>
+    <ProjectGuid>{6dad1181-14c6-4544-b4d3-1cf5ed72b92b}</ProjectGuid>
+    <RootNamespace>TestProject</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -70,18 +70,6 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LinkIncremental>true</LinkIncremental>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <LinkIncremental>false</LinkIncremental>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <LinkIncremental>true</LinkIncremental>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <LinkIncremental>false</LinkIncremental>
-  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -139,21 +127,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\ACREngine.h" />
-    <ClInclude Include="..\ACRE_Fonts.h" />
-    <ClInclude Include="..\ACRE_Gui.h" />
-    <ClInclude Include="..\ACRE_Transform.h" />
-    <ClInclude Include="entites.h" />
-    <ClInclude Include="game.cpp" />
-    <ClInclude Include="gameState.h" />
-    <ClInclude Include="inventory.h" />
-    <ClInclude Include="menu.cpp" />
-    <ClInclude Include="physics.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="DorkV4.cpp" />
-    <ClCompile Include="screen.cpp" />
-    <ClCompile Include="screen.h" />
+    <ClCompile Include="Source.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

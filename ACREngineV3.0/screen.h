@@ -14,6 +14,7 @@ typedef struct screenData {
 
 screenData sd;
 
+int cmSpace(float cameraPos, float pos);
 void initalizeScreen(screenData* s);
 void drawScreen(screenData* s);
 void startFade(screenData* s);
