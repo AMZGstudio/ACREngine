@@ -806,87 +806,6 @@
 			if (!Errors) return; else Error(L"Unable to resize window after resizing buffer!", __LINE__);
 	}
 
-
-
-
-
-
-	//	void SetConsoleWindowSize(int* x, int* y, bool Errors)
-//	{
-//		bool fullscreenFailed = false;
-//		
-//		#ifdef FULLSCREEN
-//
-//		if (!SetConsoleDisplayMode(hConsoleOutput, CONSOLE_FULLSCREEN_MODE, 0)) // if the normal way of setting the size fails
-//		{																		// then use a different way.
-//			DWORD dwStyle = GetWindowLong(ConsoleWindow, GWL_STYLE);
-//			SetWindowLong(ConsoleWindow, GWL_STYLE, dwStyle & ~WS_OVERLAPPEDWINDOW);
-//			SendMessage(ConsoleWindow, WM_SYSCOMMAND, SC_MAXIMIZE, 0);
-//			fullscreenFailed = true;
-//		}
-//		#endif
-//		COORD largestSize = GetLargestConsoleWindowSize(hConsoleOutput);
-//
-//		if (fullscreenFailed)
-//		{
-//			DWORD dwWidth = GetSystemMetrics(SM_CXSCREEN) / globalFontWidth;
-//			DWORD dwHeight = GetSystemMetrics(SM_CYSCREEN) / globalFontHeight;
-//			
-//			float ratio = (float)dwWidth / (float)largestSize.X;
-//			int yNew = dwHeight / ratio;
-//			largestSize.Y = yNew;
-//		}
-//		
-//		#ifdef FULLSCREEN
-//			(*x) = largestSize.X;
-//			(*y) = largestSize.Y;
-//		#endif
-//			//if ((*x) > largestSize.X)
-//			//{
-//			//	if (!Errors) return;
-//			//	wchar_t errMsg[200] = { 0 };
-//			//	#ifdef __GNUC__ // gcc uses different swprintf declaration.
-//			//		swprintf(errMsg, L"X dimension too big (%d > %d)", (*x), largestSize.X);
-//			//	#else
-//			//		swprintf(errMsg, 200, L"X dimension too big (%d > %d)", (*x), largestSize.X);
-//			//	#endif
-//			//		Error(errMsg, __LINE__);
-//			//}
-//			//if ((*y) > largestSize.Y)
-//			//{
-//			//	if (!Errors) return;
-//			//	wchar_t errMsg[200] = { 0 };
-//			//	#ifdef __GNUC__ // gcc uses different swprintf declaration.
-//			//		swprintf(errMsg, L"Y dimension too big (%d > %d)", (*y), largestSize.Y);
-//			//	#else
-//			//		swprintf(errMsg, 200, L"Y dimension too big (%d > %d)", (*y), largestSize.Y);
-//			//	#endif
-//			//	Error(errMsg, __LINE__);
-//			//}
-//
-//		int width, height;
-//		getConsoleWindowSize(&width, &height);
-//		
-//		if ((width) > (*x) || (height) > (*y))
-//		{
-//			// window size needs to be adjusted before the buffer size can be reduced.
-//			SMALL_RECT info = { 0,0,(short)(*x) < width ? (short)(*x) - 1 : width - 1,(short)(*y) < height ? (short)(*y) - 1 : height - 1 };
-//			if (!SetConsoleWindowInfo(hConsoleOutput, TRUE, &info))
-//				if (!Errors) return; else Error(L"Resizing window failed!", __LINE__);
-//		}
-//
-//		COORD size = { (short)(*x), (short)(*y) };
-//		if (!SetConsoleScreenBufferSize(hConsoleOutput, size))
-//			if (!Errors) return; else Error(L"Unable to resize screen buffer!", __LINE__);
-//
-//#ifndef FULLSCREEN
-//		SMALL_RECT info = { 0, 0, (short)(*x)-1, (short)(*y)-1 };
-//		if (!SetConsoleWindowInfo(hConsoleOutput, TRUE, &info))
-//			if (!Errors) return; else Error(L"Unable to resize window after resizing buffer!", __LINE__);
-//#endif
-//
-//	}
-
 	bool windowActive()
 	{
 		#ifdef NO_WINDOW_ACTIVE
@@ -1608,14 +1527,11 @@
 
 	void resizeCorrect()
 	{
-		//if (needsResizeCorrection)
-		//{
-			int w, h;
-			getConsoleWindowSize(&w, &h);
-			SetConsoleWindowSize(&w, &h, true);
+		int w, h;
+		getConsoleWindowSize(&w, &h);
+		SetConsoleWindowSize(&w, &h, true);
 
-			needsResizeCorrection = false;
-		//}
+		needsResizeCorrection = false;
 	}
 
 	void mouseEvents()
@@ -1671,18 +1587,11 @@
 				deleteArea(Screen);
 				Screen = createArea(buffW, buffH, Yellow, Red);
 				ScreenSpace.startX = 0, ScreenSpace.startY = 0, ScreenSpace.endX = buffW, ScreenSpace.endY = buffH;
-				//resizeArea(buffW, buffH, Screen);
 				screenBufferFull = (char*)realloc(screenBufferFull, sizeof(char) * ((buffW * buffH) * ANSI_STR_LEN + 1));
 				for (int i = 0; i < ((buffW * buffH) * ANSI_STR_LEN + 1); i++) screenBufferFull[i] = 0;
 				
 				hasBeenResized = true;
 				resizeCorrect();
-				//SetConsoleWindowSize(&buffW, &buffH, false);
-				//COORD size = {(short)buffW, (short)buffH};
-				//SetConsoleScreenBufferSize(hConsoleOutput, size);
-				//{
-				//}
-					//Error(L"Unable to resize screen buffer!");
 			}
 #endif
 			default: break;//resizeCorrect(); break;
@@ -1850,13 +1759,6 @@
 		if (!WriteConsoleA(hConsoleOutput, screenBufferFull, nextOpenSlot, NULL, NULL))
 			Error(L"Rendering failed.", __LINE__);
 
-		/*COORD c;
-		c.X = 0;
-		c.Y = 0;
-		DWORD o;
-		if (!WriteConsoleOutputCharacter(hConsoleOutput, screenBufferFull, nextOpenSlot, c, &o))
-			Error(L"RENDER FAILED!", __LINE__);*/
-
 		if (clearScreen) 
 			clear(Screen);
 
@@ -1907,42 +1809,3 @@
 	mouseEvents();
 	}
 #endif
-
-// BEFORE: 1431 Lines
-
-// TIME AFTER: 1408 Lines
-
-// TIME AFTER 1554
-
-// TIME AFTER 1827
-
-// GET LAST ERROR
-	/*
-LPTSTR errorText = NULL;
-
-			FormatMessage(
-				// use system message tables to retrieve error text
-				FORMAT_MESSAGE_FROM_SYSTEM
-				// allocate buffer on local heap for error text
-				| FORMAT_MESSAGE_ALLOCATE_BUFFER
-				// Important! will fail otherwise, since we're not
-				// (and CANNOT) pass insertion parameters
-				| FORMAT_MESSAGE_IGNORE_INSERTS,
-				NULL,    // unused with FORMAT_MESSAGE_FROM_SYSTEM
-				GetLastError(),
-				MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-				(LPTSTR)&errorText,  // output
-				0, // minimum size for output buffer
-				NULL);   // arguments - see note
-
-			if (NULL != errorText)
-			{
-				// ... do something with the string `errorText` - log it, display it to the user, etc.
-
-				// release memory allocated by FormatMessage()
-				LocalFree(errorText);
-				errorText = NULL;
-			}
-	
-	
-	*/

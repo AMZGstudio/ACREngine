@@ -13,9 +13,7 @@
 int main()
 {
 	// start ACRE engine
-	initalize("New Version!", 280, 160, 4, 4, Default, DarkGrey);
-
-	Window w;
+	initalize("New Version!", 280, 160, 4, 4, Default, DarkGrey
 
 	// load sprite
 	Area spr = loadSprite("../ACRE Sprites/harry.acre");
