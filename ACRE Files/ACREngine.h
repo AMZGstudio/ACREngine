@@ -281,7 +281,7 @@
 	bool textBoxInput(char* outputString, int outputStringLength);
 
 	Area createArea(int width, int height, short colorFront, short colorBack);
-	void deleteArea(Area* area);
+	void deleteArea(Area area);
 	void initalize(const char* title, int width, int height, int fontWidth, int fontHeight, int defaultFront, int defaultBack);
 	void render(bool clearScreen);
 	int terminateACRE(void);
@@ -1588,16 +1588,16 @@
 		}
 	}
 
-	void deleteArea(Area* area)
+	void deleteArea(Area area)
 	{
-		free(area->characters);
-		free(area->colFront);
-		free(area->colBack);
-		area->width = -1;
-		area->height = -1;
-		area->characters = NULL;
-		area->colFront = NULL;
-		area->colBack = NULL;
+		free(area.characters);
+		free(area.colFront);
+		free(area.colBack);
+		area.width = -1;
+		area.height = -1;
+		area.characters = NULL;
+		area.colFront = NULL;
+		area.colBack = NULL;
 	}
 
 	/*-------------------------------------------*\
@@ -1668,7 +1668,7 @@
 				buffW = wbsr.dwSize.X;
 				buffH = wbsr.dwSize.Y;
 
-				deleteArea(&Screen);
+				deleteArea(Screen);
 				Screen = createArea(buffW, buffH, Yellow, Red);
 				ScreenSpace.startX = 0, ScreenSpace.startY = 0, ScreenSpace.endX = buffW, ScreenSpace.endY = buffH;
 				//resizeArea(buffW, buffH, Screen);
@@ -1701,7 +1701,7 @@
 			Error(L"Changing codepage back to default failed.", __LINE__);
 
 		free(screenBufferFull);
-		deleteArea(&Screen);
+		deleteArea(Screen);
 
 		return 0;
 	}

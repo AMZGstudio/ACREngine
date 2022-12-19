@@ -16,7 +16,7 @@
 		void sysDrawAT(AreaTrans at, Area area);
 		void drawAT(AreaTrans at);
 
-		void calculateAT(AreaTrans at);
+		void calculateAT(AreaTrans* at);
 		void flipArea(Area ar);
 
 	#endif
@@ -56,30 +56,30 @@ void drawAT(AreaTrans at)
 	sysDrawAT(at, *areaToDrawOn);
 }
 
-void calculateAT(AreaTrans at)
+void calculateAT(AreaTrans* at)
 {
 	Key keyState = key(LeftM);
 
 	if (keyState.pressed)
-		at.spx = Mouse.x, at.spy = Mouse.y;
+		at->spx = Mouse.x, at->spy = Mouse.y;
 	
 	if (keyState.held)
 	{
-		at.x += (Mouse.x - at.spx);
-		at.y += (Mouse.y - at.spy);
-		at.spx = Mouse.x, at.spy = Mouse.y;
+		at->x += (Mouse.x - at->spx);
+		at->y += (Mouse.y - at->spy);
+		at->spx = Mouse.x, at->spy = Mouse.y;
 	}
 	
 	if (Mouse.scrollH < 0 || Mouse.scrollH > 0)
 	{
-		at.szx = ((Mouse.x - at.x) / at.zoom );
-		at.szy = ((Mouse.y - at.y) / at.zoom);
-		at.zoom *= Mouse.scrollH > 0 ? 1.05 : 0.95;
+		at->szx = ((Mouse.x - at->x) / at->zoom );
+		at->szy = ((Mouse.y - at->y) / at->zoom);
+		at->zoom *= Mouse.scrollH > 0 ? 1.05 : 0.95;
 
-		float difX = (at.szx - ((Mouse.x - at.x) / at.zoom)) * at.zoom;
-		float difY = (at.szy - ((Mouse.y - at.y) / at.zoom)) * at.zoom;
-		at.x -= difX;
-		at.y -= difY;
+		float difX = (at->szx - ((Mouse.x - at->x) / at->zoom)) * at->zoom;
+		float difY = (at->szy - ((Mouse.y - at->y) / at->zoom)) * at->zoom;
+		at->x -= difX;
+		at->y -= difY;
 	}
 }
 

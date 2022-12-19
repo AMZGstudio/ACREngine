@@ -104,7 +104,7 @@ typedef struct Window {
 //	}
 //	return returnVal;
 //}
-bool drawButton(Space space, int x, int y, char* title, Font fontType)
+void drawButton(Space space, int x, int y, char* title, Font fontType)
 {
 	int borderW = 2;
 	int w = stringWidth(title, fontType)+borderW*2, h = 7 + borderW * 2;
