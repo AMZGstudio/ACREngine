@@ -27,7 +27,7 @@ int main()
 	{
 		// draw the area, on the screen
 		drawAT(at);
-		calculateAT(&at);
+		calculateAT(at);
 
 		drawNumber(0, 0, fps, EightBit, White);
 		render(true);
