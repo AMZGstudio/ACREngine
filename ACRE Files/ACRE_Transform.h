@@ -9,6 +9,7 @@
 			float x, y;
 			float spy, spx;
 			float szx, szy;
+			Key oldStateLeftM;
 		} AreaTrans;
 
 		AreaTrans createAT(Area areaData, int x, int y);
@@ -27,9 +28,10 @@ AreaTrans createAT(Area areaData, int x, int y)
 	AreaTrans a;
 	a.zoom = 1;
 	a.area = areaData;
-	a.x = x, a.y = y;
+	a.x = (float)x, a.y = (float)y;
 	a.spx = 0, a.spy = 0;
 	a.szx = 0, a.szy = 0;
+	a.oldStateLeftM = key(LeftM);
 	return a;
 }
 
@@ -60,7 +62,7 @@ void calculateAT(AreaTrans* at)
 {
 	Key keyState = key(LeftM);
 
-	if (keyState.pressed)
+	if (keyState.held && !at->oldStateLeftM.held)
 		at->spx = Mouse.x, at->spy = Mouse.y;
 	
 	if (keyState.held)
@@ -74,13 +76,14 @@ void calculateAT(AreaTrans* at)
 	{
 		at->szx = ((Mouse.x - at->x) / at->zoom );
 		at->szy = ((Mouse.y - at->y) / at->zoom);
-		at->zoom *= Mouse.scrollH > 0 ? 1.05 : 0.95;
+		at->zoom *= Mouse.scrollH > 0 ? 1.05f : 0.95f;
 
 		float difX = (at->szx - ((Mouse.x - at->x) / at->zoom)) * at->zoom;
 		float difY = (at->szy - ((Mouse.y - at->y) / at->zoom)) * at->zoom;
 		at->x -= difX;
 		at->y -= difY;
 	}
+	at->oldStateLeftM = key(LeftM);
 }
 
 void flipArea(Area ar)

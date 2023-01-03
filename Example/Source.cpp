@@ -13,7 +13,11 @@
 int main()
 {
 	// start ACRE engine
-	initalize("New Version!", 280, 160, 4, 4, Default, DarkGrey);
+	initalize("New Version!", 190, 105, 6, 6, Default, VeryDarkGrey);
+
+	Window* w = createWindow(2, 2, 40, 60, "Properties", true);
+	
+	Option* b = createButton(w, 2, 2, 10, 6, "But");
 
 	// load sprite
 	Area spr = loadSprite("../ACRE Sprites/harry.acre");
@@ -23,11 +27,15 @@ int main()
 
 	while (!key(Esc).pressed)
 	{
-		// draw the area, on the screen
-		drawAT(at);
-		calculateAT(&at);
+		if(!calculateWindow(w))
+			calculateAT(&at);
 
-		drawNumber(0, 0, fps, EightBit, White);
+		calculateButton(b);
+
+		drawAT(at);
+		drawWindow(w, true);
+		drawButton(b, true);
+
 		render(true);
 	}
 	deleteArea(spr);

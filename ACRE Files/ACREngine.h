@@ -501,9 +501,9 @@
 	float clamp(float numToClamp, int min, int max)
 	{
 		if (numToClamp < min)
-			numToClamp = min;
+			numToClamp = (float)min;
 		if (numToClamp > max)
-			numToClamp = max;
+			numToClamp = (float)max;
 		return numToClamp;
 	}
 
@@ -518,7 +518,7 @@
 	
 	void Xterm(short col, short* r, short* g, short* b)
 	{
-		col = clamp(col, 0, 255);
+		col = (short)clamp(col, 0, 255);
 		int vals[6] = { 0,95,135,175,215,255 };
 
 		if (col < 16)
@@ -1095,12 +1095,12 @@
 
 			e1 = (unsigned int)(dx1 >> 1);
 
-			for (unsigned int i = 0; i <= dx1; i++) {
+			for (unsigned int i = 0; i <= (unsigned)dx1; i++) {
 				t1xp = 0; t2xp = 0;
 				if (t1x < t2x) { minx = t1x; maxx = t2x; }
 				else { minx = t2x; maxx = t1x; }
 				// process first line until y value is about to change
-				while (i < dx1) {
+				while (i < (unsigned)dx1) {
 					e1 += dy1;
 					while (e1 >= dx1) {
 						e1 -= dx1;
@@ -1109,7 +1109,7 @@
 					}
 					if (changed1) break;
 					else   	   	  t1x += signx1;
-					if (i < dx1) i++;
+					if (i < (unsigned)dx1) i++;
 				}
 			next3:
 				// process second line until y value is about to change
