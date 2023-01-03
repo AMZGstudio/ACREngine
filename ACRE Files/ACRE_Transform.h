@@ -58,6 +58,23 @@ void drawAT(AreaTrans at)
 	sysDrawAT(at, *areaToDrawOn);
 }
 
+void changeZoom(AreaTrans* at, float xPivot, float yPivot, float zoomLevel)
+{
+	at->szx = ((xPivot - at->x) / at->zoom);
+	at->szy = ((yPivot - at->y) / at->zoom);
+
+	at->szx = ((xPivot - at->x) / at->zoom);
+	at->szy = ((yPivot - at->y) / at->zoom);
+
+	at->zoom *= zoomLevel;
+
+	float difX = (at->szx - ((xPivot - at->x) / at->zoom)) * at->zoom;
+	float difY = (at->szy - ((yPivot - at->y) / at->zoom)) * at->zoom;
+	at->x -= difX;
+	at->y -= difY;
+}
+
+
 void calculateAT(AreaTrans* at)
 {
 	Key keyState = key(LeftM);
@@ -73,16 +90,8 @@ void calculateAT(AreaTrans* at)
 	}
 	
 	if (Mouse.scrollH < 0 || Mouse.scrollH > 0)
-	{
-		at->szx = ((Mouse.x - at->x) / at->zoom );
-		at->szy = ((Mouse.y - at->y) / at->zoom);
-		at->zoom *= Mouse.scrollH > 0 ? 1.05f : 0.95f;
-
-		float difX = (at->szx - ((Mouse.x - at->x) / at->zoom)) * at->zoom;
-		float difY = (at->szy - ((Mouse.y - at->y) / at->zoom)) * at->zoom;
-		at->x -= difX;
-		at->y -= difY;
-	}
+		changeZoom(at, Mouse.x, Mouse.y, Mouse.scrollH > 0 ? 1.05f : 0.95f);
+	
 	at->oldStateLeftM = key(LeftM);
 }
 

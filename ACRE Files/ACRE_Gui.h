@@ -1,10 +1,6 @@
 #pragma once
 #ifdef ACRE_3_COMPATIBLE
-
 #ifdef ACRE_GUI
-
-#define BUTTON 1
-#define SLIDER 2
 
 enum OptionStates {Button, Slider, TextBox};
 
@@ -17,7 +13,8 @@ typedef struct Option {
 	int xStart, yStart, xEnd, yEnd;
 	char title[40];
 
-	Window* windowBelongTo = NULL;
+	Window* windowBelongTo;
+	bool oldLeftMState;
 } Option;
 
 typedef struct Window {
@@ -45,6 +42,17 @@ typedef struct Window {
 #define DARK_BUTTON_PRESSED_COL Color(40, 40, 40)
 #define DARK_WINDOW_COL DarkGrey
 
+void addOption(Option* op, Window* wn)
+{
+	wn->numOps++;
+	wn->ops = (Option**)realloc(wn->ops, sizeof(Option*) * wn->numOps);
+	wn->ops[wn->numOps - 1] = op;
+}
+
+/*-------------------------------------------*\
+|		Creating GUI Element Functions	   	  |
+\*-------------------------------------------*/
+
 Window* createWindow(const int x, const int y, const int width, const int height, const char* name, bool resizeable)
 {
 	Window* window = (Window*)malloc(sizeof(Window));
@@ -71,29 +79,33 @@ Window* createWindow(const int x, const int y, const int width, const int height
 	return window;
 }
 
-void addOption(Option* op, Window* wn)
-{
-	wn->numOps++;
-	wn->ops = (Option**)realloc(wn->ops, sizeof(Option*) * wn->numOps);
-	wn->ops[wn->numOps - 1] = op;
-}
-
-Option* createSlider(Window* parentWindow)
-{
-
-}
-
-Option* createButton(Window* parentWindow, int xStart, int yStart, int xEnd, int yEnd, const char* title)
+Option* createOption()
 {
 	Option* op = (Option*)malloc(sizeof(Option));
+	op->windowBelongTo = NULL;
 
-	op->xStart = xStart;
-	op->yStart = yStart;
-	op->xEnd = xEnd;
-	op->yEnd = yEnd;
+	for (int i = 0; i < 40; i++)
+		op->title[i] = 0;
+
+	op->xStart = 0, op->yStart = 0, op->xEnd = 0, op->yEnd = 0;
+	op->type = NULL;
+	op->bPressed = false;
+	op->oldLeftMState = false;
+}
+Option* createButton(Window* parentWindow, int xStart, int yStart, int xEnd, int yEnd, const char* title)
+{
+	Space windowSpace = { parentWindow->x, parentWindow->y, parentWindow->x + parentWindow->width, parentWindow->y + parentWindow->height };
+	Option* op = createOption();
+
+	op->xStart = xStart == Centered ? ((parentWindow != NULL) ? center(xEnd, windowSpace, X) : center(xEnd, ScreenSpace, X)) : xStart;
+	op->yStart = yStart == Centered ? ((parentWindow != NULL) ? center(yEnd, windowSpace, Y) : center(yEnd, ScreenSpace, Y)) : yStart;
+	
+	op->xEnd = xStart == Centered ? op->xStart + xEnd : xEnd;
+	op->yEnd = yStart == Centered ? op->yStart + yEnd : yEnd;
+
 	op->bPressed = false;
 	op->type = Button;
-	op->windowBelongTo = NULL;
+
 	strcpy(op->title, title);
 
 	if (parentWindow != NULL)
@@ -104,10 +116,19 @@ Option* createButton(Window* parentWindow, int xStart, int yStart, int xEnd, int
 	return op;
 }
 
-Option* createTextBox(Window* parentWindow)
-{
+//Option* createTextBox(Window* parentWindow)
+//{
+//
+//}
 
-}
+//Option* createSlider(Window* parentWindow)
+//{
+//	
+//}
+
+/*-------------------------------------------*\
+|		Calculating GUI Element Functions  	  |
+\*-------------------------------------------*/
 
 bool calculateWindow(Window* window)
 {
@@ -151,15 +172,25 @@ bool calculateButton(Option* button)
 						 button->windowBelongTo->y + button->yStart, 
 						 button->windowBelongTo->x + button->xEnd, 
 						 button->windowBelongTo->y + button->yEnd };
-	
-	if (pointSpaceCollide(Mouse.x, Mouse.y, finalSpace) && key(LeftM).held)
+
+	Key keyState = key(LeftM);
+	if (pointSpaceCollide(Mouse.x, Mouse.y, finalSpace))
 	{
-		button->bPressed = true;
+		if (keyState.held && (!button->oldLeftMState || button->bPressed))
+			button->bPressed = true;
+
+		else button->bPressed = false;
 	}
 	else
 		button->bPressed = false;
+	
+	button->oldLeftMState = keyState.held;
 	return button->bPressed;
 }
+
+/*-------------------------------------------*\
+|		 Drawing GUI Element Functions  	  |
+\*-------------------------------------------*/
 
 Space drawWindow(Window* window, bool dark)
 {
@@ -183,93 +214,15 @@ Space drawButton(Option* button, bool dark)
 	Space buttonSpace;// = spDrawRect(button->xStart, button->yStart, button->xEnd, button->yEnd, windowSpace, dark ? DARK_BUTTON_COLOR : LIGHT_BUTTON_COLOR);
 
 	if (button->bPressed)
-		buttonSpace = spDrawRect(button->xStart, button->yStart, button->xEnd, button->yEnd, windowSpace, dark ? DARK_BUTTON_PRESSED_COL : LIGHT_BUTTON_PRESSED_COL);
+		buttonSpace = spDrawRectFilled(button->xStart, button->yStart, button->xEnd, button->yEnd, windowSpace, dark ? DARK_BUTTON_PRESSED_COL : LIGHT_BUTTON_PRESSED_COL);
 	else
-		buttonSpace = spDrawRect(button->xStart, button->yStart, button->xEnd, button->yEnd, windowSpace, dark ? DARK_BUTTON_COLOR : LIGHT_BUTTON_COLOR);
+		buttonSpace = spDrawRectFilled(button->xStart, button->yStart, button->xEnd, button->yEnd, windowSpace, dark ? DARK_BUTTON_COLOR : LIGHT_BUTTON_COLOR);
 
 	spDrawText(Centered, Centered, buttonSpace, button->title, DefaultFont, White);
 	
 	return buttonSpace;
 }
 
-
-
-
-//Space getWindowSpace(Window* win)
-//{
-//	Space window = { win->x, win->y, win->x + win->width, win->y + win->height };
-//	return window;
-//}
-//
-//bool drawButton(Window* win, int xStart, int yStart, int xEnd, int yEnd, char* title, bool dark)
-//{
-//	Space windowSpace = { win->x, win->y, win->x + win->width, win->y + win->height };
-//
-//	bool returnVal = false;
-//	Space button = sysDrawRect(xStart, yStart, xEnd, yEnd, windowSpace, Default, true, Default, dark?DARK_BUTTON_COLOR:LIGHT_BUTTON_COLOR);
-//	sysDrawText(Centered, Centered, button, title, Default, White, Default);
-//
-//	if (pointSpaceCollide(Mouse.x, Mouse.y, button))
-//	{
-//		if (key(LeftM).held)
-//		{
-//			sysDrawRect(0, 0, Width(button), Height(button), button, Default, true, Default, dark?DARK_BUTTON_PRESSED_COL:LIGHT_BUTTON_PRESSED_COL);
-//			returnVal = true;
-//		}
-//	}
-//	return returnVal;
-//}
-//void drawButton(Space space, int x, int y, char* title, Font fontType)
-//{
-//	int borderW = 2;
-//	int w = stringWidth(title, fontType)+borderW*2, h = 7 + borderW * 2;
-//
-//	Space s = getSpace(space, x, y, x == Centered ? w : x + w, y == Centered ? y : y + h);
-//
-//	bool drawn = false;
-//	if (pointSpaceCollide(Mouse.x, Mouse.y, s))
-//		if (key(LeftM).held)
-//		{
-//			drawn = true;
-//			sysDrawRect(s.startX, s.startY, s.endX, s.endY, Screen, Default, true, Default, VeryDarkGrey);
-//		}
-//	
-//	if (!drawn) sysDrawRect(s.startX, s.startY, s.endX, s.endY, Screen, Default, true, Default, Color(100,100,100));
-//
-//	sysDrawText(s.startX + borderW, s.startY + borderW-1, Screen, title, fontType, Default, White);
-//	//sysDrawRect(s.startX, s.startY, s.endX, s.endY, Screen, Default, false, Default, VeryDarkGrey);
-//}
-
-//Space sysDrawOutline(int xStart, int yStart, int xEnd, int yEnd, Space screenSpace, int colorFront, int colorBack)
-	//{
-	//	Space windowSpace = { 0,0,0,0 };
-	//	if (xStart == Centered) windowSpace.startX = center(xEnd, screenSpace, X), windowSpace.endX = windowSpace.startX + xEnd - 1;
-	//	else windowSpace.startX = xStart, windowSpace.endX = xEnd;
-
-	//	if (yStart == Centered) windowSpace.startY = center(yEnd, screenSpace, Y), windowSpace.endY = windowSpace.startY + yEnd - 1;
-	//	else windowSpace.startY = yStart, windowSpace.endY = yEnd;
-
-	//	//draw it
-	//	int tl = 218, tr = 191, bl = 192, br = 217, rl = 179, tb = 196;
-
-	//	for (int x = windowSpace.startX; x <= windowSpace.endX; x++)
-	//		for (int y = windowSpace.startY; y <= windowSpace.endY; y++)
-	//		{
-	//			//if we are in the first column or the last column.
-	//			if (y == windowSpace.startY || y == windowSpace.endY)
-	//			{
-	//				if (y == windowSpace.startY && x == windowSpace.startX) sysDrawPoint(x, y, screenSpace, tl, colorFront, colorBack);
-	//				else if (y == windowSpace.startY && x == windowSpace.endX) sysDrawPoint(x, y, screenSpace, tr, colorFront, colorBack);
-	//				else if (y == windowSpace.endY && x == windowSpace.startX) sysDrawPoint(x, y, screenSpace, bl, colorFront, colorBack);
-	//				else if (y == windowSpace.endY && x == windowSpace.endX) sysDrawPoint(x, y, screenSpace, br, colorFront, colorBack);
-	//				else sysDrawPoint(x, y, screenSpace, tb, colorFront, colorBack);
-	//			}
-	//			else if (x == windowSpace.startX || x == windowSpace.endX)
-	//				sysDrawPoint(x, y, screenSpace, rl, colorFront, colorBack);
-	//		}
-	//	return windowSpace;
-	//}
-//	Space drawOutline(int xStart, int yStart, int xEnd, int yEnd, int color){return sysDrawOutline(xStart, yStart, xEnd, yEnd, Screen, color, Default);}
 #endif
 #else
 #error You need to use a ACRE 3.0 Compatible version

@@ -417,29 +417,29 @@
 
 	Space getSpace(Space prevSpace, int xStart, int yStart, int xEnd, int yEnd)
 	{
-		Space Location = { 0, 0, 0, 0 };
+		Space currSpace = { 0,0,0,0 };
 
 		if (xStart == Centered)
 		{
-			Location.startX = prevSpace.startX + center(xEnd, prevSpace, X);
-			Location.endX = Location.startX + xEnd;
+			currSpace.startX = prevSpace.startX + center(xEnd, prevSpace, X);
+			currSpace.endX = currSpace.startX + xEnd;
 		}
 		else
 		{
-			Location.startX = prevSpace.startX + xStart;
-			Location.endX = prevSpace.startX + xEnd;
+			currSpace.startX = prevSpace.startX + xStart;
+			currSpace.endX = prevSpace.startX + xEnd;
 		}
 		if (yStart == Centered)
 		{
-			Location.startY = prevSpace.startY + center(yEnd, prevSpace, Y);
-			Location.endY = Location.startY + yEnd;
+			currSpace.startY = prevSpace.startY + center(yEnd, prevSpace, Y);
+			currSpace.endY = currSpace.startY + yEnd;
 		}
 		else
 		{
-			Location.startY = prevSpace.startY + yStart;
-			Location.endY = prevSpace.startY + yEnd;
+			currSpace.startY = prevSpace.startY + yStart;
+			currSpace.endY = prevSpace.startY + yEnd;
 		}
-		return Location;
+		return currSpace;
 	}
 	
 	/*-------------------------------------------*\
@@ -1252,7 +1252,7 @@
 
 	Space spDrawCircle(int x, int y, Space space, int radius, short color)
 	{
-		Space circleSpace = getSpace(space, x - radius, y - radius, x + radius, y + radius);
+		Space circleSpace = getSpace(space, x == Centered ? x : x - radius, y == Centered ? y : y - radius, x == Centered ? radius : x + radius, y == Centered ? radius : y + radius);
 		sysDrawCircle(x, y, *areaToDrawOn, radius, Default, false, Default, color);
 		return circleSpace;
 	}
@@ -1753,9 +1753,8 @@
 			screenBufferFull[nextOpenSlot] = Screen.characters[i];
 			nextOpenSlot++;
 		}
-		//render	
-		
 
+		//render	
 		if (!WriteConsoleA(hConsoleOutput, screenBufferFull, nextOpenSlot, NULL, NULL))
 			Error(L"Rendering failed.", __LINE__);
 
