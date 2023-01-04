@@ -1,5 +1,5 @@
 #define SHOW_FPS
-#define FULLSCREEN
+//#define FULLSCREEN
 
 #define ACRE_START
 #include "../ACRE Files/ACREngine.h"

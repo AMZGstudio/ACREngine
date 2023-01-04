@@ -91,6 +91,7 @@ Option* createOption()
 	op->type = NULL;
 	op->bPressed = false;
 	op->oldLeftMState = false;
+	return op;
 }
 Option* createButton(Window* parentWindow, int xStart, int yStart, int xEnd, int yEnd, const char* title)
 {
