@@ -9,7 +9,9 @@ typedef struct Window Window;
 
 typedef struct Option {
 	unsigned int type;
-	bool bPressed;
+	bool pressed;
+	bool held;
+	bool released;
 
 	float sliderVal;
 	int xStart, yStart, xEnd, yEnd;
@@ -40,20 +42,18 @@ typedef struct Window {
 #define LIGHT_WINDOW_COL Color(160, 160, 160)
 #define LIGHT_BUT_ON_COL Color(100, 100, 100)
 #define LIGHT_BUT_OF_COL Color(120, 120, 120)
-#define LIGHT_SLIDER_COL 
+#define LIGHT_SLIDEB_COL Color(80, 80, 80)
+#define LIGHT_SLIDEF_COL Color(100, 100, 100)
 #define LIGHT_TITLE_COL Color(100, 100, 100)
+#define LIGHT_TEXT_COL Black
 
-
-
-//#define LIGHT_TITLE_COLOR White
-//#define LIGHT_BUTTON_COLOR Color(120, 120, 120)
-//#define LIGHT_BUTTON_PRESSED_COL Color(100, 100, 100)
-//#define LIGHT_WINDOW_COL Color(180, 180, 180)
-
-//#define DARK_TITLE_COLOR Color(100, 100, 100)
-//#define DARK_BUTTON_COLOR DARK_TITLE_COLOR
-//#define DARK_BUTTON_PRESSED_COL Color(40, 40, 40)
-//#define DARK_WINDOW_COL DarkGrey
+#define DARK_WINDOW_COL Color(70, 70, 70)
+#define DARK_BUT_ON_COL Color(80, 80, 80)
+#define DARK_BUT_OF_COL Color(105, 105, 105)
+#define DARK_SLIDEB_COL Color(50, 50, 50)
+#define DARK_SLIDEF_COL Color(100, 100, 100)
+#define DARK_TITLE_COL Color(100, 100, 100)
+#define DARK_TEXT_COl White
 
 void addOption(Option* op, Window* wn)
 {
@@ -74,13 +74,13 @@ Space getWindowSpace(Window* wn)
 	}
 	return w;
 }
+
 Space getWindowSpaceFull(Window* wn)
 {
 	Space w = getWindowSpace(wn);
 	w.startY -= 3;
 	return w;
 }
-
 
 /*-------------------------------------------*\
 |		Creating GUI Element Functions	   	  |
@@ -123,7 +123,8 @@ Option* createOption(Window* parentWindow)
 
 	op->xStart = 0, op->yStart = 0, op->xEnd = 0, op->yEnd = 0;
 	op->type = NULL;
-	op->bPressed = false;
+	op->pressed = false;
+	op->held = false;
 	op->oldLeftMState = false;
 	op->font = DefaultFont;
 
@@ -137,6 +138,7 @@ Option* createOption(Window* parentWindow)
 
 	return op;
 }
+
 Option* createButton(Window* parentWindow, int xStart, int yStart, int xEnd, int yEnd, const char* title)
 {
 	Space windowSpace = getWindowSpace(parentWindow);
@@ -173,8 +175,7 @@ Option* createTextBox(Window* parentWindow, int x, int y, char* text, Font font)
 	return op;
 }
 
-// side start loc is float between 0, and 100
-Option* createSlider(Window* parentWindow, int xStart, int yStart, int xEnd, int yEnd, float slideStartLoc)
+Option* createSlider(Window* parentWindow, int xStart, int yStart, int xEnd, int yEnd, float slideStartLoc) // slide start loc is float between 0, and 100
 {
 	Space windowSpace = getWindowSpace(parentWindow);
 	Option* op = createOption(parentWindow);
@@ -231,7 +232,7 @@ bool calculateWindow(Window* window)
 	return pointSpaceCollide(Mouse.x, Mouse.y, getWindowSpaceFull(window));
 }
 
-bool calculateButton(Option* button)
+void calculateButton(Option* button)
 {
 	Space finalSpace = { button->windowBelongTo->x + button->xStart, 
 						 button->windowBelongTo->y + button->yStart, 
@@ -242,16 +243,19 @@ bool calculateButton(Option* button)
 	Key keyState = key(LeftM);
 	if (pointSpaceCollide(Mouse.x, Mouse.y, finalSpace))
 	{
-		if (keyState.held && (!button->oldLeftMState || button->bPressed))
-			button->bPressed = true;
+		if (keyState.held && (!button->oldLeftMState || button->held))
+			button->held = true;
 
-		else button->bPressed = false;
+		else button->held = false;
 	}
 	else
-		button->bPressed = false;
+		button->held = false;
 	
+	if (button->oldLeftMState == false && button->held)
+		button->pressed = true;
+	else button->pressed = false;
+
 	button->oldLeftMState = keyState.held;
-	return button->bPressed;
 }
 
 void calculateSlider(Option* slider)
@@ -266,6 +270,7 @@ void calculateSlider(Option* slider)
 		slider->sliderVal = map(Mouse.x, finalSpace.startX, finalSpace.endX, 0, 100);
 	}
 }
+
 /*-------------------------------------------*\
 |		 Drawing GUI Element Functions  	  |
 \*-------------------------------------------*/
@@ -287,13 +292,13 @@ void drawShade(int xStart, int yStart, int xEnd, int yEnd)
 
 Space drawWindow(Window* window, bool dark)
 {
-	Space windowSpace = drawRectFilled(window->x, window->y, window->x+window->width, window->y+window->height, dark ? 1: LIGHT_WINDOW_COL);
-	sysDrawRect(windowSpace.startX, windowSpace.startY-3, windowSpace.endX, windowSpace.startY, Screen, Default, true, Default, dark ? 1 : LIGHT_TITLE_COL);
+	Space windowSpace = drawRectFilled(window->x, window->y, window->x+window->width, window->y+window->height, dark ? DARK_WINDOW_COL : LIGHT_WINDOW_COL);
+	sysDrawRect(windowSpace.startX, windowSpace.startY-3, windowSpace.endX, windowSpace.startY, Screen, Default, true, Default, dark ? DARK_TITLE_COL : LIGHT_TITLE_COL);
 
 	drawShade(windowSpace.startX, windowSpace.startY-3, windowSpace.endX, windowSpace.endY);
 
 	if(window->name != NULL)
-		sysDrawText(windowSpace.startX + 2, windowSpace.startY-2, Screen, window->name, DefaultFont, dark?White:Black, Default);
+		sysDrawText(windowSpace.startX + 2, windowSpace.startY-2, Screen, window->name, DefaultFont, dark ? White : Black, Default);
 	
 	return windowSpace;
 }
@@ -301,44 +306,41 @@ Space drawWindow(Window* window, bool dark)
 Space drawButton(Option* button, bool dark)
 {
 	Space windowSpace = getWindowSpace(button->windowBelongTo);
+	Space buttonSpace;
 
-	Space buttonSpace;// = spDrawRect(button->xStart, button->yStart, button->xEnd, button->yEnd, windowSpace, dark ? DARK_BUTTON_COLOR : LIGHT_BUTTON_COLOR);
-
-	if (button->bPressed)
-		buttonSpace = spDrawRectFilled(button->xStart, button->yStart, button->xEnd, button->yEnd, windowSpace, dark ?1 : LIGHT_BUT_ON_COL);
+	if (button->held) buttonSpace = spDrawRectFilled(button->xStart, button->yStart, button->xEnd, button->yEnd, windowSpace, dark ? DARK_BUT_ON_COL : LIGHT_BUT_ON_COL);
+	else				  buttonSpace = spDrawRectFilled(button->xStart, button->yStart, button->xEnd, button->yEnd, windowSpace, dark ? DARK_BUT_OF_COL : LIGHT_BUT_OF_COL);
 	
-	else
-		buttonSpace = spDrawRectFilled(button->xStart, button->yStart, button->xEnd, button->yEnd, windowSpace, dark ? 1 : LIGHT_BUT_OF_COL);
-	
-
 	drawShade(buttonSpace.startX, buttonSpace.startY, buttonSpace.endX, buttonSpace.endY);
-	
 	spDrawText(Centered, Centered, buttonSpace, button->title, DefaultFont, Black);
 	
 	return buttonSpace;
 }
 
 Space drawTextBox(Option* textbox, bool dark)
-{//dark ? LIGHT_TITLE_COLOR : DARK_TITLE_COLOR
+{
 	Space windowSpace = getWindowSpace(textbox->windowBelongTo);
-	return spDrawText(textbox->xStart, textbox->yStart, textbox->windowBelongTo == NULL ? ScreenSpace : windowSpace, textbox->title, textbox->font, Black);
+	return spDrawText(textbox->xStart, textbox->yStart, textbox->windowBelongTo == NULL ? ScreenSpace : windowSpace, textbox->title, textbox->font, dark ? DARK_TEXT_COl : LIGHT_TEXT_COL);
 }
 
 void drawSlider(Option* slider, bool dark)
 {
 	Space windowSpace = getWindowSpace(slider->windowBelongTo);
 	
-	spDrawRectFilled(slider->xStart, slider->yStart, slider->xEnd, slider->yEnd, windowSpace, Color(50, 50, 50));
+	spDrawRectFilled(slider->xStart, slider->yStart, slider->xEnd, slider->yEnd, windowSpace, dark ? DARK_SLIDEB_COL : LIGHT_SLIDEB_COL);
 	int newX = map(slider->sliderVal, 0, 100, slider->xStart, slider->xEnd);
 	
-	spDrawRectFilled(newX, slider->yStart, newX + 1, slider->yEnd, windowSpace, Color(80, 80, 80));
+	spDrawRectFilled(newX, slider->yStart, newX + 1, slider->yEnd, windowSpace, dark ? DARK_SLIDEF_COL : LIGHT_SLIDEF_COL);
 }
+
+/*-------------------------------------------*\
+|			  Delete Gui Elements			  |
+\*-------------------------------------------*/
 
 void deleteWindow(Window* wn)
 {
 	free(wn->ops);
 }
-
 
 #endif
 #else

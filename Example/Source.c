@@ -1,3 +1,47 @@
+//
+//#define SHOW_FPS
+//
+//#define ACRE_START // only do this in the main file.
+//#include "../ACRE Files/ACREngine.h"
+//
+//int main()
+//{
+//    // we create the screen, with the window title, dimensions, the text foreground, and background color. over here, its black text on a white background.
+//    initalize("Demo Text", 200, 100, 5, 5, Black, White); // TIP: write Default, for default foreground and background.
+//    
+//    // top left coordinates of the square.
+//    float x = 100, y = 50;
+//
+//    // keep on running the game loop, as long as the escape key is not pressed.
+//    while (key(Esc).pressed == false)
+//    {
+//        // draw a rectangle starting from x, and y, to x and y + 10, making the square 10 units wide.
+//        drawRectFilled(x-10, y-10, x + 10, y + 10, Blue);
+//
+//        // check if any of the WASD keys are pressed, and move the x and y of the square accordingly.
+//        // timerPerSec adds the correct amount to the coordinates, to make them move 40 units every second.
+//        if (key(W).held) y -= timePerSec(40);
+//        if (key(S).held) y += timePerSec(40);
+//        if (key(A).held) x -= timePerSec(40);
+//        if (key(D).held) x += timePerSec(40);
+//
+//        // render to screen, true means to clear the screen after rendering.
+//        render(true);
+//    }
+//
+//    //close the API, (stops memory from leaking)
+//    return terminateACRE();
+//}
+
+
+
+
+
+
+
+
+
+
 #define SHOW_FPS
 #define SPRITE_PATH "../ACRE Sprites/"
 #define FILE_NAME "harry.acre"
@@ -19,6 +63,7 @@
 
 int main()
 {
+	bool darkMode = true;
 	// start ACRE engine
 	initalize("New Version!", 190, 105, 6, 6, Default, VeryDarkGrey);
 
@@ -26,6 +71,7 @@ int main()
 
 	Option* b1 = createButton(w, Centered, 4, w->width - 4, 9, "Zoom In");
 	Option* b2 = createButton(w, Centered, 11, w->width - 4, 16, "Zoom Out");
+	Option* b3 = createButton(w, w->width/2+1, 18, w->width - 2, 23, "Change Color");
 
 	Option* text = createTextBox(w, 5, 18, "Zoom Scale: ", DefaultFont);
 	Option* slider = createSlider(w, Centered, 30, w->width - 4, 34, 0);	
@@ -39,17 +85,21 @@ int main()
 		if (!calculateWindow(w))
 			calculateAT(&at);
 
-		if (calculateButton(b1))
-			slider->sliderVal += slider->sliderVal < 100 ? timePerSec(10) : 0;
-		if (calculateButton(b2))
-			slider->sliderVal -= slider->sliderVal > 1 ? timePerSec(10) : 0;
+		calculateButton(b1);
+		calculateButton(b2);
+		calculateButton(b3);
+
+		if (b1->held) slider->sliderVal += slider->sliderVal < 100 ? timePerSec(10) : 0;
+		if (b2->held) slider->sliderVal -= slider->sliderVal > 1 ? timePerSec(10) : 0;
+		if (b3->pressed) darkMode = !darkMode;
 
 		drawAT(at);
-		drawWindow(w, false);
-		drawButton(b1, false);
-		drawButton(b2, false);
-		drawSlider(slider, false);
-		drawTextBox(text, false);
+		drawWindow(w, darkMode);
+		drawButton(b1, darkMode);
+		drawButton(b2, darkMode);
+		drawButton(b3, darkMode);
+		drawTextBox(text, darkMode);
+		drawSlider(slider, darkMode);
 
 		changeZoom(&at, Width(Screen)/2, Height(Screen)/2, map(slider->sliderVal, 0, 100, 1, 100), false);
 		sprintf_s(text->title, TEXT_SIZE, "Zoom scale: %.2f\n\nFile name:\n%s\n\nFPS: %.2f", at.zoom, FILE_NAME, fps);
@@ -57,6 +107,6 @@ int main()
 		render(true);
 	}
 	deleteArea(spr);
-
-	return terminateACRE();
+	
+	terminateACRE();
 }
