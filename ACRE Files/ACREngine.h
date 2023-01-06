@@ -113,6 +113,8 @@
 
 		FINISHED: TODO: Add other drawPartialArea functions.
 
+		Changed FULLSCREEN to be ACRE_FULLSCREEN
+
 		TODO: onResize() function.
 		TODO: Change how fps works, instead of ticks, it goes by time.
 		TODO: Finish textBoxInput()
@@ -178,7 +180,7 @@
 	};
 	enum ACRE_TYPES {Thirds = -502, Centered = -501, Default = -1 };
 	enum COLORS { 
-		Black = 16, VeryDarkGrey = 235, DarkGrey = 237, Grey = 243, LightGrey = 247, White = 255,
+		Black = 16, VeryDarkGrey = 234, DarkGrey = 237, Grey = 243, LightGrey = 247, White = 255,
 		
 		Red = 196, Maroon = 52,		   DarkRed = 124,  Pink = 218,
 		Orange=202,Brown = 130,		   DarkOrange=166, Tan = 180,
@@ -369,7 +371,7 @@
 	};
 	Font EightBit = { 8, 8, (const unsigned char*)font8x8_basic }; //sysDrawFontChar(x, y, Screen, EIGHT_BIT, text[slot], colorFront, colorBack);
 	Font DefaultFont = { 1, 1, NULL };
-	Timer time = { 0 };
+	Timer timer = { 0 };
 	/*-------------------------------------------*\
 	|			 System Only Functions   		  |
 	\*-------------------------------------------*/
@@ -734,7 +736,7 @@
 	void SetConsoleWindowSize(int* x, int* y, bool Errors)
 	{
 		bool fullscreenFailed = false;
-		#ifdef FULLSCREEN
+		#ifdef ACRE_FULLSCREEN
 		if (!SetConsoleDisplayMode(hConsoleOutput, CONSOLE_FULLSCREEN_MODE, 0))
 		{
 			DWORD dwStyle = GetWindowLong(ConsoleWindow, GWL_STYLE);
@@ -756,7 +758,7 @@
 				largestSize.X -= 1;
 				//largestSize.Y += 1;
 			}
-#ifdef FULLSCREEN
+#ifdef ACRE_FULLSCREEN
 			(*x) = largestSize.X;
 			(*y) = largestSize.Y;
 #endif
@@ -1652,7 +1654,7 @@
 
 		ConsoleWindow = GetConsoleWindow();
 
-		#ifdef FULLSCREEN
+		#ifdef ACRE_FULLSCREEN
 			checkActiveWindow = false;
 		#endif
 		//set default values
