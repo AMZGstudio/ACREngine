@@ -157,7 +157,7 @@ Option* createButton(Window* parentWindow, int xStart, int yStart, int xEnd, int
 	return op;
 }
 
-Option* createTextBox(Window* parentWindow, int x, int y, char* text, Font font)
+Option* createTextBox(Window* parentWindow, int x, int y, const char* text, Font font)
 {
 	Space windowSpace = getWindowSpace(parentWindow);
 	Option* op = createOption(parentWindow);

@@ -1,29 +1,43 @@
-//
 //#define SHOW_FPS
-//
 //#define ACRE_START // only do this in the main file.
+//
 //#include "../ACRE Files/ACREngine.h"
+//
+//class Object {
+//
+//public: // everything here we can use directly
+//	float x, y;
+//
+//	Object() // constructor, it initalizes the things in the class
+//	{
+//		x = Width(Screen) / 2.0f;
+//		y = Height(Screen) / 2.0f;
+//	}
+//
+//	void drawObject()
+//	{
+//		drawRectFilled(x, y, x + 10, y + 10, Blue);
+//	}
+//};
 //
 //int main()
 //{
 //    // we create the screen, with the window title, dimensions, the text foreground, and background color. over here, its black text on a white background.
 //    initalize("Demo Text", 200, 100, 5, 5, Black, White); // TIP: write Default, for default foreground and background.
 //    
-//    // top left coordinates of the square.
-//    float x = 100, y = 50;
+//	Object square;
 //
 //    // keep on running the game loop, as long as the escape key is not pressed.
 //    while (key(Esc).pressed == false)
 //    {
-//        // draw a rectangle starting from x, and y, to x and y + 10, making the square 10 units wide.
-//        drawRectFilled(x-10, y-10, x + 10, y + 10, Blue);
-//
+//		square.drawObject();
+//      
 //        // check if any of the WASD keys are pressed, and move the x and y of the square accordingly.
 //        // timerPerSec adds the correct amount to the coordinates, to make them move 40 units every second.
-//        if (key(W).held) y -= timePerSec(40);
-//        if (key(S).held) y += timePerSec(40);
-//        if (key(A).held) x -= timePerSec(40);
-//        if (key(D).held) x += timePerSec(40);
+//        if (key(W).held) square.y -= timePerSec(40);
+//        if (key(S).held) square.y += timePerSec(40);
+//        if (key(A).held) square.x -= timePerSec(40);
+//        if (key(D).held) square.x += timePerSec(40);
 //
 //        // render to screen, true means to clear the screen after rendering.
 //        render(true);
@@ -32,7 +46,7 @@
 //    //close the API, (stops memory from leaking)
 //    return terminateACRE();
 //}
-
+//
 
 
 
@@ -81,17 +95,21 @@ int main()
 	
 	while (!key(Esc).pressed)
 	{	
-		calculateSlider(slider);
 		if (!calculateWindow(w))
 			calculateAT(&at);
 
 		calculateButton(b1);
 		calculateButton(b2);
 		calculateButton(b3);
+		calculateSlider(slider);
 
 		if (b1->held) slider->sliderVal += slider->sliderVal < 100 ? timePerSec(10) : 0;
 		if (b2->held) slider->sliderVal -= slider->sliderVal > 1 ? timePerSec(10) : 0;
-		if (b3->pressed) darkMode = !darkMode;
+		if (b3->pressed)
+		{
+			defaultBackColor = darkMode ? Color(200,200,200) : VeryDarkGrey;
+			darkMode = !darkMode;
+		}
 
 		drawAT(at);
 		drawWindow(w, darkMode);
