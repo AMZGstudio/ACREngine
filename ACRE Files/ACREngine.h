@@ -170,8 +170,8 @@
 	typedef struct Key {bool pressed, held, released; int letter;} Key;
 	typedef struct Timer { double elapsedTime; } Timer;
 
-	Area Screen;
-	Space ScreenSpace;
+	extern Area Screen;
+	extern Space ScreenSpace;
 	// all enums
 	enum KEYS {
 		A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z, Up, Down, Left, Right,
@@ -327,6 +327,8 @@
 	HWND ConsoleWindow;
 
 	Area* areaToDrawOn;
+	Area Screen;
+	Space ScreenSpace;
 	
 	//others
 	MOUSE Mouse = { 0, 0, 0, 0 };
