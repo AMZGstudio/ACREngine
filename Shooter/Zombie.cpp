@@ -52,7 +52,7 @@ void Zombie::update()
 void Zombie::draw()
 {
 	Space sp = drawCircle(x, y, RADIUS, Green);
-	spDrawNumber(Centered,0, sp, health, 0, EightBit, Pink);
+	spDrawNumber(Centered, -RADIUS-3, sp, health, 0, EightBit, Red);
 }
 
 bool Zombie::pointCollide(int x, int y)
