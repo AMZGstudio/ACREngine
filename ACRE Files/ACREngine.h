@@ -1331,7 +1331,7 @@
 		int n = (int)number;
 		do {(int)(n = n/10), ++count;} 
 		while (n != 0);
-		int textWidth = (n + numDecimal) * fontType.displayW;
+		int textWidth = (count + numDecimal) * fontType.displayW;
 
 		Space numSpace = getSpace(space, x, y, (x == Centered) ? textWidth : x + textWidth, (y == Centered) ? fontType.displayW : y + fontType.displayW);
 		sysDrawNumber(numSpace.startX, numSpace.startY, *areaToDrawOn, number, numDecimal, fontType, Default, color);
