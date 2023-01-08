@@ -1,7 +1,7 @@
 #pragma once
 #include "Entity.h"
 
-#define RADIUS 5
+#define RADIUS 2
 
 class Player : public Entity
 {

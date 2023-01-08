@@ -27,3 +27,4 @@ void Player::update()
 	x += timePerSec(vx);
 	y += timePerSec(vy);
 }
+
