@@ -2,16 +2,20 @@
 #include <cmath>
 #include <algorithm>
 
-Bullet::Bullet(int px, int py, int mx, int my) : Entity(100)
+Bullet::Bullet(int px, int py, float pvx, float pvy, int mx, int my) : Entity(100)
 {
 	x = px, y = py;
 	float th = atan((float)abs(my - py) / (float)abs(mx - px));
 
-	vx = (cos(th) * _vel);
-	vy = (sin(th) * _vel);
+	vx = cos(th) * _vel;
+	vy = sin(th) * _vel;
 
 	if (mx < px) vx *= -1;
 	if (my < py) vy *= -1;
+
+	vx += pvx;
+	vy += pvy;
+
 }
 
 void Bullet::draw()

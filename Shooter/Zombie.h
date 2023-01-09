@@ -18,6 +18,7 @@ public:
 	void update() override;
 	void draw() override;
 
+	float getRadius();
 	bool pointCollide(int x, int y);	
 };
 

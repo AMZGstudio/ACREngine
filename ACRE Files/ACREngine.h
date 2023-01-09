@@ -99,6 +99,8 @@
 		added spWidth, and spHeight.
 		fixed bug in makeSprite()
 		fixed bug in spDrawNumber()
+		fixed bug in drawCircle() causing it too be create malformed circles.
+		fixed bug in spDrawCircleFilled
 
 		Changed ACRE_Window extension, now works like other extensions (#ifdef stuff)
 		Changed terminate() function, to terminateACRE(). it caused issues with cpp
@@ -221,7 +223,7 @@
 	int strToInt(char* string);
 	void intToStr(char* string, int num);
 	float map(float numberToMap, int numberBegin, int numberEnd, int numberMapStart, int numberMapEnd);
-	float clamp(float numToClamp, int min, int max);
+	float clamp(float numToClamp, float min, float max);
 	void Xterm(short col, short* r, short* g, short* b);
 	int Color(int r, int g, int b);
 	int stringWidth(const char* string, Font fontType);
@@ -502,11 +504,11 @@
 		float output = (float)numberMapStart + (((float)numberMapEnd - (float)numberMapStart) / ((float)numberEnd - (float)numberBegin)) * ((float)numberToMap - (float)numberBegin);
 		return output;
 	}
-	float clamp(float numToClamp, int min, int max)
+	float clamp(float numToClamp, float min, float max)
 	{
-		if (numToClamp < min)
+		if (numToClamp < (float)min)
 			numToClamp = (float)min;
-		if (numToClamp > max)
+		if (numToClamp > (float)max)
 			numToClamp = (float)max;
 		return numToClamp;
 	}
@@ -912,12 +914,12 @@
 			if (filled)
 			{
 				// Modified to draw scan-lines instead of edges
-				for (int ia = x - xa; ia < x + xa; ia++)
+				for (int ia = x - xa; ia <= x + xa; ia++)
 				{
 					sysDrawPoint(ia, y - ya, area, character, colorFront, colorBack);
 					sysDrawPoint(ia, y + ya, area, character, colorFront, colorBack);
 				}
-				for (int ia = x - ya; ia < x + ya; ia++)
+				for (int ia = x - ya; ia <= x + ya; ia++)
 				{
 					sysDrawPoint(ia, y - xa, area, character, colorFront, colorBack);
 					sysDrawPoint(ia, y + xa, area, character, colorFront, colorBack);
@@ -1262,7 +1264,7 @@
 	}
 	Space spDrawCircleFilled(int x, int y, Space space, int radius, short color)
 	{
-		Space circleSpace = getSpace(space, x - radius, y - radius, x + radius, y + radius);
+		Space circleSpace = getSpace(space, x == Centered ? x : x - radius, y == Centered ? y : y - radius, x == Centered ? radius : x + radius, y == Centered ? radius : y + radius);
 		sysDrawCircle(x, y, *areaToDrawOn, radius, Default, true, Default, color);
 		return circleSpace;
 	}

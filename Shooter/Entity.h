@@ -5,7 +5,6 @@
 class Entity
 {
 protected:
-
 	float x, y, vx, vy;
 	float health;
 	Entity(float health);

@@ -55,6 +55,11 @@ void Zombie::draw()
 	spDrawNumber(Centered, -RADIUS-3, sp, health, 0, EightBit, Red);
 }
 
+float Zombie::getRadius()
+{
+	return RADIUS;
+}
+
 bool Zombie::pointCollide(int x, int y)
 {
 	float distX = x - this->x;

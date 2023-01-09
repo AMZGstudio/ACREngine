@@ -10,7 +10,7 @@ private:
 	static constexpr float _vel = 60;
 
 public:
-	Bullet(int px, int py, int mx, int my);
+	Bullet(int px, int py, float pvx, float pvy, int mx, int my);
 	
 	void draw() override;
 	void update() override;

@@ -6,10 +6,10 @@ Game::Game() : p(), bullets(), zombies()
 {
 }
 
-void Game::runState()
+int Game::runState()
 {
 	if (key(Spacebar).pressed)
-		bullets.push_back(Bullet(p.getX(), p.getY(), Mouse.x, Mouse.y));
+		bullets.push_back(Bullet(p.getX(), p.getY(), 0, 0, Mouse.x, Mouse.y));
 
 	if (key(Q).pressed)
 		zombies.push_back(Zombie(p));
@@ -33,6 +33,8 @@ void Game::runState()
 	zombies.erase(std::remove_if(zombies.begin(), zombies.end(), [](auto&& item)
 		{ return !item.isAlive(); }), zombies.end());
 
+	
 	drawText(2, 2, "Health: ", EightBit, White);
 	drawNumber(2 + stringWidth("Health", EightBit) + 8, 2, p.getHealth(), EightBit, White);
+	return game;
 }

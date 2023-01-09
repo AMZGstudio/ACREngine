@@ -14,6 +14,6 @@ private:
 
 public:
 	Game();
-	void runState() override;
+	int runState() override;
 };
 
