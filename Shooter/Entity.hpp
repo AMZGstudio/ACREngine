@@ -8,6 +8,7 @@ protected:
 	float x, y, vx, vy;
 	float health;
 	Entity(float health);
+	Entity(const Entity& other);
 
 	virtual void draw() = 0;
 	virtual void update() = 0;

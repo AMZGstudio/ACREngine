@@ -5,28 +5,28 @@
 
 #include "../ACRE Files/ACREngine.h"
 
-enum all_states { menu, game, over };
+//enum all_states { menu, game, over };
 
 class State
 {
 public:
-	virtual int runState() = 0;
+	virtual void runState(std::string& state) = 0;
 };
 
 class States
 {
 private:
 	// vector of functions
-	std::vector<State*> states;
+	std::map<std::string, State*> states;
 	Area surface;
-	int stateIndex;
+	std::string currState;
 
 public:
 	std::map<std::string, int> leaderboard;
 
-	States(int stateIndex);
-	int runState();
-	void setState(int index);
-	void addState(State* state);
+	States(std::string stateName);
+	void runState();
+	void setState(std::string name);
+	void addState(std::string name, State* state);
 	Area& getArea();
 };

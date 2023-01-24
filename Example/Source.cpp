@@ -21,7 +21,7 @@ int main()
 {
 	bool darkMode = true;
 	// start ACRE engine
-	initalize("New Version!", 190, 105, 6, 6, Default, VeryDarkGrey);
+	initialize("New Version!", 190, 105, 6, 6, Default, VeryDarkGrey);
 
 	Window* w = createWindow(2, 2, 45, 60, "Sprite Controls", true);
 

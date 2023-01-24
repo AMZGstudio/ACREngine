@@ -27,10 +27,8 @@ Zombie::Zombie(Player& p, std::vector<Zombie>& zombies, float speed) : Entity(10
 	} while (zombieCollide());
 }
 
-Zombie::Zombie(const Zombie& other) : Entity(other.health), _player(other._player), _zombies(other._zombies), _speed(other._speed)
+Zombie::Zombie(const Zombie& other) : Entity(other), _player(other._player), _zombies(other._zombies), _speed(other._speed)
 {
-	x = other.x;
-	y = other.y;
 }
 
 Zombie& Zombie::operator=(const Zombie& other)
@@ -54,21 +52,22 @@ void Zombie::update()
 	float dx = _player.getX() - x;
 	float dy = _player.getY() - y;
 
+	if (abs(dx) < 0.3) dx = 0;
+	if (abs(dy) < 0.3) dy = 0;
+
 	if (dx < 0) vx -= timePerSec(_speed);
 	if (dx > 0) vx += timePerSec(_speed);
 	if (dy < 0) vy -= timePerSec(_speed);
 	if (dy > 0) vy += timePerSec(_speed);
 
-	if (vx < -_speed) vx = -_speed;
-	if (vy < -_speed) vy = -_speed;
-	if (vx > _speed) vx = _speed;
-	if (vy > _speed) vy = _speed;
+	vx = clamp(vx, _speed * -1, _speed);
+	vy = clamp(vy, _speed * -1, _speed);
+	
+	if (vx != 0) vx += (vx < 0 ? timePerSec(30) : -timePerSec(30));
+	if (vy != 0) vy += (vy < 0 ? timePerSec(30) : -timePerSec(30));
 
-	if (vx != 0) vx += (vx < 0 ? timePerSec(10) : -timePerSec(10)) * 3;
-	if (vy != 0) vy += (vy < 0 ? timePerSec(10) : -timePerSec(10)) * 3;
-
-	if (vx < 0.1 && vx > -0.1) vx = 0;
-	if (vy < 0.1 && vy > -0.1) vy = 0;
+	if (abs(vx) < 0.1) vx = 0;
+	if (abs(vy) < 0.1) vy = 0;
 
 	x += timePerSec(vx);
 	if (zombieCollide())
@@ -77,6 +76,8 @@ void Zombie::update()
 	y += timePerSec(vy);
 	if (zombieCollide())
 		y -= timePerSec(vy);
+
+	// drawNumber(x, y, vx, EightBit, Pink);
 }
 
 void Zombie::draw()

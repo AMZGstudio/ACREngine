@@ -24,19 +24,23 @@ public:
 		score = 0;
 	}
 
-	int runState() override
+	void runState(std::string& state) override
 	{
 		// check to make sure the player is not dead
 		if (!p.isAlive())
-			return over;
+			state = "over";
 
-		if (key(Spacebar).pressed)
+		if (key(Spacebar).pressed || key(LeftM).pressed)
 			bullets.push_back(Bullet(p.getX(), p.getY(), p.getVX(), p.getVY(), Mouse.x, Mouse.y));
 
 		Wave::attemptNext(zombies.size() == 0);
 
-		if(Wave::spawnZombie(3))
-			zombies.push_back(Zombie(p, zombies, 32 + Wave::waveNum * 8));
+		if (Wave::spawnZombie(3))
+		{
+			Zombie zom(p, zombies, 32 + Wave::waveNum * 8);
+			zombies.push_back(zom);
+		}
+			
 
 		p.update();
 		p.draw();
@@ -58,7 +62,6 @@ public:
 		drawText(2, 10, std::format("Wave:   {}", Wave::waveNum).c_str(), Pzim, White);
 		drawText(2, 18, std::format("Num Zombies: {}", zombies.size()).c_str(), Pzim, White);
 		drawText(Centered, 2, std::format("Score: {}", score).c_str(), Pzim, White);
-		return game;
 	}
 };
 

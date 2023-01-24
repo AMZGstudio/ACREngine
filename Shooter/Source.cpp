@@ -15,17 +15,17 @@
 
 int main()
 {
-	initalize("Shooter Game!", 300, 200, 3, 3, Default, Default);
+	initialize("Shooter Game!", 300, 200, 3, 3, Default, Default);
 
-	States states(menu);
-	states.addState((State*)new Menu());
-	states.addState((State*)new Game());
-	states.addState((State*)new Over());
+	States states("menu");
+	states.addState("menu", (State*)new Menu());
+	states.addState("game", (State*)new Game());
+	states.addState("over", (State*)new Over());
 
 	while (true)
 	{
 		clear(states.getArea());
-		states.setState(states.runState());
+		states.runState();
 
 		sysDrawArea(0, 0, Screen, states.getArea());
 		render(false);

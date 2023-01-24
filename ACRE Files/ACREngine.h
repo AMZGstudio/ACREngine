@@ -55,6 +55,7 @@
 		/*
 		Changelog:
 
+		Fixed initalize to be called initialize
 		MAJOR:
 		space functions.
 		Areas (and their functions).
@@ -289,7 +290,7 @@
 
 	Area createArea(int width, int height, short colorFront, short colorBack);
 	void deleteArea(Area area);
-	void initalize(const char* title, int width, int height, int fontWidth, int fontHeight, int defaultFront, int defaultBack);
+	void initialize(const char* title, int width, int height, int fontWidth, int fontHeight, int defaultFront, int defaultBack);
 	void render(bool clearScreen);
 	int terminateACRE(void);
 
@@ -1183,8 +1184,8 @@
 		if (numDecimal == Default)
 		{
 			if ((int)number == number) numDecimal = 0;
-			else if (number < 1.0f && number > 0.0f) numDecimal = 4;
-			else if ((int)number < number) numDecimal = 2;
+			else if (abs((long)((float)number - (int)number)) < 1.0f) numDecimal = 4;
+			else numDecimal = 2;
 		}
 		char text[30] = { 0 };
 		char formatText[10] = "%.";
@@ -1332,7 +1333,7 @@
 	}
 	Space spDrawNumber(int x, int y, Space space, double number, int numDecimal, Font fontType, int color)
 	{
-		int count = 0;
+		int count = number < 0 ? 1 : 0;
 		int n = (int)number;
 		do {(int)(n = n/10), ++count;} 
 		while (n != 0);
@@ -1650,7 +1651,7 @@
 			terminated = false;
 	}
 
-	void initalize(const char* title, int width, int height, int fontWidth, int fontHeight, int defaultFront, int defaultBack)
+	void initialize(const char* title, int width, int height, int fontWidth, int fontHeight, int defaultFront, int defaultBack)
 	{
 		strcpy(windowTitle, title);
 		hConsoleOutput = GetStdHandle(STD_OUTPUT_HANDLE);

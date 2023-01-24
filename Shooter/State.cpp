@@ -1,25 +1,25 @@
 #include "State.hpp"
 
-States::States(int stateIndex) : states()
+States::States(std::string stateName) : states()
 {
-	this->stateIndex = stateIndex;
+	currState = stateName;
 	surface = createArea(Width(Screen), Height(Screen), Default, Default);
 	setDefaultDrawArea(&surface);
 }
 
-int States::runState()
+void States::runState()
 {
-	return states[stateIndex]->runState();
+	states[currState]->runState(currState);
 }
 
-void States::setState(int index)
+void States::setState(std::string name)
 {
-	stateIndex = index;
+	currState = name;
 }
 
-void States::addState(State* state)
+void States::addState(std::string name, State* state)
 {
-	states.push_back(state);
+	states[name] = state;
 }
 
 Area& States::getArea()

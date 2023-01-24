@@ -5,6 +5,15 @@ Entity::Entity(float health)
 	x = 0, y = 0, vx = 0, vy = 0, this->health = health;
 }
 
+Entity::Entity(const Entity& other)
+{
+	x = other.x;
+	y = other.y;
+	vx = other.vx;
+	vy = other.vy;
+	health = other.health;
+}
+
 void Entity::hit(float amount)
 {
 	health -= amount;
