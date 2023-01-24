@@ -30,6 +30,16 @@ float Entity::getY()
 	return y;
 }
 
+float Entity::getVX()
+{
+	return vx;
+}
+
+float Entity::getVY()
+{
+	return vy;
+}
+
 float Entity::getHealth()
 {
 	return health;

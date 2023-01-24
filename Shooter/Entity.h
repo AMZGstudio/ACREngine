@@ -19,6 +19,8 @@ public:
 
 	float getX();
 	float getY();
+	float getVX();
+	float getVY();
 	float getHealth();
 };
 

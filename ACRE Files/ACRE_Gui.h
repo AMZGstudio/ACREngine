@@ -262,8 +262,10 @@ void calculateSlider(Option* slider)
 {
 	Space finalSpace = { slider->windowBelongTo->x + slider->xStart, 
 						 slider->windowBelongTo->y + slider->yStart, 
-						 slider->windowBelongTo->x + slider->xEnd, 
+						 slider->windowBelongTo->x + slider->xEnd-1, 
 						 slider->windowBelongTo->y + slider->yEnd };
+
+	slider->sliderVal = clamp(slider->sliderVal, 0, 100);
 
 	if (pointSpaceCollide(Mouse.x, Mouse.y, finalSpace) && key(LeftM).held)
 	{
@@ -328,7 +330,7 @@ void drawSlider(Option* slider, bool dark)
 	Space windowSpace = getWindowSpace(slider->windowBelongTo);
 	
 	spDrawRectFilled(slider->xStart, slider->yStart, slider->xEnd, slider->yEnd, windowSpace, dark ? DARK_SLIDEB_COL : LIGHT_SLIDEB_COL);
-	int newX = map(slider->sliderVal, 0, 100, slider->xStart, slider->xEnd);
+	int newX = map(slider->sliderVal, 0, 100, slider->xStart, slider->xEnd-1);
 	
 	spDrawRectFilled(newX, slider->yStart, newX + 1, slider->yEnd, windowSpace, dark ? DARK_SLIDEF_COL : LIGHT_SLIDEF_COL);
 }

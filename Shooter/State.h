@@ -2,7 +2,7 @@
 #include <vector>
 #include "../ACRE Files/ACREngine.h"
 
-enum all_states { menu, game };
+enum all_states { menu, game, over };
 
 class State
 {

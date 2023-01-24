@@ -114,6 +114,9 @@
 		added legalArea() function. (it checks if a area is able to be drawn properly.
 
 		FINISHED: TODO: Add other drawPartialArea functions.
+		ACRE_Fonts now work in OOP.
+			- do be able to use all fonts define ALL_FONTS
+			- to start the fonts, define ACRE_FONTS
 
 		Changed FULLSCREEN to be ACRE_FULLSCREEN
 

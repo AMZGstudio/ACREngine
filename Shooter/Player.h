@@ -9,5 +9,7 @@ public:
 	Player();
 	void draw() override;
 	void update() override;
+
+	float getRadius() const;
 };
 

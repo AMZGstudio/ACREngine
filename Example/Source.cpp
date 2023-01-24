@@ -29,7 +29,7 @@ int main()
 	Option* b2 = createButton(w, Centered, 11, w->width - 4, 16, "Zoom Out");
 	Option* b3 = createButton(w, w->width/2+1, 18, w->width - 2, 23, "Change Color");
 
-	Option* text = createTextBox(w, 5, 18, "Zoom Scale: ", DefaultFont);
+	Option* text = createTextBox(w, 3, 18, "Zoom Scale: ", DefaultFont);
 	Option* slider = createSlider(w, Centered, 30, w->width - 4, 34, 0);	
 	
 	Area spr = loadSprite(SPRITE_PATH FILE_NAME);

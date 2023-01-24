@@ -26,5 +26,16 @@ void Player::update()
 
 	x += timePerSec(vx);
 	y += timePerSec(vy);
+
+	if (x > Width(Screen)) x = 0;
+	if (x < 0) x = Width(Screen);
+
+	if (y > Height(Screen)) y = 0;
+	if (y < 0) y = Height(Screen);
+}
+
+float Player::getRadius() const
+{
+	return RADIUS;
 }
 
