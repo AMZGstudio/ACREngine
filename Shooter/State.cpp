@@ -1,4 +1,4 @@
-#include "State.h"
+#include "State.hpp"
 
 States::States(int stateIndex) : states()
 {

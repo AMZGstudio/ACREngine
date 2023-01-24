@@ -7,10 +7,10 @@
 #define ACRE_FONTS
 #include "../ACRE Files/ACRE_Fonts.h"
 
-#include "Game.h"
-#include "Menu.h"
-#include "Over.h"
-#include "State.h"
+#include "Game.hpp"
+#include "Menu.hpp"
+#include "Over.hpp"
+#include "State.hpp"
 
 
 int main()

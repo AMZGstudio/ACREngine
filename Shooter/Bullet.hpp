@@ -1,8 +1,8 @@
 #pragma once
 #include <vector>
 
-#include "Entity.h"
-#include "Zombie.h"
+#include "Entity.hpp"
+#include "Zombie.hpp"
 
 class Bullet : public Entity
 {

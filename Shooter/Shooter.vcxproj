@@ -140,15 +140,15 @@
     <ClCompile Include="Zombie.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Bullet.h" />
-    <ClInclude Include="Collision.h" />
-    <ClInclude Include="Entity.h" />
-    <ClInclude Include="Game.h" />
-    <ClInclude Include="Menu.h" />
-    <ClInclude Include="Over.h" />
-    <ClInclude Include="Player.h" />
-    <ClInclude Include="State.h" />
-    <ClInclude Include="Zombie.h" />
+    <ClInclude Include="Bullet.hpp" />
+    <ClInclude Include="Collision.hpp" />
+    <ClInclude Include="Entity.hpp" />
+    <ClInclude Include="Game.hpp" />
+    <ClInclude Include="Menu.hpp" />
+    <ClInclude Include="Over.hpp" />
+    <ClInclude Include="Player.hpp" />
+    <ClInclude Include="State.hpp" />
+    <ClInclude Include="Zombie.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -1,4 +1,4 @@
-#include "Collision.h"
+#include "Collision.hpp"
 #include <cmath>
 
 bool Collision::c2cCollide(float c1x, float c1y, float c1r, float c2x, float c2y, float c2r)

@@ -1,5 +1,5 @@
 #pragma once
-#include "Entity.h"
+#include "Entity.hpp"
 
 #define RADIUS 2
 

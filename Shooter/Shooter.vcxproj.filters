@@ -1,69 +1,69 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    <Filter Include="Game Code">
+      <UniqueIdentifier>{2bdfbf78-cdb0-4bdf-a14c-22d5bf8ebe7d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    <Filter Include="Game Code\Physics">
+      <UniqueIdentifier>{9588611c-8919-4364-a440-00ee2e0537a4}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    <Filter Include="Game Code\Game States">
+      <UniqueIdentifier>{a77ad9b0-cccf-4911-8282-60128816603e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game Code\Entities">
+      <UniqueIdentifier>{0c91d84b-96fa-485b-bd07-77146764354f}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Source.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Entity.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Zombie.cpp">
+      <Filter>Game Code\Entities</Filter>
     </ClCompile>
     <ClCompile Include="Player.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Game Code\Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="Entity.cpp">
+      <Filter>Game Code\Entities</Filter>
     </ClCompile>
     <ClCompile Include="Bullet.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Zombie.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="State.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Game Code\Entities</Filter>
     </ClCompile>
     <ClCompile Include="Collision.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Game Code\Physics</Filter>
+    </ClCompile>
+    <ClCompile Include="State.cpp">
+      <Filter>Game Code\Game States</Filter>
+    </ClCompile>
+    <ClCompile Include="Source.cpp">
+      <Filter>Game Code</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Entity.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Zombie.hpp">
+      <Filter>Game Code\Entities</Filter>
     </ClInclude>
-    <ClInclude Include="Player.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Bullet.hpp">
+      <Filter>Game Code\Entities</Filter>
     </ClInclude>
-    <ClInclude Include="Bullet.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Entity.hpp">
+      <Filter>Game Code\Entities</Filter>
     </ClInclude>
-    <ClInclude Include="Zombie.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Player.hpp">
+      <Filter>Game Code\Entities</Filter>
     </ClInclude>
-    <ClInclude Include="State.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Game.hpp">
+      <Filter>Game Code\Game States</Filter>
     </ClInclude>
-    <ClInclude Include="Game.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Menu.hpp">
+      <Filter>Game Code\Game States</Filter>
     </ClInclude>
-    <ClInclude Include="Menu.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Over.hpp">
+      <Filter>Game Code\Game States</Filter>
     </ClInclude>
-    <ClInclude Include="Collision.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="State.hpp">
+      <Filter>Game Code\Game States</Filter>
     </ClInclude>
-    <ClInclude Include="Over.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Collision.hpp">
+      <Filter>Game Code\Physics</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -1,16 +1,13 @@
 #pragma once
 
-#include "State.h"
-#include "Bullet.h"
-#include "Player.h"
-#include "Zombie.h"
-#include "Collision.h"
+#include "State.hpp"
+#include "Bullet.hpp"
+#include "Player.hpp"
+#include "Zombie.hpp"
+#include "Collision.hpp"
 
 #include <algorithm>
 #include <format>
-
-//#include "../ACRE Files/ACREngine.h"
-//#include "../ACRE Files/ACRE_Fonts.h"
 
 class Game : public State
 {
@@ -20,8 +17,11 @@ private:
 	std::vector<Zombie> zombies;
 
 public:
+	static int score;
+
 	Game() : p(), bullets(), zombies()
 	{
+		score = 0;
 	}
 
 	int runState() override
@@ -51,13 +51,15 @@ public:
 			}), bullets.end());
 
 		// remove dead zombies
-		zombies.erase(std::remove_if(zombies.begin(), zombies.end(), [](auto&& item)
-			{ return !item.isAlive(); }), zombies.end());
+		zombies.erase(std::remove_if(zombies.begin(), zombies.end(), [this](auto&& item)
+			{ if (!item.isAlive()) score += 100; return !item.isAlive(); }), zombies.end());
 
 		drawText(2, 2, std::format("Health: {:.1f}", p.getHealth()).c_str(), Pzim, White);
 		drawText(2, 10, std::format("Wave:   {}", Wave::waveNum).c_str(), Pzim, White);
 		drawText(2, 18, std::format("Num Zombies: {}", zombies.size()).c_str(), Pzim, White);
+		drawText(Centered, 2, std::format("Score: {}", score).c_str(), Pzim, White);
 		return game;
 	}
 };
 
+int Game::score = 0;

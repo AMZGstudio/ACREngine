@@ -1,5 +1,5 @@
-#include "Bullet.h"
-#include "Collision.h"
+#include "Bullet.hpp"
+#include "Collision.hpp"
 #include <cmath>
 #include <algorithm>
 

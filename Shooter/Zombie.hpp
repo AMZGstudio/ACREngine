@@ -1,6 +1,6 @@
 #pragma once
-#include "Entity.h"
-#include "Player.h"
+#include "Entity.hpp"
+#include "Player.hpp"
 
 #include <vector>
 #define RADIUS 5

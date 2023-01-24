@@ -1,6 +1,6 @@
-#include "Zombie.h"
-#include "Player.h"
-#include "Collision.h"
+#include "Zombie.hpp"
+#include "Player.hpp"
+#include "Collision.hpp"
 
 #include "../ACRE Files/ACRE_Fonts.h"
 
