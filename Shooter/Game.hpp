@@ -86,7 +86,7 @@ public:
 				aud.playSound("empty");
 		}
 
-		if (key(R).pressed)
+		if (key(R).pressed || key(RightM).pressed)
 		{
 			aud.playSound("reload");
 			ammo = 15;
