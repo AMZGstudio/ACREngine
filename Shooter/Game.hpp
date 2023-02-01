@@ -110,10 +110,11 @@ public:
 			reset();
 		}
 		
-		// check to make sure the player is not dead
+		// if player is dead, reset
 		if (!p.isAlive())
 		{
 			setState("over");
+			reset();
 			return;
 		}
 

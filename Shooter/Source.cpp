@@ -30,7 +30,7 @@ int main()
 	aud.start();
 	aud.addSound("firing", "../Sound Effects/bullet.wav");
 	aud.addSound("music", "../Sound Effects/music.wav");
-	aud.addSound("reloud", "../Sound Effects/reload.wav");
+	aud.addSound("reload", "../Sound Effects/reload.wav");
 	
 	acre::Renderer renderer;
 	acre::States states("menu");
