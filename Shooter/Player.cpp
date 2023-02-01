@@ -18,6 +18,12 @@ void Player::update()
 	if (key(S).held || key(Down).held) vy += timePerSec(60);
 	if (key(D).held || key(Right).held) vx += timePerSec(60);
 
+	if (vx > 120) vx = 120;
+	if (vx < -120) vx = -120;
+
+	if (vy > 120) vy = 120;
+	if (vy < -120) vy = -120;
+
 	if(vx != 0) vx += (vx < 0 ? timePerSec(10) : -timePerSec(10)) * 3;
 	if(vy != 0) vy += (vy < 0 ? timePerSec(10) : -timePerSec(10)) * 3;
 

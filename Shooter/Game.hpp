@@ -74,11 +74,16 @@ public:
 			{ if (!item.isAlive()) score += 100; return !item.isAlive(); }), zombies.end());
 
 
-		if ((key(Spacebar).pressed || key(LeftM).pressed) && ammo > 0)
+		if (key(Spacebar).pressed || key(LeftM).pressed)
 		{
-			bullets.push_back(Bullet(p.getX(), p.getY(), p.getVX(), p.getVY(), Mouse.x, Mouse.y));
-			ammo--;
-			aud.playSound("firing");
+			if (ammo > 0)
+			{
+				aud.playSound("firing");
+				bullets.push_back(Bullet(p.getX(), p.getY(), p.getVX(), p.getVY(), Mouse.x, Mouse.y));
+				ammo--;
+			}
+			else
+				aud.playSound("empty");
 		}
 
 		if (key(R).pressed)
@@ -95,10 +100,17 @@ public:
 
 		p.draw();
 
+		const char* s = std::format("Wave: {}", Wave::waveNum).c_str();
+
+		drawText(Width(Screen) - txtWidth(s, Pzim) - 2, 2, s, Pzim, White);
 		drawText(2, 2, std::format("Health: {:.1f}", p.getHealth()).c_str(), Pzim, White);
-		drawText(2, 10, std::format("Wave:   {}", Wave::waveNum).c_str(), Pzim, White);
-		drawText(2, 18, std::format("Ammo: {}", ammo).c_str(), Pzim, White);
+		drawText(2, 10, std::format("Ammo: {}", ammo).c_str(), Pzim, White);
 		drawText(Centered, 2, std::format("Score: {}", score).c_str(), Pzim, White);
+
+		//drawPixel(Mouse.x-1, Mouse.y, Red);
+		//drawPixel(Mouse.x, Mouse.y+1, Red);
+		//drawPixel(Mouse.x, Mouse.y-1, Red);
+		//drawPixel(Mouse.x+1, Mouse.y, Red);
 	}
 
 	void runState() override

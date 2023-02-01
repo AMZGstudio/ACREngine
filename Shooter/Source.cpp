@@ -31,6 +31,7 @@ int main()
 	aud.addSound("firing", "../Sound Effects/bullet.wav");
 	aud.addSound("music", "../Sound Effects/music.wav");
 	aud.addSound("reload", "../Sound Effects/reload.wav");
+	aud.addSound("empty", "../Sound Effects/empty_gun.wav");
 	
 	acre::Renderer renderer;
 	acre::States states("menu");
@@ -51,14 +52,3 @@ int main()
 	
 	return terminateACRE();
 }
-
-/*
-Things to add:
-- DONE: Fix link
-- DONE: Keyboard input for game
-- DONE: Fading animation after game is over
-- DONE: Added music
-
-- Settings menu
-	Option 
-*/
