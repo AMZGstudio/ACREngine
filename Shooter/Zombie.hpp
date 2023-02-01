@@ -15,8 +15,10 @@ public:
 
 public:
 	static void attemptNext(bool startCondition);
-	static bool spawnZombie(float secsForZombieSpawn);
+	static bool spawnZombie();
 	static int getNumEntities();
+
+	static void reset();
 };
 
 class Zombie : public Entity

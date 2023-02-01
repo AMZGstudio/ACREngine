@@ -131,23 +131,27 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Audio.cpp" />
     <ClCompile Include="Bullet.cpp" />
     <ClCompile Include="Collision.cpp" />
     <ClCompile Include="Entity.cpp" />
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="Source.cpp" />
-    <ClCompile Include="State.cpp" />
     <ClCompile Include="Zombie.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Audio.h" />
     <ClInclude Include="Bullet.hpp" />
     <ClInclude Include="Collision.hpp" />
+    <ClInclude Include="Creds.hpp" />
     <ClInclude Include="Entity.hpp" />
     <ClInclude Include="Game.hpp" />
+    <ClInclude Include="Board.hpp" />
+    <ClInclude Include="olcSoundWaveEngine.h" />
+    <ClInclude Include="Leaderboard.hpp" />
     <ClInclude Include="Menu.hpp" />
     <ClInclude Include="Over.hpp" />
     <ClInclude Include="Player.hpp" />
-    <ClInclude Include="State.hpp" />
     <ClInclude Include="Zombie.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

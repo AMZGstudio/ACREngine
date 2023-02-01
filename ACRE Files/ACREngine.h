@@ -56,6 +56,7 @@
 		Changelog:
 
 		Fixed initalize to be called initialize
+
 		MAJOR:
 		space functions.
 		Areas (and their functions).
@@ -65,9 +66,9 @@
 		Removed sysDrawColorBuffer.
 		Removed sysDrawFontChar, now sysDrawText is used.
 		drawPoint now called drawPixel.
-		More functions work when using ACRE on mutliple files.
+		All functions work now when using ACRE on mutliple files.
 		Fixed user input, when window is not selected one. to allow that to happen define: NO_WINDOW_ACTIVE
-		added makeImage()
+
 		Renamed Screen to ScreenSpace.
 		Screen is now an Area.
 		added Areas.
@@ -91,7 +92,41 @@
 		added center() function in the header mode of the file.
 		added extern variables.
 
-		removed Images, Areas are now used exclusivly.
+		ACRE Extensions:
+			Fonts:
+				ACRE_Fonts now work in OOP.
+				- to be able to use all fonts define ALL_FONTS
+				- to start the fonts, define ACRE_FONTS
+
+				stringWidth() now called txtWidth() (returns the widest line)
+				added txtHeight(), returns the height of text (accounting for new lines)
+				Updated how fonts work (struct is different)
+
+				changed fields in Fonts. now instead of .w, .dat, and .displayW
+				we have ._w (not for user), ._data (not for user), and .width, .height
+
+				when drawing text, it now knows its exact size, 
+				and starts drawing from topLeft corner exactly. (this could break things old things.)
+
+				added spacing between fonts. (you can change this if you want font letters rendered further apart.)
+
+			Gui:
+
+				Changed ACRE_Window extension, now works like other extensions (#ifdef stuff)
+				ACRE_Window extension, is now called ACRE_Gui.
+
+			Transform:
+
+				ACRE_Transform now also works across multiple files
+				Now also works with Centered.
+
+			Gameplay:
+
+				This adds things used many times when actually making games. 
+				a nicer renderer, menu drawing routines, state system
+
+		Images -> Area:
+			removed Images, Areas are now used exclusivly.
 			Image struct gone. Image functions, now use sprite name instead, and return Areas.
 			Removed sysDrawImage()
 			Removed drawImage()
@@ -101,12 +136,12 @@
 		fixed bug in makeSprite()
 		fixed bug in spDrawNumber()
 		fixed bug in drawCircle() causing it too be create malformed circles.
-		fixed bug in spDrawCircleFilled
+		fixed bug in spDrawCircleFilled()
 
-		Changed ACRE_Window extension, now works like other extensions (#ifdef stuff)
+		Added calcSpace (hopefully can be used instead of getSpace)
+
 		Changed terminate() function, to terminateACRE(). it caused issues with cpp
 		renamed stringLength to stringWidth
-		ACRE_Window extension, is now called ACRE_Gui.
 
 		Default Area to draw on, is now configurable. call setDefaultDrawArea().
 			- Note: only draws on area specified, assuming no other draw area is set.
@@ -114,16 +149,16 @@
 
 		added legalArea() function. (it checks if a area is able to be drawn properly.
 
-		FINISHED: TODO: Add other drawPartialArea functions.
-		ACRE_Fonts now work in OOP.
-			- do be able to use all fonts define ALL_FONTS
-			- to start the fonts, define ACRE_FONTS
-
 		Changed FULLSCREEN to be ACRE_FULLSCREEN
 
+		FINISHED: TODO: Add other drawPartialArea functions.
 		TODO: onResize() function.
 		TODO: Change how fps works, instead of ticks, it goes by time.
 		TODO: Finish textBoxInput()
+		TODO: Performance
+		TODO: check for bugs related to drawing real characters
+		TODO: Check every font, and make sure their numbers are correct.
+
 		*/
 		
 #ifndef ACRE_INCLUDES
@@ -131,6 +166,10 @@
 	#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
 		#define _CRT_SECURE_NO_WARNINGS 1
 		#define _WIN32_WINNT 0x0500
+		
+		#if defined(ACRE_FPS) && defined(ACRE_FULLSCREEN)
+		#undef ACRE_FPS
+		#endif
 
 		#include <stdio.h>
 		#include <windows.h>
@@ -171,7 +210,7 @@
 	typedef struct Point { int x, y; } Point;
 	typedef struct Space { int startX, startY, endX, endY; } Space;
 	typedef struct MOUSE { int x, y; int scrollH, scrollW; } MOUSE;
-	typedef struct Font { int w, displayW; const unsigned char *dat; } Font;
+	typedef struct Font { int _w, width, height, spacingX, spacingY; const unsigned char *data; } Font;
 	typedef struct Area { short* colFront, * colBack; char* characters; int width, height; bool drawFront, drawBack, drawText; } Area;
 	typedef struct Key {bool pressed, held, released; int letter;} Key;
 	typedef struct Timer { double elapsedTime; } Timer;
@@ -185,6 +224,7 @@
 		Num0, Num1, Num2, Num3, Num4, Num5, Num6, Num7, Num8, Num9
 	};
 	enum ACRE_TYPES {Thirds = -502, Centered = -501, Default = -1 };
+
 	enum COLORS { 
 		Black = 16, VeryDarkGrey = 234, DarkGrey = 237, Grey = 243, LightGrey = 247, White = 255,
 		
@@ -198,7 +238,6 @@
 		
 		Magenta=127
 	};
-
 
 	enum SPECIAL_CHARS {
 		LightShade = 176, MediumShade = 177, DarkShade = 178, FullBlock = 219, LowerHalfBlock = 220,
@@ -222,6 +261,7 @@
 	int Random(int rangeStart, int rangeEnd);
 	float timePerSec(float amount);
 	Space getSpace(Space prevSpace, int xStart, int yStart, int xEnd, int yEnd);
+	Space calcSpace(Space prevSpace, int xStart, int yStart, int width, int height);
 	void calculateTimer(Timer* timer);
 	Timer createTimer();
 	int strToInt(char* string);
@@ -230,7 +270,8 @@
 	float clamp(float numToClamp, float min, float max);
 	void Xterm(short col, short* r, short* g, short* b);
 	int Color(int r, int g, int b);
-	int stringWidth(const char* string, Font fontType);
+	int txtWidth(const char* string, Font fontType);
+	int txtHeight(const char* string, Font fontType);
 	void setDefaultDrawArea(Area* ar);
 	bool legalArea(Area area);
 
@@ -377,7 +418,7 @@
 		{0x00,0x00,0x3F,0x19,0x0C,0x26,0x3F,0x00},{0x38,0x0C,0x0C,0x07,0x0C,0x0C,0x38,0x00},{0x18,0x18,0x18,0x00,0x18,0x18,0x18,0x00},
 		{0x07,0x0C,0x0C,0x38,0x0C,0x0C,0x07,0x00},{0x6E,0x3B,0x00,0x00,0x00,0x00,0x00,0x00},{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00}
 	};
-	Font EightBit = { 8, 8, (const unsigned char*)font8x8_basic }; //sysDrawFontChar(x, y, Screen, EIGHT_BIT, text[slot], colorFront, colorBack);
+	Font EightBit = { 8, 8, 8, 1, 1, (const unsigned char*)font8x8_basic }; //sysDrawFontChar(x, y, Screen, EIGHT_BIT, text[slot], colorFront, colorBack);
 	Font DefaultFont = { 1, 1, NULL };
 	Timer timer = { 0 };
 	/*-------------------------------------------*\
@@ -451,6 +492,21 @@
 		}
 		return currSpace;
 	}
+
+	inline Space calcSpace(Space prevSpace, int xStart, int yStart, int width, int height)
+	{
+		Space sp = { prevSpace.startX, prevSpace.startY, 0, 0  };//prevSpace.startX, prevSpace.startY };
+
+		if (xStart == Centered) sp.startX += center(width, prevSpace, X);
+		else sp.startX += xStart;
+
+		if (yStart == Centered) sp.startY += center(height, prevSpace, Y);
+		else sp.startY += yStart;
+
+		sp.endX += sp.startX + width;
+		sp.endY += sp.startY + height;
+		return sp;
+	}
 	
 	/*-------------------------------------------*\
 	|		 General Functions / Miscelanous   	  |
@@ -477,9 +533,35 @@
 		return (rand() % (rangeEnd - rangeStart + 1)) + rangeStart;
 	}
 
-	int stringWidth(const char* string, Font fontType)
+	int txtWidth(const char* string, Font fontType)
 	{
-		return (int)strlen(string) * fontType.displayW;
+		int maxWidth = 0;
+		char stringCpy[1024] = { 0 };
+		strcpy(stringCpy, string);
+
+		char* token = strtok(stringCpy, "\n"); // Returns first token
+
+		while (token != NULL) // Keep printing tokens while one of the delimiters present in str[].
+		{
+			int newSize = strlen(token);
+			if (newSize > maxWidth)
+				maxWidth = newSize;
+
+			token = strtok(NULL, "\n");
+		}
+
+		return (int)maxWidth * (fontType.width + fontType.spacingX) - fontType.spacingX; // because last spacing is not existant.
+	}
+
+	int txtHeight(const char* string, Font fontType)
+	{
+		int rows = 1;
+
+		for (int i = 0; string[i]; i++)
+			if (string[i] == '\n')
+				rows++;
+			
+		return rows * (fontType.height + 1) - 1;
 	}
 
 	void onResize(int* newWidth, int* newHeight)
@@ -727,7 +809,6 @@
 		if (!SetConsoleOutputCP(codePage)) Error(L"Setting consoles codepage failed.", __LINE__);
 
 		if (!SetCurrentConsoleFontEx(hConsoleOutput, 0, &info)) Error(L"Setting console font failed.", __LINE__);
-
 	}
 
 	void getConsoleWindowSize(int* w, int* h)
@@ -816,7 +897,7 @@
 			if (!Errors) return; else Error(L"Unable to resize window after resizing buffer!", __LINE__);
 	}
 
-	bool windowActive()
+	inline bool windowActive()
 	{
 		#ifdef NO_WINDOW_ACTIVE
 			return true;
@@ -1155,25 +1236,31 @@
 		while (text[slot] != 0)
 		{
 			if (text[slot] == '\n')
-				x = xPrev, y += fontType.displayW;
+				x = xPrev, y += fontType.height + fontType.spacingY;
 
 			else
 			{
-				if (fontType.dat == NULL) sysDrawPoint(x, y, area, text[slot], colorFront, colorBack);
+				if (fontType.data == NULL) sysDrawPoint(x, y, area, text[slot], colorFront, colorBack);
 				else
 				{
-					const unsigned char* letter = (fontType.dat + (((char)text[slot]) - ' ') * fontType.w);
+					const unsigned char* letter = (fontType.data + (((char)text[slot]) - ' ') * fontType._w);
 
-					for (int i = 0; i < fontType.w; i++)
-						for (int j = 0; j < 8; j++)
+					const int num_bits = 8;
+					int yOffset = num_bits - fontType.height - 1;
+
+					// loop through x and y of data
+					for (int px = 0; px < fontType._w; px++)
+						for (int py = yOffset; py < num_bits; py++)
 						{
-							int set = letter[i] & 1 << j;
-							int addX = (fontType.dat == (const unsigned char*)font8x8_basic) ? j : i;
-							int addY = (fontType.dat == (const unsigned char*)font8x8_basic) ? i : j;
+							int set = letter[px] & 1 << py;
+
+							int addX = (fontType.data == (const unsigned char*)font8x8_basic) ? py - yOffset : px; // here yOffset is not needed, because its 8 bit
+							int addY = (fontType.data == (const unsigned char*)font8x8_basic) ? px : py - yOffset; // over here it is, because there is more memory than actually used.
+
 							sysDrawPoint(x + addX, y + addY, area, Default, colorFront, set ? colorBack : Default);
 						}
 				}
-				x += fontType.displayW;
+				x += fontType.width + fontType.spacingX;
 			}
 			slot++;
 		}
@@ -1322,13 +1409,9 @@
 	}
 	Space spDrawText(int x, int y, Space space, const char* text, Font fontType, int color)
 	{
-		int i = 0;
-		while (text[i] != '\n' && text[i] != 0) i++;
-		int textWidth = i * (fontType.displayW);
-
-		Space textSpace = getSpace(space, x, y, (x == Centered) ? textWidth : x + textWidth, (y == Centered) ? fontType.displayW : y + fontType.displayW);
+		Space textSpace = calcSpace(space, x, y, txtWidth(text, fontType), txtHeight(text, fontType));
 		
-		sysDrawText(textSpace.startX, textSpace.startY, *areaToDrawOn, text, fontType, fontType.dat == NULL ? color : Default, fontType.dat == NULL ? Default : color);
+		sysDrawText(textSpace.startX, textSpace.startY, *areaToDrawOn, text, fontType, fontType.data == NULL ? color : Default, fontType.data == NULL ? Default : color);
 		return textSpace;
 	}
 	Space spDrawNumber(int x, int y, Space space, double number, int numDecimal, Font fontType, int color)
@@ -1337,9 +1420,9 @@
 		int n = (int)number;
 		do {(int)(n = n/10), ++count;} 
 		while (n != 0);
-		int textWidth = (count + numDecimal) * fontType.displayW;
+		int textWidth = (count + numDecimal) * fontType.width;
 
-		Space numSpace = getSpace(space, x, y, (x == Centered) ? textWidth : x + textWidth, (y == Centered) ? fontType.displayW : y + fontType.displayW);
+		Space numSpace = getSpace(space, x, y, (x == Centered) ? textWidth : x + textWidth, (y == Centered) ? fontType.width : y + fontType.width);
 		sysDrawNumber(numSpace.startX, numSpace.startY, *areaToDrawOn, number, numDecimal, fontType, Default, color);
 		return numSpace;
 	}

@@ -1,6 +1,10 @@
 #pragma once
 
 #ifdef ACRE_3_COMPATIBLE
+	#ifndef ACRE_EX_TRANSFORM
+		#define ACRE_EX_TRANSFORM
+	#endif
+	
 	#ifndef TRANSFORM_INCLUDES
 		#define TRANSFORM_INCLUDES
 		typedef struct AreaTrans {
@@ -12,7 +16,7 @@
 			Key oldStateLeftM;
 		} AreaTrans;
 
-		AreaTrans createAT(Area areaData, int x, int y);
+		AreaTrans createAT(Area areaData, float x, float y);
 
 		void sysDrawAT(AreaTrans at, Area area);
 		void drawAT(AreaTrans at);
@@ -23,12 +27,15 @@
 	#endif
 #ifdef ACRE_TRANSFORM
 		
-AreaTrans createAT(Area areaData, int x, int y)
+AreaTrans createAT(Area areaData, float x, float y)
 {
+	Space as = getSpace(ScreenSpace, x, y, x == Centered ? areaData.width : x + areaData.width, y == Centered ? areaData.height : y + areaData.height);
 	AreaTrans a;
+	a.x = as.startX;
+	a.y = as.startY;
+
 	a.zoom = 1;
 	a.area = areaData;
-	a.x = (float)x, a.y = (float)y;
 	a.spx = 0, a.spy = 0;
 	a.szx = 0, a.szy = 0;
 	a.oldStateLeftM = key(LeftM);
@@ -60,6 +67,10 @@ void drawAT(AreaTrans at)
 
 void changeZoom(AreaTrans* at, float xPivot, float yPivot, float zoomLevel, bool mulOrSet)
 {
+	
+	if (xPivot == Centered) xPivot = at->x + (Width(at->area) / 2.0f);
+	if (yPivot == Centered) yPivot = at->y + (Height(at->area) / 2.0f);
+
 	at->szx = ((xPivot - at->x) / at->zoom);
 	at->szy = ((yPivot - at->y) / at->zoom);
 

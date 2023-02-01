@@ -1,6 +1,7 @@
 #pragma once
 
-#include "State.hpp"
+#include "Audio.h"
+
 #include "Bullet.hpp"
 #include "Player.hpp"
 #include "Zombie.hpp"
@@ -9,59 +10,148 @@
 #include <algorithm>
 #include <format>
 
-class Game : public State
+class Game : public acre::State
 {
 private:
+	bool paused = false;
 	Player p;
+	Space spPaused = { 0 };
+
 	std::vector<Bullet> bullets;
 	std::vector<Zombie> zombies;
 
+	acre::Menu m;
+	acre::Renderer* _ar;
+
+	acre::Fade f;
+
+	int ammo = 15;
+
 public:
 	static int score;
+	
+	Game(acre::Renderer* r) : f(r), m(Five, calcSpace(ScreenSpace, Centered, Centered, 80, 50), true)
+	{ 
+		m.addOption("Exit", Centered, Default);
+		m.addOption("Resume", Centered, Default);
 
-	Game() : p(), bullets(), zombies()
-	{
-		score = 0;
+		spPaused = calcSpace(ScreenSpace, Centered, Centered, 80, 100);
 	}
 
-	void runState(std::string& state) override
+	void initalizer() override
 	{
-		// check to make sure the player is not dead
-		if (!p.isAlive())
-			state = "over";
+		p = Player();
+		bullets.clear();
+		zombies.clear();
+		paused = false;
+		Wave::reset();
+		score = 0;
+		ammo = 15;
+		aud.playSound("music", true);
+	}
 
-		if (key(Spacebar).pressed || key(LeftM).pressed)
-			bullets.push_back(Bullet(p.getX(), p.getY(), p.getVX(), p.getVY(), Mouse.x, Mouse.y));
+	void update()
+	{
+		std::for_each(bullets.begin(), bullets.end(), [](auto&& item) { item.update(); });
+		std::for_each(zombies.begin(), zombies.end(), [](auto&& item) { item.update(); });
 
+		p.update();
 		Wave::attemptNext(zombies.size() == 0);
 
-		if (Wave::spawnZombie(3))
+		if (Wave::spawnZombie())
 		{
 			Zombie zom(p, zombies, 32 + Wave::waveNum * 8);
 			zombies.push_back(zom);
 		}
-			
-
-		p.update();
-		p.draw();
-
-		// update and draw bullets and zombies
-		std::for_each(bullets.begin(), bullets.end(), [](auto&& item) { item.update(); item.draw(); });
-		std::for_each(zombies.begin(), zombies.end(), [](auto&& item) { item.update(); item.draw(); });
 
 		bullets.erase(std::remove_if(bullets.begin(), bullets.end(), [this](auto&& item)
 			{   return item.damageOther(this->zombies, 15) || // remove bullets that hit, and damage zombie
-				(item.getX() > Width(Screen) || item.getX() < 0 || item.getY() > Width(Screen) || item.getY() < 0); // remove off screen bullets from vector
+			(item.getX() > Width(Screen) || item.getX() < 0 || item.getY() > Width(Screen) || item.getY() < 0); // remove off screen bullets from vector
 			}), bullets.end());
 
 		// remove dead zombies
 		zombies.erase(std::remove_if(zombies.begin(), zombies.end(), [this](auto&& item)
 			{ if (!item.isAlive()) score += 100; return !item.isAlive(); }), zombies.end());
 
+
+		if ((key(Spacebar).pressed || key(LeftM).pressed) && ammo > 0)
+		{
+			bullets.push_back(Bullet(p.getX(), p.getY(), p.getVX(), p.getVY(), Mouse.x, Mouse.y));
+			ammo--;
+			aud.playSound("firing");
+		}
+
+		if (key(R).pressed)
+		{
+			aud.playSound("reload");
+			ammo = 15;
+		}
+			
+	}
+	void draw()
+	{
+		std::for_each(bullets.begin(), bullets.end(), [](auto&& item) { item.draw(); });
+		std::for_each(zombies.begin(), zombies.end(), [](auto&& item) { item.draw(); });
+
+		p.draw();
+
 		drawText(2, 2, std::format("Health: {:.1f}", p.getHealth()).c_str(), Pzim, White);
 		drawText(2, 10, std::format("Wave:   {}", Wave::waveNum).c_str(), Pzim, White);
-		drawText(2, 18, std::format("Num Zombies: {}", zombies.size()).c_str(), Pzim, White);
+		drawText(2, 18, std::format("Ammo: {}", ammo).c_str(), Pzim, White);
 		drawText(Centered, 2, std::format("Score: {}", score).c_str(), Pzim, White);
+	}
+
+	void runState() override
+	{
+		f.fadeOutIfNecessary();
+		if (f.fadeInFinished())
+		{
+			setState("menu");
+			reset();
+		}
+		
+		// check to make sure the player is not dead
+		if (!p.isAlive())
+		{
+			setState("over");
+			return;
+		}
+
+		if (key(Esc).pressed)
+		{
+			paused = !paused;
+			m.noneSelected();
+		}
+
+		if (paused)
+		{
+			draw();
+			
+			drawRectFilled(spPaused.startX, spPaused.startY, spPaused.endX, spPaused.endY, VeryDarkGrey);
+			drawRect(spPaused.startX, spPaused.startY, spPaused.endX, spPaused.endY, DarkGrey);
+			drawText(Centered, spPaused.startY + 6, "Paused", Five, White);
+
+			if (m.pressed() && f.notFading())
+			{
+				int index = m.indexPressed();
+
+				switch (index)
+				{
+				case 0: f.fadeIn(); break;
+				case 1: paused = false; break;
+				}
+			}
+	
+			m.calculations();
+			m.draw();
+
+			return;
+		}
+		else
+		{
+			update();
+			draw();
+		}
 	}
 };
 

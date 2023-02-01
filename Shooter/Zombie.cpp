@@ -111,7 +111,7 @@ bool Zombie::playerCollide() const
 {
 	// check collision with player, if hit than damage player
 	return Collision::c2cCollide(_player.getX(), _player.getY(), _player.getRadius(), x, y, RADIUS);
-	}
+}
 
 int Wave::waveNum = 0;
 bool Wave::waveStarted = false;
@@ -123,7 +123,15 @@ int Wave::getNumEntities()
 	return waveNum * 3;
 }
 
-bool Wave::spawnZombie(float secsForZombieSpawn)
+void Wave::reset()
+{
+	waveStarted = false;
+	waveNum = 0;
+	amountSpawned = 0;
+	timeFromSpawned = 0;
+}
+
+bool Wave::spawnZombie()
 {
 	if (Wave::amountSpawned >= Wave::getNumEntities())
 		Wave::waveStarted = false;
@@ -133,6 +141,7 @@ bool Wave::spawnZombie(float secsForZombieSpawn)
 
 	Wave::timeFromSpawned += timePerSec(1);
 
+	float secsForZombieSpawn = 3 - (Wave::waveNum / 10);
 	if (Wave::timeFromSpawned > secsForZombieSpawn)
 	{
 		Wave::timeFromSpawned -= secsForZombieSpawn;
@@ -144,6 +153,9 @@ bool Wave::spawnZombie(float secsForZombieSpawn)
 
 void Wave::attemptNext(bool startCondition)
 {
+	if (key(E).pressed)
+		waveNum++;
+
 	if (!Wave::waveStarted && startCondition)
 	{
 		waveNum++;

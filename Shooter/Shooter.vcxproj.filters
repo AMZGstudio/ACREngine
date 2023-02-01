@@ -15,27 +15,25 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Zombie.cpp">
-      <Filter>Game Code\Entities</Filter>
+    <ClCompile Include="Source.cpp">
+      <Filter>Game Code</Filter>
     </ClCompile>
-    <ClCompile Include="Player.cpp">
+    <ClCompile Include="Bullet.cpp">
       <Filter>Game Code\Entities</Filter>
     </ClCompile>
     <ClCompile Include="Entity.cpp">
       <Filter>Game Code\Entities</Filter>
     </ClCompile>
-    <ClCompile Include="Bullet.cpp">
+    <ClCompile Include="Player.cpp">
+      <Filter>Game Code\Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="Zombie.cpp">
       <Filter>Game Code\Entities</Filter>
     </ClCompile>
     <ClCompile Include="Collision.cpp">
       <Filter>Game Code\Physics</Filter>
     </ClCompile>
-    <ClCompile Include="State.cpp">
-      <Filter>Game Code\Game States</Filter>
-    </ClCompile>
-    <ClCompile Include="Source.cpp">
-      <Filter>Game Code</Filter>
-    </ClCompile>
+    <ClCompile Include="Audio.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Zombie.hpp">
@@ -59,11 +57,21 @@
     <ClInclude Include="Over.hpp">
       <Filter>Game Code\Game States</Filter>
     </ClInclude>
-    <ClInclude Include="State.hpp">
-      <Filter>Game Code\Game States</Filter>
-    </ClInclude>
     <ClInclude Include="Collision.hpp">
       <Filter>Game Code\Physics</Filter>
     </ClInclude>
+    <ClInclude Include="Board.hpp">
+      <Filter>Game Code\Game States</Filter>
+    </ClInclude>
+    <ClInclude Include="Leaderboard.hpp">
+      <Filter>Game Code</Filter>
+    </ClInclude>
+    <ClInclude Include="Creds.hpp">
+      <Filter>Game Code\Game States</Filter>
+    </ClInclude>
+    <ClInclude Include="olcSoundWaveEngine.h">
+      <Filter>Game Code</Filter>
+    </ClInclude>
+    <ClInclude Include="Audio.h" />
   </ItemGroup>
 </Project>

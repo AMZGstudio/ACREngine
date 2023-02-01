@@ -13,10 +13,10 @@ void Player::draw()
 
 void Player::update()
 {
-	if (key(W).held) vy -= timePerSec(60);
-	if (key(A).held) vx -= timePerSec(60);
-	if (key(S).held) vy += timePerSec(60);
-	if (key(D).held) vx += timePerSec(60);
+	if (key(W).held || key(Up).held) vy -= timePerSec(60);
+	if (key(A).held || key(Left).held) vx -= timePerSec(60);
+	if (key(S).held || key(Down).held) vy += timePerSec(60);
+	if (key(D).held || key(Right).held) vx += timePerSec(60);
 
 	if(vx != 0) vx += (vx < 0 ? timePerSec(10) : -timePerSec(10)) * 3;
 	if(vy != 0) vy += (vy < 0 ? timePerSec(10) : -timePerSec(10)) * 3;

@@ -27,6 +27,9 @@
     <ClInclude Include="..\ACRE Files\ACREngine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\ACRE Files\ACRE_Gameplay.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source.cpp">
