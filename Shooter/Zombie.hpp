@@ -14,7 +14,7 @@ public:
 	static float timeFromSpawned;
 
 public:
-	static void attemptNext(bool startCondition);
+	static bool attemptNext(bool startCondition);
 	static bool spawnZombie();
 	static int getNumEntities();
 

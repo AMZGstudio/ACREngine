@@ -22,8 +22,8 @@ public:
 	{
 		area = createArea(txtWidth(title.c_str(), FONT_USED) + 1, FONT_USED.height + 1, Default, Default);
 		sysDrawText(1, 1, area, title.c_str(), FONT_USED, Default, DarkGrey);		
-		m.addArea(area, Centered, 20, 3);
-
+		
+		m.setArea(area, Centered, 20, 3);
 		m.addOption("Go back", Centered, Default);
 	}
 

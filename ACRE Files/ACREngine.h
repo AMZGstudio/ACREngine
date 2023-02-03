@@ -232,13 +232,13 @@
 	enum COLORS { 
 		Black = 16, VeryDarkGrey = 234, DarkGrey = 237, Grey = 243, LightGrey = 247, White = 255,
 		
-		Red = 196, Maroon = 52,		   DarkRed = 124,  Pink = 218,
-		Orange=202,Brown = 130,		   DarkOrange=166, Tan = 180,
-		Yellow=226,Olive=100,		   DarkYellow=184, LightYellow=228,
-		Green=40,  VeryDarkGreen=22,   DarkGreen=34,   LightGreen=83, 
-		Cyan=37,   VeryDarkCyan=24,    DarkCyan=31,    LightCyan=44,
-		Blue=33,   Navy=17,		       DarkBlue=20,    LightBlue=75,
-		Purple=93, VeryDarkPurple=54,  DarkPurple=91,  LightPurple=129,
+		Red = 196,  VeryDarkRed = 52,   DarkRed = 124,  Pink = 218,
+		Orange=202, Brown = 130,		DarkOrange=166, Tan = 180,
+		Yellow=226, Olive=100,		    DarkYellow=184, LightYellow=228,
+		Green=40,   VeryDarkGreen=22,   DarkGreen=34,   LightGreen=83, 
+		Cyan=37,    VeryDarkCyan=24,    DarkCyan=31,    LightCyan=44,
+		Blue=33,    Navy=17,		    DarkBlue=20,    LightBlue=75,
+		Purple=93,  VeryDarkPurple=54,  DarkPurple=91,  LightPurple=129,
 		
 		Magenta=127
 	};

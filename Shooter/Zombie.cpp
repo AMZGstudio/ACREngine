@@ -4,8 +4,9 @@
 
 #include "../ACRE Files/ACRE_Fonts.h"
 
-//#define ACRE_GAMEPLAY
-//#include "../ACRE Files/ACRE_Gameplay.h"
+#include "../ACRE Files/ACRE_Transform.h"
+
+#include "../ACRE Files/ACRE_Gameplay.h"
 
 #include <cmath>
 #include <algorithm>
@@ -157,14 +158,13 @@ bool Wave::spawnZombie()
 	return false;
 }
 
-void Wave::attemptNext(bool startCondition)
+bool Wave::attemptNext(bool startCondition)
 {
-	if (key(E).pressed)
-		waveNum++;
-
 	if (!Wave::waveStarted && startCondition)
 	{
 		waveNum++;
 		Wave::waveStarted = true;
+		return true;
 	}	
+	return false;
 }

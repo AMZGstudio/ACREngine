@@ -79,9 +79,10 @@ short calculateColor(short colorArea, short colorScreen, float opacity)
 
 void sysDrawAT(AreaTrans* at, Area area)
 {
-	at->opacity = clamp(at->opacity, 0, 1);
-	Space areaToDrawOnSpace = { 0, 0, area.width, area.height };
+	if((at->opacity = clamp(at->opacity, 0, 1)) == 0)
+		return;
 
+	Space areaToDrawOnSpace = { 0, 0, area.width, area.height };
 	for (int y = 0; y < at->area.height; y++)
 		for (int x = 0; x < at->area.width; x++)
 		{

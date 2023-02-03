@@ -23,7 +23,7 @@ public:
 		sysDrawText(1, 1, area, title.c_str(), FONT_USED, Default, DarkGrey);
 		sysDrawText(0, 0, area, title.c_str(), FONT_USED, Default, White);
 
-		menu.addArea(area, Centered, 20, 3);
+		menu.setArea(area, Centered, 20, 3);
 	}
 
 	void initalizer() override {}

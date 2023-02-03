@@ -2,9 +2,14 @@
 
 #ifdef ACRE_3_COMPATIBLE
 
+#ifdef ACRE_EX_TRANSFORM
 	#ifndef ACRE_EX_GAMEPLAY
 		#define ACRE_EX_GAMEPLAY
 	#endif
+
+	#include <vector> 
+	#include <string>
+	#include <map>
 
 namespace acre // delcarations
 {
@@ -119,7 +124,7 @@ namespace acre // delcarations
 		Menu(Font optionFont, Space optionSpace, bool optionShadow = true, short shadowColor = DarkGrey, bool fade = true, short fadeSpeed = 800);
 
 		void addOption(std::string text, int x, int y); // y can be default
-		void addArea(Area area, int x, int y, float zoom = 1, bool shadow = false, short shadowColor = DarkGrey);
+		void setArea(Area area, int x, int y, float zoom = 1, bool shadow = false, short shadowColor = DarkGrey);
 
 		void drawArea();
 		void drawOptions();
@@ -130,14 +135,60 @@ namespace acre // delcarations
 		void deselectOptions();
 		bool pressed() const;
 		int indexPressed();
+
+		AreaTrans& getAT();
+	};
+
+
+	// this has to be here, because the function definition for setState in States
+	// doesnt exist yet. (writing 'class States' doesnt work here.)
+	class States;
+
+	class State
+	{
+	protected:
+		bool initalized;
+		std::string* _thisState;
+		States* _currState;
+
+	public:
+		State();
+		virtual void initalizer() = 0;
+		virtual void runState() = 0;
+		virtual void terminator() {};
+
+		void setState(std::string state);
+
+		void runInit(std::string& state, States& states);
+		void reset();
+
+		~State();
+	};
+
+	class States
+	{
+	private:
+		// vector of functions
+		std::map<std::string, State*> states;
+		bool _running;
+
+	public:
+		std::string currState;
+
+		States(std::string stateName);
+
+		void runState();
+		void setState(std::string name);
+		void addState(std::string name, State* state);
+
+		bool isRunning();
+		void stopRunning();
+
+		States& operator=(const States& other);
 	};
 }
 
 #ifdef ACRE_GAMEPLAY
-
-#include <vector> 
-#include <string>
-#include <map>
 
 namespace acre // definitions
 {
@@ -276,6 +327,7 @@ namespace acre // definitions
 	Fade::Fade(Renderer* rendererPointer)
 	{
 		r = rendererPointer;
+		thisCalledFade = false;
 	}
 
 	inline void Fade::fadeOutIfNecessary()
@@ -362,7 +414,7 @@ namespace acre // definitions
 		_options.push_back({ text, x, y });
 	}
 
-	inline void Menu::addArea(Area area, int x, int y, float zoom, bool shadow, short shadowColor)
+	inline void Menu::setArea(Area area, int x, int y, float zoom, bool shadow, short shadowColor)
 	{
 		_areaShadow = shadow;
 		_arShadowColor = shadowColor;
@@ -484,118 +536,97 @@ namespace acre // definitions
 
 		return val;
 	}
+
+	inline AreaTrans& Menu::getAT()
+	{
+		return _tv;
+	}
 	
 	/*-------------------------------------------*\
 	|			  Single State Class			  |
 	\*-------------------------------------------*/
 
-	class States;
-
-	class State
+	State::State()
 	{
-	protected:
-		bool initalized;
-		std::string* _thisState;
-		States* _currState;
+		_thisState = nullptr;
+		initalized = false;
+		_currState = nullptr;
+	}
 
-	public:
-		State()
+	void State::setState(std::string state)
+	{
+		_currState->setState(state);
+	}
+
+	void State::runInit(std::string& state, States& states)
+	{
+		if (!initalized)
 		{
-			_thisState = nullptr;
-			initalized = false;
-			_currState = nullptr;
-		}
-		virtual void initalizer() = 0;
-		virtual void runState() = 0;
-		virtual void terminator() {};
+			_thisState = &state;
+			_currState = &states;
 
-		void setState(std::string state);
-
-		void runInit(std::string& state, States& states)
-		{
-			if (!initalized)
-			{
-				_thisState = &state;
-				_currState = &states;
-
-				initalized = true;
-				initalizer();
-			}
-			runState();
+			initalized = true;
+			initalizer();
 		}
-		void reset()
-		{
-			initalized = false;
-		}
-		~State()
-		{
-			terminator();
-		}
-	};
-
+		runState();
+	}
+	inline void State::reset()
+	{
+		initalized = false;
+	}
+	inline State::~State()
+	{
+		terminator();
+	}
 	/*-------------------------------------------*\
 	|				 States Class	    		  |
 	\*-------------------------------------------*/
 
-	class States
+	States::States(std::string stateName) : states()
 	{
-	private:
-		// vector of functions
-		std::map<std::string, State*> states;
-		bool _running;
+		_running = true;
+		currState = stateName;
+	}
 
-	public:
-		std::string currState;
-
-		States(std::string stateName) : states()
-		{
-			_running = true;
-			currState = stateName;
-		}
-
-		void runState()
-		{
-			states[currState]->runInit(currState, *this);
-		}
-
-		void setState(std::string name)
-		{
-			currState = name;
-		}
-
-		void addState(std::string name, State* state)
-		{
-			states[name] = state;
-		}
-
-		bool isRunning()
-		{
-			return _running;
-		}
-
-		void stopRunning()
-		{
-			_running = false;
-		}
-
-		States& operator=(const States& other)
-		{
-			currState = other.currState;
-			states = other.states;
-			return *this;
-		}
-	};
-
-
-	// this has to be here, because the function definition for setState in States
-	// doesnt exist yet. (writing 'class States' doesnt work here.)
-	void State::setState(std::string state)
+	void States::runState()
 	{
-		_currState->setState(state);
+		states[currState]->runInit(currState, *this);
+	}
+
+	void States::setState(std::string name)
+	{
+		currState = name;
+	}
+
+	void States::addState(std::string name, State* state)
+	{
+		states[name] = state;
+	}
+	
+	bool States::isRunning()
+	{
+		return _running;
+	}
+
+	void States::stopRunning()
+	{
+		_running = false;
+	}
+
+	States& States::operator=(const States& other)
+	{
+		currState = other.currState;
+		states = other.states;
+		return *this;
 	}
 }
 
 #endif
 
+#else
+#error You need to use ACRE_Transforms
+#endif
 
+#else
+#error You need to include ACRE 3.0 before.
 #endif

@@ -13,31 +13,63 @@
 class Game : public acre::State
 {
 private:
-	bool paused = false;
-	Player p;
-	Space spPaused = { 0 };
+	enum splashState {FadingIn, Waiting, FadingOut, None};
+	enum coolDownState { Neither, Started, Finished };
 
+	Space spPaused = { 0 };
+	bool paused = false;
+	int index; // for paused screen
+
+	Player p;
 	std::vector<Bullet> bullets;
 	std::vector<Zombie> zombies;
 
-	acre::Menu m;
 	acre::Renderer* _ar;
-
 	acre::Fade f;
 
-	int ammo = 15;
+	acre::Menu pausedMenu;
+	acre::Menu waveScreen;
 
-	int index; // for paused screen
+	splashState ss = None;
+	coolDownState cds = Neither;
+	float timePassed = 0;
+	float coolDown = 0;
+	float coolDownTime = 3;
+
+	int ammo = 15;
+	
+private:
+	void drawWave(int num, AreaTrans& at)
+	{
+		std::string text;
+
+		if (num == -1)
+			text = "Wave XXXX";
+
+		else
+			text = "Wave " + std::to_string(num);
+
+		int x = (int)((float)Width(at.area) / 2 - (float)txtWidth(text.c_str(), Five) / 2.0f);
+		sysDrawText(x + 1,1, at.area, text.c_str(), Five, Default, DarkRed);
+		sysDrawText(x,    0, at.area, text.c_str(), Five, Default, Color(200,200,200));
+	}
+
 public:
 	static int score;
 	
-	Game(acre::Renderer* r) : f(r), m(Five, calcSpace(ScreenSpace, Centered, Centered, 80, 50), true)
+	Game(acre::Renderer* r) : f(r), waveScreen(DefaultFont, {}), pausedMenu(Five, calcSpace(ScreenSpace, Centered, Centered, 80, 50), true)
 	{ 
-		m.addOption("Restart", Centered, Default);
-		m.addOption("Exit", Centered, Default);
-		m.addOption("Resume", Centered, Default);
+		pausedMenu.addOption("Restart", Centered, Default);
+		pausedMenu.addOption("Resume", Centered, Default);
+		pausedMenu.addOption("Exit", Centered, Default);
 
 		spPaused = calcSpace(ScreenSpace, Centered, Centered, 80, 100);
+
+		Area splash = createArea(txtWidth("Wave XXXX", Five) + 1, Five.height + 1, Default, Default);
+		waveScreen.setArea(splash, Centered, 40, 2);
+
+		AreaTrans& at = waveScreen.getAT();
+		at.opacity = 0;
 	}
 
 	void initalizer() override
@@ -51,16 +83,35 @@ public:
 		ammo = 15;
 		index = -1;
 
+		AreaTrans& at = waveScreen.getAT();
+		at.opacity = 0;
+		timePassed = 0;
+		coolDown = 0;
+
+		cds = Neither;
+		ss = None;
+
 		aud.playSound("music", true);
 	}
 
 	void update()
 	{
+		AreaTrans& at = waveScreen.getAT();
+		
 		std::for_each(bullets.begin(), bullets.end(), [](auto&& item) { item.update(); });
 		std::for_each(zombies.begin(), zombies.end(), [](auto&& item) { item.update(); });
 
 		p.update();
-		Wave::attemptNext(zombies.size() == 0);
+
+		if (cds == Finished)
+			if (Wave::attemptNext(zombies.size() == 0))
+			{
+				ss = FadingIn, cds = Neither;
+				drawWave(Wave::waveNum, at);
+			}	
+
+		if (zombies.size() == 0)
+			cds = Started;
 
 		if (Wave::spawnZombie())
 		{
@@ -77,6 +128,34 @@ public:
 		zombies.erase(std::remove_if(zombies.begin(), zombies.end(), [this](auto&& item)
 			{ if (!item.isAlive()) score += 100; return !item.isAlive(); }), zombies.end());
 
+
+		if (cds == Started)
+			coolDown += timePerSec(1);
+
+		if (coolDown > 2)
+		{
+			cds = Finished;
+			coolDown = 0;
+		}	
+
+		if (ss == FadingIn)
+			at.opacity += timePerSec(1);
+		if (ss == FadingOut)
+			at.opacity -= timePerSec(1);
+		
+		if (at.opacity >= 1)
+			ss = Waiting;
+		if (at.opacity <= 0)
+			ss = None;
+
+		if (ss == Waiting)
+			timePassed += timePerSec(0.5);
+
+		if (timePassed > 1)
+		{
+			timePassed = -1;
+			ss = FadingOut;
+		}
 
 		if (key(Spacebar).pressed || key(LeftM).pressed)
 		{
@@ -105,6 +184,8 @@ public:
 
 		p.draw();
 
+		waveScreen.drawArea();
+
 		const char* s = std::format("Wave: {}", Wave::waveNum).c_str();
 
 		drawText(Width(Screen) - txtWidth(s, Pzim) - 2, 2, s, Pzim, White);
@@ -121,13 +202,13 @@ public:
 	void runState() override
 	{
 		f.fadeOutIfNecessary();
+
 		if (f.fadeInFinished())
 		{
 			switch (index)
 			{
 			case 0: setState("game"); break;
-			case 1: 
-				setState("menu"); break;
+			case 2: setState("menu"); break;
 			}
 			
 			reset();
@@ -144,7 +225,7 @@ public:
 		if (key(Esc).pressed)
 		{
 			paused = !paused;
-			m.deselectOptions();
+			pausedMenu.deselectOptions();
 		}
 
 		if (paused)
@@ -155,19 +236,19 @@ public:
 			drawRect(spPaused.startX, spPaused.startY, spPaused.endX, spPaused.endY, DarkGrey);
 			drawText(Centered, spPaused.startY + 6, "Paused", Five, White);
 
-			if (m.pressed() && f.notFading())
+			if (pausedMenu.pressed() && f.notFading())
 			{
-				index = m.indexPressed();
+				index = pausedMenu.indexPressed();
 
-				if (index == 2)
+				if (index == 1)
 					paused = false;
 
 				else
 					f.fadeIn();
 			}
 	
-			m.calculations();
-			m.draw();
+			pausedMenu.calculations();
+			pausedMenu.draw();
 
 			return;
 		}

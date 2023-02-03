@@ -16,11 +16,11 @@
     <Filter Include="Header Files">
       <UniqueIdentifier>{f3d632fb-eb6f-4a66-82b6-b46d1e4a878e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Misc">
+      <UniqueIdentifier>{ea39c2dc-8775-4b33-89d7-9d5899b9640e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Source.cpp">
-      <Filter>Game Code</Filter>
-    </ClCompile>
     <ClCompile Include="Bullet.cpp">
       <Filter>Game Code\Entities</Filter>
     </ClCompile>
@@ -36,7 +36,10 @@
     <ClCompile Include="Collision.cpp">
       <Filter>Game Code\Physics</Filter>
     </ClCompile>
-    <ClCompile Include="Audio.cpp" />
+    <ClCompile Include="Audio.cpp">
+      <Filter>Misc</Filter>
+    </ClCompile>
+    <ClCompile Include="Source.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Zombie.hpp">
@@ -66,16 +69,9 @@
     <ClInclude Include="Board.hpp">
       <Filter>Game Code\Game States</Filter>
     </ClInclude>
-    <ClInclude Include="Leaderboard.hpp">
-      <Filter>Game Code</Filter>
-    </ClInclude>
     <ClInclude Include="Creds.hpp">
       <Filter>Game Code\Game States</Filter>
     </ClInclude>
-    <ClInclude Include="olcSoundWaveEngine.h">
-      <Filter>Game Code</Filter>
-    </ClInclude>
-    <ClInclude Include="Audio.h" />
     <ClInclude Include="..\ACRE Files\ACREngine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -90,6 +86,15 @@
     </ClInclude>
     <ClInclude Include="..\ACRE Files\ACRE_Transform.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Audio.h">
+      <Filter>Misc</Filter>
+    </ClInclude>
+    <ClInclude Include="olcSoundWaveEngine.h">
+      <Filter>Misc</Filter>
+    </ClInclude>
+    <ClInclude Include="Leaderboard.hpp">
+      <Filter>Misc</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

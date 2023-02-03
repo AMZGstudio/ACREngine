@@ -127,13 +127,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\ACRE Files\ACREngine.h" />
-    <ClInclude Include="..\ACRE Files\ACRE_Fonts.h" />
-    <ClInclude Include="..\ACRE Files\ACRE_Gameplay.h" />
-    <ClInclude Include="..\ACRE Files\ACRE_Gui.h" />
-    <ClInclude Include="..\ACRE Files\ACRE_Transform.h" />
-  </ItemGroup>
-  <ItemGroup>
     <ClCompile Include="Source.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
