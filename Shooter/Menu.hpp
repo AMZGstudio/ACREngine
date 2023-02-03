@@ -45,7 +45,7 @@ public:
 			case 2: setState("creds"); break;
 			case 3: _currState->stopRunning(); break;
 			}
-			menu.noneSelected();
+			menu.deselectOptions();
 		}
 		
 		if (menu.pressed() && f.notFading())

@@ -162,11 +162,11 @@ Option* createTextBox(Window* parentWindow, int x, int y, const char* text, Font
 	Space windowSpace = getWindowSpace(parentWindow);
 	Option* op = createOption(parentWindow);
 
-	op->xStart = x == Centered ? ((parentWindow != NULL) ? center(stringWidth(text, font), windowSpace, X) : center(stringWidth(text, font), ScreenSpace, X)) : x;
-	op->yStart = y == Centered ? ((parentWindow != NULL) ? center(y * font.displayW, windowSpace, Y) : center(y * font.displayW, ScreenSpace, Y)) : y;
+	op->xStart = x == Centered ? ((parentWindow != NULL) ? center(txtWidth(text, font), windowSpace, X) : center(txtWidth(text, font), ScreenSpace, X)) : x;
+	op->yStart = y == Centered ? ((parentWindow != NULL) ? center(txtHeight(text, font), windowSpace, Y) : center(txtHeight(text, font), ScreenSpace, Y)) : y;
 
-	op->xEnd = op->xStart + stringWidth(text, font);
-	op->yEnd = op->yStart + y * font.displayW;
+	op->xEnd = op->xStart + txtWidth(text, font);
+	op->yEnd = op->yStart + txtHeight(text, font);
 
 	op->font = font;
 	op->type = TextBox;
@@ -187,7 +187,7 @@ Option* createSlider(Window* parentWindow, int xStart, int yStart, int xEnd, int
 	op->yEnd = yStart == Centered ? op->yStart + yEnd : yEnd;
 
 	op->type = Slider;
-	op->sliderVal = clamp(slideStartLoc, 0, 100);
+	op->sliderVal = clamp(slideStartLoc, 1, 100);
 	return op;
 }
 
@@ -262,14 +262,14 @@ void calculateSlider(Option* slider)
 {
 	Space finalSpace = { slider->windowBelongTo->x + slider->xStart, 
 						 slider->windowBelongTo->y + slider->yStart, 
-						 slider->windowBelongTo->x + slider->xEnd-1, 
+						 slider->windowBelongTo->x + slider->xEnd, 
 						 slider->windowBelongTo->y + slider->yEnd };
 
-	slider->sliderVal = clamp(slider->sliderVal, 0, 100);
+	slider->sliderVal = clamp(slider->sliderVal, 1, 100);
 
 	if (pointSpaceCollide(Mouse.x, Mouse.y, finalSpace) && key(LeftM).held)
 	{
-		slider->sliderVal = map(Mouse.x, finalSpace.startX, finalSpace.endX, 0, 100);
+		slider->sliderVal = map(Mouse.x, finalSpace.startX, finalSpace.endX, 1, 100);
 	}
 }
 
@@ -330,7 +330,7 @@ void drawSlider(Option* slider, bool dark)
 	Space windowSpace = getWindowSpace(slider->windowBelongTo);
 	
 	spDrawRectFilled(slider->xStart, slider->yStart, slider->xEnd, slider->yEnd, windowSpace, dark ? DARK_SLIDEB_COL : LIGHT_SLIDEB_COL);
-	int newX = map(slider->sliderVal, 0, 100, slider->xStart, slider->xEnd-1);
+	int newX = map(slider->sliderVal, 1, 100, slider->xStart, slider->xEnd);
 	
 	spDrawRectFilled(newX, slider->yStart, newX + 1, slider->yEnd, windowSpace, dark ? DARK_SLIDEF_COL : LIGHT_SLIDEF_COL);
 }

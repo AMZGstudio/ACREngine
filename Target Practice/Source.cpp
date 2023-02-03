@@ -61,7 +61,7 @@ public:
 
 int main()
 {
-	initalize("Target Game", 250, 125, 3, 3, Default, Default);
+	initialize("Target Game", 250, 125, 3, 3, Default, Default);
 
 	Objects arrow(Arrow);
 	Objects target(Target);

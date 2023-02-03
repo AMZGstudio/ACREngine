@@ -52,3 +52,24 @@ int main()
 	
 	return terminateACRE();
 }
+
+/*
+TODO:
+
+DONE: Add restart button in escape menu
+DONE: make menu's work on hover, and only click once
+DONE: Allow renderer class to be a global variable, without it breaking things
+
+Add shaking to the screen.
+
+add a message in the center of the screen, saying what wave it is.
+
+make waves longer.
+
+add zombie death sound effect, and zombie scream sound effect.
+
+Make ACRE_GAMEPLAY work across multiple files.
+
+
+*/
+

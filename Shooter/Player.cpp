@@ -8,7 +8,7 @@ Player::Player() : Entity(100)
 
 void Player::draw()
 {
-	drawCircle(x, y, RADIUS, LightBlue);
+	drawCircle(x, y, RADIUS, Cyan);
 }
 
 void Player::update()

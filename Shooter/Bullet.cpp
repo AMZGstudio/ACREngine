@@ -21,7 +21,7 @@ Bullet::Bullet(int px, int py, float pvx, float pvy, int mx, int my) : Entity(50
 
 void Bullet::draw()
 {
-	drawPixel(x, y, Yellow);
+	drawPixel(x, y, DarkYellow);
 }
 
 void Bullet::update()

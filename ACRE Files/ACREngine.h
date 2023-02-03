@@ -117,8 +117,11 @@
 
 			Transform:
 
-				ACRE_Transform now also works across multiple files
+				ACRE_Transform now also works across multiple files.
 				Now also works with Centered.
+
+				Major update, transforms now support opacity. just set its opacity with .opacity, to a value between 0-1
+
 
 			Gameplay:
 
@@ -158,7 +161,8 @@
 		TODO: Performance
 		TODO: check for bugs related to drawing real characters
 		TODO: Check every font, and make sure their numbers are correct.
-
+		TODO: Change order of parameters in sysDrawRect & sysDrawTriangle, so that characters is after filled.
+		TODO: Make ACRE_Transform work with multiple files again.
 		*/
 		
 #ifndef ACRE_INCLUDES
@@ -330,7 +334,7 @@
 	bool textBoxInput(char* outputString, int outputStringLength);
 
 	Area createArea(int width, int height, short colorFront, short colorBack);
-	void deleteArea(Area area);
+	void deleteArea(Area* area);
 	void initialize(const char* title, int width, int height, int fontWidth, int fontHeight, int defaultFront, int defaultBack);
 	void render(bool clearScreen);
 	int terminateACRE(void);
@@ -419,7 +423,7 @@
 		{0x07,0x0C,0x0C,0x38,0x0C,0x0C,0x07,0x00},{0x6E,0x3B,0x00,0x00,0x00,0x00,0x00,0x00},{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00}
 	};
 	Font EightBit = { 8, 8, 8, 1, 1, (const unsigned char*)font8x8_basic }; //sysDrawFontChar(x, y, Screen, EIGHT_BIT, text[slot], colorFront, colorBack);
-	Font DefaultFont = { 1, 1, NULL };
+	Font DefaultFont = { 0, 1, 1, 0, 0, NULL };
 	Timer timer = { 0 };
 	/*-------------------------------------------*\
 	|			 System Only Functions   		  |
@@ -1306,7 +1310,6 @@
 
 		for (int ys = startAreaY; ys < endAreaY; ys++)
 		{
-
 			for (int xs = startAreaX; xs < endAreaX; xs++)
 			{
 				int loc = ys * (areaToDraw.width) + xs;
@@ -1600,16 +1603,16 @@
 		}
 	}
 
-	void deleteArea(Area area)
+	void deleteArea(Area* area)
 	{
-		free(area.characters);
-		free(area.colFront);
-		free(area.colBack);
-		area.width = -1;
-		area.height = -1;
-		area.characters = NULL;
-		area.colFront = NULL;
-		area.colBack = NULL;
+		free(area->characters);
+		free(area->colFront);
+		free(area->colBack);
+		area->width = -1;
+		area->height = -1;
+		area->characters = NULL;
+		area->colFront = NULL;
+		area->colBack = NULL;
 	}
 
 	/*-------------------------------------------*\
@@ -1703,7 +1706,7 @@
 			Error(L"Changing codepage back to default failed.", __LINE__);
 
 		free(screenBufferFull);
-		deleteArea(Screen);
+		deleteArea(&Screen);
 
 		return 0;
 	}

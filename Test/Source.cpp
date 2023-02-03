@@ -4,21 +4,32 @@
 #define ACRE_START
 #include "../ACRE Files/ACREngine.h"
 
+#define ACRE_TRANSFORM
+#include "../ACRE Files/ACRE_Transform.h"
+
+
 
 int main()
 {
 	initialize("Shooter Game!", 300, 200, 3, 3, Default, Default);
 
+	Area a = createArea(50, 50, Default, White);
+	AreaTrans at1 = createAT(a, Centered, Centered);
+	AreaTrans at2 = createAT(a, Centered, Centered);
+
+	sysDrawCircle(25, 25, a, 20, Default, true, Default, Red);
+	
 	while (true)
 	{
-		if (key(W).held)
-			drawPixel(Mouse.x, Mouse.y, Red);
+		calculateAT(&at1);
 
-		if (key(R).held)
-			sysDrawPoint(Mouse.x, Mouse.y, Screen, Default, Default, Default);
-			//drawPixel(Mouse.x, Mouse.y, defaultBackColor);
+		if (key(Up).held) at1.opacity += timePerSec(0.5);
+		if (key(Down).held) at1.opacity -= timePerSec(0.5);
 
-		render(false);
+		drawAT(&at2);
+		drawAT(&at1);
+		
+		render(true);
 	}
 	return terminateACRE();
 }

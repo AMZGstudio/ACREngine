@@ -4,6 +4,9 @@
 
 #include "../ACRE Files/ACRE_Fonts.h"
 
+//#define ACRE_GAMEPLAY
+//#include "../ACRE Files/ACRE_Gameplay.h"
+
 #include <cmath>
 #include <algorithm>
 #include <vector>
@@ -46,8 +49,11 @@ Zombie& Zombie::operator=(const Zombie& other)
 
 void Zombie::update()
 {
-	if(playerCollide())
+	if (playerCollide())
+	{
 		_player.hit(timePerSec(10));
+		//acre::Renderer::doShake = true;
+	}
 
 	float dx = _player.getX() - x;
 	float dy = _player.getY() - y;
@@ -82,8 +88,8 @@ void Zombie::update()
 
 void Zombie::draw()
 {
-	Space sp = drawCircle(x, y, RADIUS, Green);
-	spDrawNumber(Centered, -RADIUS-3, sp, health, 0, Pzim, Red);
+	Space sp = drawCircle(x, y, RADIUS, DarkGreen);
+	spDrawNumber(Centered, -RADIUS-3, sp, health, 0, Pzim, DarkRed);
 }
 
 float Zombie::getRadius()

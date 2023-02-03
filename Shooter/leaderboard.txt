@@ -1,4 +1,1 @@
-amzg 10000
-Amzg 3000
-amzg 3000
-sdfsf 0
+  300

@@ -6,18 +6,8 @@
 		#define ACRE_EX_GAMEPLAY
 	#endif
 
-#ifdef ACRE_GAMEPLAY
-
-#include <vector> 
-#include <string>
-#include <map>
-
-namespace acre
+namespace acre // delcarations
 {
-	/*-------------------------------------------*\
-	|				 Renderer Class	    		  |
-	\*-------------------------------------------*/
-
 	class Renderer
 	{
 	private:
@@ -26,89 +16,34 @@ namespace acre
 		float fadeProgress;
 		float fadeIncrement;
 
-	public:
+		float timeFromLastShake = 0;
+		int amntShakes = 0;
+		float timeForShake = 10;
+		int shakeState = 0;
+
 		enum fadeState { Neither, startedFadeIn, finished, startedFadeOut };
 		fadeState fs;
 
-		Renderer()
-		{
-			_window = createArea(Width(Screen), Height(Screen), Default, Default);
-			setDefaultDrawArea(&_window);
+	public:
+		static bool doShake;
 
-			fs = Neither;
-			fadeProgress = 0;
-			fadeIncrement = 2;
-		}
-		Area getWindow()
-		{
-			return _window;
-		}
-		void draw()
-		{
-			if (fs == startedFadeIn || fs == startedFadeOut)
-			{
-				if (fadeProgress < 1)
-					for (int y = 0; y < Height(Screen); y++)
-						for (int x = 0; x < Width(Screen); x++)
-						{
-							short r, g, b;
-							Xterm(_window.colBack[y * Width(Screen) + x], &r, &g, &b);
-							
-							r -= map(fs == startedFadeOut ? 1 - fadeProgress : fadeProgress, 0, 1, 0, 255);
-							g -= map(fs == startedFadeOut ? 1 - fadeProgress : fadeProgress, 0, 1, 0, 255);
-							b -= map(fs == startedFadeOut ? 1 - fadeProgress : fadeProgress, 0, 1, 0, 255);
-							
-							sysDrawPoint(x, y, Screen, Default, Default, Color(clamp(r, 0, 255), clamp(g, 0, 255), clamp(b, 0, 255)));
-						}
+		Renderer();
+		
+		void draw();
+		void render();
+		void clear();
 
-				fadeProgress += timePerSec(fadeIncrement);
-				if (fadeProgress > 1)
-				{
-					fadeProgress = 0;
-					if (fs == startedFadeIn) fs = finished;
-					if (fs == startedFadeOut) fs = Neither;
-				}
-					
-			}
+		// checkers
+		bool isFadingIn();
+		bool finishedFade();
+		bool notFading();
 
-			else if (fs == finished)
-			{
-				clear();
-			}
-			else
-			{
-				sysDrawArea(0, 0, Screen, _window);
-			}
-		}
+		// setters
+		void startFadeIn();
+		void startFadeOut();
 
-		void render()
-		{
-			::render(false);
-		}
-		void clear()
-		{
-			::clear(_window);
-		}
-		bool fadingIn()
-		{
-			return fs == startedFadeIn;
-		}
-		bool finishedFade()
-		{
-			return fs == finished;
-		}
-		bool notFading()
-		{
-			return fs == Neither;
-		}
-		void startFadeIn()
-		{
-			fs = startedFadeIn;
-		}
-		void startFadeOut()
-		{
-			fs = startedFadeOut;
-		}
+		// getters
+		Area getWindow();
 	};
 
 	class Fade
@@ -118,40 +53,13 @@ namespace acre
 		bool thisCalledFade;
 
 	public:
-		Fade(Renderer* rendererPointer)
-		{
-			r = rendererPointer;
-		}
-		void fadeOutIfNecessary()
-		{
-			if (!thisCalledFade && r->finishedFade())
-				r->startFadeOut();
-		}
-		bool fadeInFinished()
-		{
-			if (r->finishedFade() && thisCalledFade)
-			{
-				thisCalledFade = false;
-				return true;
-			}
-			return false;
-		}
-		bool notFading()
-		{
-			return r->notFading();
-		}
-		void fadeIn()
-		{
-			if (notFading())
-			{
-				thisCalledFade = true;
-				r->startFadeIn();
-			}
-		}
+		Fade(Renderer* rendererPointer);
+		void fadeOutIfNecessary();
+		bool fadeInFinished();
+		bool notFading();
+
+		void fadeIn();
 	};
-	/*-------------------------------------------*\
-	|				   Menu Class	    		  |
-	\*-------------------------------------------*/
 
 	/*
 	Class Notes:
@@ -171,191 +79,418 @@ namespace acre
 		};
 
 	private:
-		// options and options space.
+		// options and options space + font
 		std::vector<Option> _options;
-		Space spOptions;
+		Space _spOptions;
 		Font _font;
 
 		// selected option and pressed or not
-		int _selectedOption = -1;
-		bool _pressed = false;
-		
+		int _highlighted = -1;
+		int _indexPressed = -1;
+
 		// option specs
 		bool _optionShadow;
 		short _opShadowColor;
 		bool _fade;
 		short _fadeSpeed;
-		int _shadowOffsetX = 1;
-		int _shadowOffsetY = 1;
-		int _vSpace = 7; // space in between options
-		int hitSpace = 2;
-		
+
+		const int _shadowOffsetX = 1;
+		const int _shadowOffsetY = 1;
+		const int _vSpace = 7; // space in between options (vertical space)
+		const int _hitSpace = 2; // how much bigger text bounding box is
+
 		// area related
 		bool _areaShadow;
 		short _arShadowColor;
 		AreaTrans _tv;
 
+		// internal
+		bool _usingKeyboard = false;
+
 	protected:
-		virtual void drawOption(Option& op, bool selected)
-		{
-			if (_optionShadow)
-				spDrawText(op.x + _shadowOffsetX, op.y + _shadowOffsetY, spOptions, op.text.c_str(), _font, DarkGrey);
+		virtual void drawOption(Option& op, const bool hovered);
+		virtual void optionHovered(Option& op);
+		virtual void optionPressed(Option& op);
 
-			spDrawText(op.x, op.y, spOptions, op.text.c_str(), _font, Color(op.r, op.g, op.b));
-		}
-
-		virtual void optionHovered(Option& op)
-		{
-			short r, g, b;
-			Xterm(Red, &r, &g, &b);
-
-			op.r = r;
-			op.g = g;
-			op.b = b;
-		}
-
-		virtual void optionPressed(Option& op)
-		{
-			op.r = 255;
-			op.g = 255;
-			op.b = 255;
-
-			_pressed = true;
-		}
+	private:
+		void keyboardCalculations();
 
 	public:
-		Menu(Font whichFont, Space optionSpace, bool optionShadow = true, short shadowColor = DarkGrey, bool fade = true, short fadeSpeed = 800)
-		{
-			_font = whichFont;
-			_font.spacingX = 2;
+		Menu(Font optionFont, Space optionSpace, bool optionShadow = true, short shadowColor = DarkGrey, bool fade = true, short fadeSpeed = 800);
 
-			spOptions = optionSpace;
+		void addOption(std::string text, int x, int y); // y can be default
+		void addArea(Area area, int x, int y, float zoom = 1, bool shadow = false, short shadowColor = DarkGrey);
 
-			_optionShadow = optionShadow;
-			_opShadowColor = shadowColor;
-			_optionShadow = optionShadow;
+		void drawArea();
+		void drawOptions();
+		void draw();
 
-			_fade = fade;
-			_fadeSpeed = fadeSpeed;
-		}
+		void calculations();
 
-		void addOption(std::string text, int x, int y) // y can be default
-		{
-			if (x == Default || x == Centered) // calculate X here because we can, not Y, that must be done later
-				x = center(txtWidth(text.c_str(), _font) + _shadowOffsetX, spOptions, X);
-
-			_options.push_back({ text, x, y });
-		}
-
-		void addArea(Area area, int x, int y, float zoom = 1, bool shadow = false, short shadowColor = DarkGrey)
-		{
-			_areaShadow = shadow;
-			_arShadowColor = shadowColor;
-
-			_tv = createAT(area, x, y);
-			changeZoom(&_tv, Centered, Centered, zoom, true);
-
-		}
-
-		void drawArea()
-		{
-			drawAT(_tv);
-		}
-		void drawOptions()
-		{
-			for (auto op = _options.begin(); op < _options.end(); op++)
-				drawOption(*op, (op - _options.begin()) == _selectedOption);
-		}
-		void draw()
-		{
-			drawArea();
-			drawOptions();
-		}
-
-		void calculations()
-		{
-			int i = 0, y = _tv.y + _tv.area.height * _tv.zoom + 5;
-			bool leftMPressed = key(LeftM).pressed;
-			bool EnterPressed = key(Enter).pressed;
-			bool somethingPressed = false;
-
-			for (Option& o : _options)
-			{
-				// correct Y in the case it was default
-				if (o.y == Default)
-					o.y = i * (txtHeight("", _font) + _vSpace + _shadowOffsetX);
-
-				// calculate the collide space for that option
-				Space textSpace = calcSpace(spOptions, o.x, o.y, txtWidth(o.text.c_str(), _font), txtHeight(o.text.c_str(), _font));
-
-				textSpace.startX -= hitSpace;
-				textSpace.startY -= hitSpace;
-
-				textSpace.endX += _shadowOffsetX + hitSpace;
-				textSpace.endY += _shadowOffsetY + hitSpace;
-				
-				if (leftMPressed && pointSpaceCollide(Mouse.x, Mouse.y, textSpace))
-				{
-					somethingPressed = true;
-					optionHovered(o);
-
-					if (_selectedOption == i)
-						optionPressed(o);
-
-					_selectedOption = i;
-				}
-				else if (!somethingPressed)
-					_pressed = false;
-
-				if (_selectedOption != i)
-				{
-					o.r += timePerSec(_fadeSpeed);
-					o.g += timePerSec(_fadeSpeed);
-					o.b += timePerSec(_fadeSpeed);
-
-					o.r = clamp(o.r, 0, 255);
-					o.g = clamp(o.g, 0, 255);
-					o.b = clamp(o.b, 0, 255);
-				}
-				i++;
-			}
-		
-			if (EnterPressed)
-				optionPressed(_options[_selectedOption]);
-
-			if ((key(W).pressed || key(Up).pressed) && _selectedOption > 0)
-			{
-				_selectedOption--;
-				optionHovered(_options[_selectedOption]);
-			}
-			if ((key(S).pressed || key(Down).pressed) && (_selectedOption < _options.size() - 1 || _selectedOption == -1))
-			{
-				_selectedOption++;
-				optionHovered(_options[_selectedOption]);
-			}
-		}
-		
-		bool pressed()
-		{
-			return _pressed;
-		}
-
-		void noneSelected()
-		{
-			_selectedOption = -1;
-		}
-		
-		int indexPressed()
-		{
-			return _selectedOption;
-		}
+		void deselectOptions();
+		bool pressed() const;
+		int indexPressed();
 	};
+}
 
+#ifdef ACRE_GAMEPLAY
+
+#include <vector> 
+#include <string>
+#include <map>
+
+namespace acre // definitions
+{
+	/*-------------------------------------------*\
+	|				 Renderer Class	    		  |
+	\*-------------------------------------------*/
+
+	inline Renderer::Renderer()
+	{
+		_window = createArea(Width(Screen), Height(Screen), Default, Default);
+		setDefaultDrawArea(&_window);
+
+		fs = Neither;
+		fadeProgress = 0;
+		fadeIncrement = 2;
+	}
+
+	void Renderer::draw()
+	{
+		if (fs == startedFadeIn || fs == startedFadeOut)
+		{
+			if (fadeProgress < 1)
+				for (int y = 0; y < Height(Screen); y++)
+					for (int x = 0; x < Width(Screen); x++)
+					{
+						short r, g, b;
+						Xterm(_window.colBack[y * Width(Screen) + x], &r, &g, &b);
+
+						r -= map(fs == startedFadeOut ? 1 - fadeProgress : fadeProgress, 0, 1, 0, 255);
+						g -= map(fs == startedFadeOut ? 1 - fadeProgress : fadeProgress, 0, 1, 0, 255);
+						b -= map(fs == startedFadeOut ? 1 - fadeProgress : fadeProgress, 0, 1, 0, 255);
+
+						sysDrawPoint(x, y, Screen, Default, Default, Color(clamp(r, 0, 255), clamp(g, 0, 255), clamp(b, 0, 255)));
+					}
+
+			fadeProgress += timePerSec(fadeIncrement);
+			if (fadeProgress > 1)
+			{
+				fadeProgress = 0;
+				if (fs == startedFadeIn) fs = finished;
+				if (fs == startedFadeOut) fs = Neither;
+			}
+
+		}
+
+		else if (fs == finished)
+		{
+			clear();
+		}
+		else
+		{
+			if (doShake)
+			{
+				timeFromLastShake += timePerSec(timeForShake);
+				if (timeFromLastShake > 1)
+				{
+					timeFromLastShake = 0;
+					shakeState = rand() % 8;
+					amntShakes++;
+				}
+				/*if (amntShakes > 4)
+				{
+					doShake = false;
+					timeFromLastShake = 0;
+					amntShakes = 0;
+
+				}*/
+
+				switch (shakeState)
+				{
+				case 0: sysDrawArea(1, 1, Screen, _window); break;
+				case 1: sysDrawArea(1, 0, Screen, _window); break;
+				case 2: sysDrawArea(0, 1, Screen, _window); break;
+				case 3: sysDrawArea(0, 0, Screen, _window); break;
+				case 4: sysDrawArea(-1, -1, Screen, _window); break;
+				case 5: sysDrawArea(-1, -0, Screen, _window); break;
+				case 6: sysDrawArea(-0, -1, Screen, _window); break;
+				case 7: sysDrawArea(-0, -0, Screen, _window); break;
+				}
+
+			}
+
+			else
+				sysDrawArea(0, 0, Screen, _window);
+
+		}
+	}
+
+	inline void Renderer::render()
+	{
+		::render(false);
+	}
+
+	inline void Renderer::clear()
+	{
+		::clear(_window);
+	}
+
+	inline bool Renderer::isFadingIn()
+	{
+		return fs == startedFadeIn;
+	}
+
+	inline bool Renderer::finishedFade()
+	{
+		return fs == finished;
+	}
+
+	inline bool Renderer::notFading()
+	{
+		return fs == Neither;
+	}
+
+	inline void Renderer::startFadeIn()
+	{
+		fs = startedFadeIn;
+	}
+
+	void Renderer::startFadeOut()
+	{
+		fs = startedFadeOut;
+	}
+
+	inline Area Renderer::getWindow()
+	{
+		return _window;
+	}
+
+	// static members
+	bool Renderer::doShake = false;
+	
+	/*-------------------------------------------*\
+	|			  Fade Manager Class	   		  |
+	\*-------------------------------------------*/
+
+	Fade::Fade(Renderer* rendererPointer)
+	{
+		r = rendererPointer;
+	}
+
+	inline void Fade::fadeOutIfNecessary()
+	{
+		if (!thisCalledFade && r->finishedFade())
+			r->startFadeOut();
+	}
+
+	inline bool Fade::fadeInFinished()
+	{
+		if (r->finishedFade() && thisCalledFade)
+		{
+			thisCalledFade = false;
+			return true;
+		}
+		return false;
+	}
+
+	inline bool Fade::notFading()
+	{
+		return r->notFading();
+	}
+
+	inline void Fade::fadeIn()
+	{
+		if (notFading())
+		{
+			thisCalledFade = true;
+			r->startFadeIn();
+		}
+	}
+	
+	/*-------------------------------------------*\
+	|				   Menu Class	    		  |
+	\*-------------------------------------------*/
+
+	void Menu::drawOption(Option& op, const bool hovered)
+	{
+		if (_optionShadow)
+			spDrawText(op.x + _shadowOffsetX, op.y + _shadowOffsetY, _spOptions, op.text.c_str(), _font, DarkGrey);
+
+		spDrawText(op.x, op.y, _spOptions, op.text.c_str(), _font, Color(op.r, op.g, op.b));
+	}
+
+	inline void Menu::optionHovered(Option& op)
+	{
+		short r, g, b;
+		Xterm(Red, &r, &g, &b);
+
+		op.r = r;
+		op.g = g;
+		op.b = b;
+	}
+
+	inline void Menu::optionPressed(Option& op)
+	{
+		op.r = 255;
+		op.g = 255;
+		op.b = 255;
+
+		_indexPressed = _highlighted;
+	}
+
+	inline Menu::Menu(Font optionFont, Space optionSpace, bool optionShadow, short shadowColor, bool fade, short fadeSpeed)
+	{
+		_font = optionFont;
+		_font.spacingX = 2;
+
+		_spOptions = optionSpace;
+
+		_optionShadow = optionShadow;
+		_opShadowColor = shadowColor;
+		_optionShadow = optionShadow;
+
+		_fade = fade;
+		_fadeSpeed = fadeSpeed;
+	}
+
+	inline void Menu::addOption(std::string text, int x, int y)
+	{
+		if (x == Default || x == Centered) // calculate X here because we can, not Y, that must be done later
+			x = center(txtWidth(text.c_str(), _font) + _shadowOffsetX, _spOptions, X);
+
+		_options.push_back({ text, x, y });
+	}
+
+	inline void Menu::addArea(Area area, int x, int y, float zoom, bool shadow, short shadowColor)
+	{
+		_areaShadow = shadow;
+		_arShadowColor = shadowColor;
+
+		_tv = createAT(area, x, y);
+		setPivotAT(&_tv, Centered, Centered, false);
+		setZoomAT(&_tv, zoom);
+	}
+
+	inline void Menu::drawArea()
+	{
+		drawAT(&_tv);
+	}
+
+	inline void Menu::drawOptions()
+	{
+		for (auto op = _options.begin(); op < _options.end(); op++)
+			drawOption(*op, (op - _options.begin()) == _highlighted);
+	}
+
+	inline void Menu::draw()
+	{
+		drawArea();
+		drawOptions();
+	}
+
+	inline void Menu::keyboardCalculations()
+	{
+		if (key(Enter).pressed && _highlighted >= 0 && _highlighted <= _options.size() - 1)
+			optionPressed(_options[_highlighted]);
+
+		if ((key(W).pressed || key(Up).pressed))
+		{
+			_usingKeyboard = true;
+			_highlighted--;
+
+			if (_highlighted < 0)
+				_highlighted = _options.size() - 1;
+
+			optionHovered(_options[_highlighted]);
+		}
+		if ((key(S).pressed || key(Down).pressed))
+		{
+			_usingKeyboard = true;
+			_highlighted++;
+
+			if (_highlighted > _options.size() - 1)
+				_highlighted = 0;
+
+			optionHovered(_options[_highlighted]);
+		}
+	}
+
+	inline void Menu::calculations()
+	{
+		int i = 0, y = _tv.y + _tv.area.height * _tv.zoom + 5;
+		bool leftMPressed = key(LeftM).pressed;
+
+		for (Option& o : _options)
+		{
+			// correct Y in the case it was default
+			if (o.y == Default)
+				o.y = i * (txtHeight("", _font) + _vSpace + _shadowOffsetX);
+
+			// calculate the collide space for that option
+			Space textSpace = calcSpace(_spOptions, o.x, o.y, txtWidth(o.text.c_str(), _font), txtHeight(o.text.c_str(), _font));
+
+			// adjust colision space by making bounding box bigger
+			textSpace.startX -= _hitSpace;
+			textSpace.startY -= _hitSpace;
+
+			textSpace.endX += _shadowOffsetX + _hitSpace;
+			textSpace.endY += _shadowOffsetY + _hitSpace;
+
+			if (!_usingKeyboard)
+				deselectOptions();
+
+			if (pointSpaceCollide(Mouse.x, Mouse.y, textSpace))
+			{
+				_usingKeyboard = false;
+				_highlighted = i;
+				optionHovered(o);
+
+				if (leftMPressed)
+					optionPressed(o);
+			}
+
+			if (_highlighted != i)
+			{
+				o.r += timePerSec(_fadeSpeed);
+				o.g += timePerSec(_fadeSpeed);
+				o.b += timePerSec(_fadeSpeed);
+
+				o.r = clamp(o.r, 0, 255);
+				o.g = clamp(o.g, 0, 255);
+				o.b = clamp(o.b, 0, 255);
+			}
+			i++;
+		}
+
+		keyboardCalculations();
+	}
+
+	inline void Menu::deselectOptions()
+	{
+		_highlighted = -1;
+	}
+
+	inline bool Menu::pressed() const
+	{
+		return _indexPressed != -1;
+	}
+
+	inline int Menu::indexPressed()
+	{
+		int val = _indexPressed;
+		if (_indexPressed != -1)
+			_indexPressed = -1;
+
+		return val;
+	}
+	
 	/*-------------------------------------------*\
 	|			  Single State Class			  |
 	\*-------------------------------------------*/
 
 	class States;
+
 	class State
 	{
 	protected:
@@ -458,7 +593,6 @@ namespace acre
 	{
 		_currState->setState(state);
 	}
-
 }
 
 #endif

@@ -13,6 +13,9 @@
     <Filter Include="Game Code\Entities">
       <UniqueIdentifier>{0c91d84b-96fa-485b-bd07-77146764354f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{f3d632fb-eb6f-4a66-82b6-b46d1e4a878e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source.cpp">
@@ -73,5 +76,20 @@
       <Filter>Game Code</Filter>
     </ClInclude>
     <ClInclude Include="Audio.h" />
+    <ClInclude Include="..\ACRE Files\ACREngine.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ACRE Files\ACRE_Fonts.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ACRE Files\ACRE_Gameplay.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ACRE Files\ACRE_Gui.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ACRE Files\ACRE_Transform.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

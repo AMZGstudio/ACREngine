@@ -67,6 +67,9 @@ public:
 			else
 			{
 				enterInput = false;
+
+				if (strlen(output) <= 0) return;
+
 				lb.leaderboard.insert(std::pair<std::string, int>(output, Game::score));
 				lb.saveLeaderboard();
 			}

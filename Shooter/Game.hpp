@@ -27,11 +27,13 @@ private:
 
 	int ammo = 15;
 
+	int index; // for paused screen
 public:
 	static int score;
 	
 	Game(acre::Renderer* r) : f(r), m(Five, calcSpace(ScreenSpace, Centered, Centered, 80, 50), true)
 	{ 
+		m.addOption("Restart", Centered, Default);
 		m.addOption("Exit", Centered, Default);
 		m.addOption("Resume", Centered, Default);
 
@@ -47,6 +49,8 @@ public:
 		Wave::reset();
 		score = 0;
 		ammo = 15;
+		index = -1;
+
 		aud.playSound("music", true);
 	}
 
@@ -93,6 +97,7 @@ public:
 		}
 			
 	}
+	
 	void draw()
 	{
 		std::for_each(bullets.begin(), bullets.end(), [](auto&& item) { item.draw(); });
@@ -118,7 +123,13 @@ public:
 		f.fadeOutIfNecessary();
 		if (f.fadeInFinished())
 		{
-			setState("menu");
+			switch (index)
+			{
+			case 0: setState("game"); break;
+			case 1: 
+				setState("menu"); break;
+			}
+			
 			reset();
 		}
 		
@@ -133,7 +144,7 @@ public:
 		if (key(Esc).pressed)
 		{
 			paused = !paused;
-			m.noneSelected();
+			m.deselectOptions();
 		}
 
 		if (paused)
@@ -146,13 +157,13 @@ public:
 
 			if (m.pressed() && f.notFading())
 			{
-				int index = m.indexPressed();
+				index = m.indexPressed();
 
-				switch (index)
-				{
-				case 0: f.fadeIn(); break;
-				case 1: paused = false; break;
-				}
+				if (index == 2)
+					paused = false;
+
+				else
+					f.fadeIn();
 			}
 	
 			m.calculations();
