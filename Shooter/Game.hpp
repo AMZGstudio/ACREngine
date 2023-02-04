@@ -7,6 +7,8 @@
 #include "Zombie.hpp"
 #include "Collision.hpp"
 
+#include "health.hpp"
+
 #include <algorithm>
 #include <format>
 
@@ -14,11 +16,11 @@ class Game : public acre::State
 {
 private:
 	enum splashState {FadingIn, Waiting, FadingOut, None};
-	enum coolDownState { Neither, Started, Finished };
 
 	Space spPaused = { 0 };
 	bool paused = false;
 	int index; // for paused screen
+	int ammo = 15;
 
 	Player p;
 	std::vector<Bullet> bullets;
@@ -31,33 +33,41 @@ private:
 	acre::Menu waveScreen;
 
 	splashState ss = None;
-	coolDownState cds = Neither;
 	float timePassed = 0;
-	float coolDown = 0;
-	float coolDownTime = 3;
+	HealthBar hb;
 
-	int ammo = 15;
+	acre::Interval coolDown;
+	acre::Interval background;
+	acre::Interval reloading;
 	
 private:
 	void drawWave(int num, AreaTrans& at)
 	{
 		std::string text;
 
-		if (num == -1)
-			text = "Wave XXXX";
+		if (num == -1) text = "Wave XXXX";
+		else text = "Wave " + std::to_string(num);
 
-		else
-			text = "Wave " + std::to_string(num);
+		acre::sysDrawShadowedText(Centered, 0, at.area, text, Five, Color(200, 200, 200), DarkRed);
+	}
 
-		int x = (int)((float)Width(at.area) / 2 - (float)txtWidth(text.c_str(), Five) / 2.0f);
-		sysDrawText(x + 1,1, at.area, text.c_str(), Five, Default, DarkRed);
-		sysDrawText(x,    0, at.area, text.c_str(), Five, Default, Color(200,200,200));
+	void shoot()
+	{
+		if (!ammo)
+			return aud.playSound("empty");
+
+		if (reloading.getPaused())
+		{
+			aud.playSound("firing");
+			bullets.push_back(Bullet(p.getX(), p.getY(), p.getRadius(), Mouse.x, Mouse.y));
+			ammo--;
+		}
 	}
 
 public:
 	static int score;
 	
-	Game(acre::Renderer* r) : f(r), waveScreen(DefaultFont, {}), pausedMenu(Five, calcSpace(ScreenSpace, Centered, Centered, 80, 50), true)
+	Game(acre::Renderer* r) : coolDown(2, 0), reloading(2, 0), background(9, 16, 0), f(r), waveScreen(DefaultFont, {}), pausedMenu(Five, calcSpace(ScreenSpace, Centered, Centered, 80, 50), true)
 	{ 
 		pausedMenu.addOption("Restart", Centered, Default);
 		pausedMenu.addOption("Resume", Centered, Default);
@@ -66,7 +76,7 @@ public:
 		spPaused = calcSpace(ScreenSpace, Centered, Centered, 80, 100);
 
 		Area splash = createArea(txtWidth("Wave XXXX", Five) + 1, Five.height + 1, Default, Default);
-		waveScreen.setArea(splash, Centered, 40, 2);
+		waveScreen.setArea(splash, Centered, 40, 3);
 
 		AreaTrans& at = waveScreen.getAT();
 		at.opacity = 0;
@@ -86,70 +96,68 @@ public:
 		AreaTrans& at = waveScreen.getAT();
 		at.opacity = 0;
 		timePassed = 0;
-		coolDown = 0;
 
-		cds = Neither;
 		ss = None;
-
 		aud.playSound("music", true);
+		reloading.pause();
 	}
 
 	void update()
 	{
-		AreaTrans& at = waveScreen.getAT();
-		
+		// update all entities
 		std::for_each(bullets.begin(), bullets.end(), [](auto&& item) { item.update(); });
 		std::for_each(zombies.begin(), zombies.end(), [](auto&& item) { item.update(); });
-
 		p.update();
 
-		if (cds == Finished)
-			if (Wave::attemptNext(zombies.size() == 0))
-			{
-				ss = FadingIn, cds = Neither;
-				drawWave(Wave::waveNum, at);
-			}	
+		AreaTrans& at = waveScreen.getAT();
+
+		// calculate intervals
+		background.calculate();
+		coolDown.calculate();
+		reloading.calculate();
+
+		if (background.timePassed())
+			Audio::playSound("background" + std::to_string(Random(1, 5)));
+
+		if (reloading.timePassed())
+		{
+			ammo = 15;
+			reloading.pause();
+			reloading.resetTime();
+		}
+		
+		if (coolDown.timePassed() && zombies.size() == 0)
+		{
+			Wave::nextWave();
+			coolDown.pause();
+			ss = FadingIn;
+			drawWave(Wave::waveNum, at);
+		}	
 
 		if (zombies.size() == 0)
-			cds = Started;
+			coolDown.resume();
 
 		if (Wave::spawnZombie())
-		{
-			Zombie zom(p, zombies, 32 + Wave::waveNum * 8);
-			zombies.push_back(zom);
-		}
+			zombies.push_back(Zombie(p, zombies, 30 + Wave::waveNum * 6));
 
 		bullets.erase(std::remove_if(bullets.begin(), bullets.end(), [this](auto&& item)
-			{   return item.damageOther(this->zombies, 15) || // remove bullets that hit, and damage zombie
-			(item.getX() > Width(Screen) || item.getX() < 0 || item.getY() > Width(Screen) || item.getY() < 0); // remove off screen bullets from vector
+			{   return item.damageZombie(this->zombies, 15) || // remove bullets that hit, and damage zombie
+					   item.damagePlayer(p, 3)              || // remove bullets that hit a player, and damage the player.
+			(          item.getX() > Width(Screen) || item.getX() < 0 || item.getY() > Width(Screen) || item.getY() < 0); // remove off screen bullets from vector
+			
 			}), bullets.end());
 
 		// remove dead zombies
 		zombies.erase(std::remove_if(zombies.begin(), zombies.end(), [this](auto&& item)
-			{ if (!item.isAlive()) score += 100; return !item.isAlive(); }), zombies.end());
+			{ if (!item.isAlive()) { score += 100; }; return !item.isAlive(); }), zombies.end());
 
-
-		if (cds == Started)
-			coolDown += timePerSec(1);
-
-		if (coolDown > 2)
-		{
-			cds = Finished;
-			coolDown = 0;
-		}	
-
-		if (ss == FadingIn)
-			at.opacity += timePerSec(1);
-		if (ss == FadingOut)
-			at.opacity -= timePerSec(1);
+		if (ss == FadingIn) at.opacity += timePerSec(1);
+		if (ss == FadingOut) at.opacity -= timePerSec(1);
 		
-		if (at.opacity >= 1)
-			ss = Waiting;
-		if (at.opacity <= 0)
-			ss = None;
+		if (at.opacity >= 1) ss = Waiting;
+		if (at.opacity <= 0) ss = None;
 
-		if (ss == Waiting)
-			timePassed += timePerSec(0.5);
+		if (ss == Waiting) timePassed += timePerSec(0.5);
 
 		if (timePassed > 1)
 		{
@@ -158,51 +166,30 @@ public:
 		}
 
 		if (key(Spacebar).pressed || key(LeftM).pressed)
-		{
-			if (ammo > 0)
-			{
-				aud.playSound("firing");
-				bullets.push_back(Bullet(p.getX(), p.getY(), p.getVX(), p.getVY(), Mouse.x, Mouse.y));
-				ammo--;
-			}
-			else
-				aud.playSound("empty");
-		}
+			shoot();
 
 		if (key(R).pressed || key(RightM).pressed)
 		{
 			aud.playSound("reload");
-			ammo = 15;
+			reloading.resume();
 		}
-			
 	}
 	
 	void draw()
-	{
+	{		
+		// draw entities
 		std::for_each(bullets.begin(), bullets.end(), [](auto&& item) { item.draw(); });
 		std::for_each(zombies.begin(), zombies.end(), [](auto&& item) { item.draw(); });
-
 		p.draw();
 
 		waveScreen.drawArea();
-
-		const char* s = std::format("Wave: {}", Wave::waveNum).c_str();
-
-		drawText(Width(Screen) - txtWidth(s, Pzim) - 2, 2, s, Pzim, White);
-		drawText(2, 2, std::format("Health: {:.1f}", p.getHealth()).c_str(), Pzim, White);
-		drawText(2, 10, std::format("Ammo: {}", ammo).c_str(), Pzim, White);
-		drawText(Centered, 2, std::format("Score: {}", score).c_str(), Pzim, White);
-
-		//drawPixel(Mouse.x-1, Mouse.y, Red);
-		//drawPixel(Mouse.x, Mouse.y+1, Red);
-		//drawPixel(Mouse.x, Mouse.y-1, Red);
-		//drawPixel(Mouse.x+1, Mouse.y, Red);
+		acre::drawShadowedText(Centered, 2, std::format("Score: {}", score), Pzim, White, DarkGrey);
+		hb.draw(p.getHealth(), ammo);
 	}
 
 	void runState() override
 	{
 		f.fadeOutIfNecessary();
-
 		if (f.fadeInFinished())
 		{
 			switch (index)
@@ -210,7 +197,6 @@ public:
 			case 0: setState("game"); break;
 			case 2: setState("menu"); break;
 			}
-			
 			reset();
 		}
 		
@@ -242,9 +228,8 @@ public:
 
 				if (index == 1)
 					paused = false;
-
-				else
-					f.fadeIn();
+					
+				else f.fadeIn();
 			}
 	
 			pausedMenu.calculations();
@@ -261,3 +246,5 @@ public:
 };
 
 int Game::score = 0;
+
+// 298

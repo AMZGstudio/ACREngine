@@ -32,6 +32,12 @@ public:
 		drawText(Centered, board.startY - 10, "Leaderboard:", Pzim, White);
 		int y = 0;
 
+		if (leaderboard.size() == 0)
+		{
+			spDrawText(Centered, y+5, board, "There is nothing here!", Pzim, White);
+			return;
+		}
+
 		for (auto& item : leaderboard)
 		{
 			std::string strScore = std::format("{}", item.second);

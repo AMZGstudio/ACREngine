@@ -152,6 +152,8 @@
 		  =Various bug fixes
 */
 
+#undef min
+#undef max
 #pragma once
 #ifndef OLC_SOUNDWAVE_H
 #define OLC_SOUNDWAVE_H

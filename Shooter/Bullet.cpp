@@ -3,10 +3,19 @@
 #include <cmath>
 #include <algorithm>
 
-Bullet::Bullet(int px, int py, float pvx, float pvy, int mx, int my) : Entity(500)
+Bullet::Bullet(int px, int py, float playerRadius, int mx, int my) : Entity(500)
 {
-	x = px, y = py;
+	
 	float th = atan((float)abs(my - py) / (float)abs(mx - px));
+
+	x = cos(th) * (playerRadius+1);
+	y = sin(th)* (playerRadius+1);
+
+	if (mx < px) x *= -1;
+	if (my < py) y *= -1;
+
+	x += px;
+	y += py;
 
 	vx = cos(th) * _vel;
 	vy = sin(th) * _vel;
@@ -30,14 +39,26 @@ void Bullet::update()
 	y += timePerSec(vy);
 }
 
-bool Bullet::damageOther(std::vector<Zombie>& z, float hitAmount)
+bool Bullet::damageZombie(std::vector<Zombie>& z, float hitAmount)
 {
 	for (int i = 0; i < z.size(); i++)
 		if (Collision::p2cCollide(x, y, z[i].getX(), z[i].getY(), z[i].getRadius()))
 		{
+			if (rand() % 2 == 0 ) Audio::playSound("dead");
 			z[i].hit(hitAmount);
 			return true;
 		}
 			
+	return false;
+}
+
+bool Bullet::damagePlayer(Player& player, float hitAmount)
+{
+	if (Collision::p2cCollide(x, y, player.getX(), player.getY(), player.getRadius()))
+	{
+		player.hit(hitAmount);
+		return true;
+	}
+
 	return false;
 }

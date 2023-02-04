@@ -14,7 +14,7 @@ public:
 	static float timeFromSpawned;
 
 public:
-	static bool attemptNext(bool startCondition);
+	static bool nextWave();
 	static bool spawnZombie();
 	static int getNumEntities();
 

@@ -96,5 +96,8 @@
     <ClInclude Include="Leaderboard.hpp">
       <Filter>Misc</Filter>
     </ClInclude>
+    <ClInclude Include="health.hpp">
+      <Filter>Misc</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -152,6 +152,7 @@
     <ClInclude Include="Entity.hpp" />
     <ClInclude Include="Game.hpp" />
     <ClInclude Include="Board.hpp" />
+    <ClInclude Include="health.hpp" />
     <ClInclude Include="olcSoundWaveEngine.h" />
     <ClInclude Include="Leaderboard.hpp" />
     <ClInclude Include="Menu.hpp" />

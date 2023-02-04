@@ -1,178 +1,182 @@
-/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		*
-		*	   ___  _____ ______ _____            _
-		*	  / _ \/  __ \| ___ \  ___|          (_)
-		*	 / /_\ \ /  \/| |_/ / |__ _ __   __ _ _ _ __   ___
-		*	 |  _  | |    |    /|  __| '_ \ / _` | | '_ \ / _ \
-		*	 | | | | \__/\| |\ \| |__| | | | (_| | | | | |  __/
-		*	 \_| |_/\____/\_| \_\____/_| |_|\__, |_|_| |_|\___|
-		*	                                 __/ |
-		*	                                |___/
-		*
+/*		~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		      _    ____ ____  _____             _          __     _______       
+		     / \  / ___|  _ \| ____|_ __   __ _(_)_ __   __\ \   / /___ /   _   
+		    / _ \| |   | |_) | |__ | '_ \ / _` | | '_ \ / _ \ \ / /  |_ \ _| |_ 
+		   / ___ \ |___|  _ <| |___| | | | (_| | | | | |  __/\ V /  ___) |_   _|
+		  /_/   \_\____|_| \_\_____|_| |_|\__, |_|_| |_|\___| \_/  |____/  |_|  
+                                         |___/                                 
 		~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-		ACREngine, a game engine that runs entirely in the console!
-		You can use this for whatever you would like, it would be nice if you
-		gave me credit, but you dont have to. ¯\_(ツ)_/¯
+		ACREngine, is an advanced game engine for beginners, that runs entirely in the 
+		console! This can be used for anything. from making console applications with 
+		colors and mouse/keyboard input, to creating fully fledged and advanced games. 
+		The possiblities are endless! If you use ACREngine, I would appreciate you 
+		giving me credit, but you don't have to. ¯\_(ツ)_/¯
 
-		For information on how to use this, go to the github repo:
+		For information on what this is, and how to use it, go to the github repo:
 		https://github.com/AMZGstudio/ACREngine
 
-		To use gcc, simply use the command:
-		gcc -o example.exe example.c
+		|-------- Creator --------|
+			AMZGstudio (solo)
 
-		original creator:
-		AMZGstudio
+		|------ Compilation ------|
+			To use gcc, simply use the command:
+			gcc -o example.exe example.c				
 
-		BSD 2-Clause License
+		|-------- License --------|
+			BSD 2-Clause License
 
-		Copyright (c) 2022, AMZG
-		All rights reserved.
+			Copyright (c) 2022, AMZG
+			All rights reserved.
 
-		Redistribution and use in source and binary forms, with or without
-		modification, are permitted provided that the following conditions are met:
+			Redistribution and use in source and binary forms, with or without
+			modification, are permitted provided that the following conditions are met:
 
-		1. Redistributions of source code must retain the above copyright notice, this
-		   list of conditions and the following disclaimer.
+			1. Redistributions of source code must retain the above copyright notice, this
+			   list of conditions and the following disclaimer.
 
-		2. Redistributions in binary form must reproduce the above copyright notice,
-		   this list of conditions and the following disclaimer in the documentation
-		   and/or other materials provided with the distribution.
+			2. Redistributions in binary form must reproduce the above copyright notice,
+			   this list of conditions and the following disclaimer in the documentation
+			   and/or other materials provided with the distribution.
 
-		THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-		AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-		IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-		DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-		FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-		DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-		SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-		CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-		OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-		OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+			THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+			AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+			IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+			DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+			FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+			DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+			SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+			CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+			OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+			OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 		~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		
-		/*
-		Changelog:
+		|------- Changelog -------|
 
-		Fixed initalize to be called initialize
+			Fixed initalize to be called initialize
 
-		MAJOR:
-		space functions.
-		Areas (and their functions).
-		Image routines. (making, loading, etc).
+			MAJOR:
+			space functions.
+			Areas (and their functions).
+			Image routines. (making, loading, etc).
 
-		Fixed Bugs in triangle routines.
-		Removed sysDrawColorBuffer.
-		Removed sysDrawFontChar, now sysDrawText is used.
-		drawPoint now called drawPixel.
-		All functions work now when using ACRE on mutliple files.
-		Fixed user input, when window is not selected one. to allow that to happen define: NO_WINDOW_ACTIVE
+			Fixed Bugs in triangle routines.
+			Removed sysDrawColorBuffer.
+			Removed sysDrawFontChar, now sysDrawText is used.
+			drawPoint now called drawPixel.
+			All functions work now when using ACRE on mutliple files.
+			Fixed user input, when window is not selected one. to allow that to happen define: NO_WINDOW_ACTIVE
 
-		Renamed Screen to ScreenSpace.
-		Screen is now an Area.
-		added Areas.
-		renamed clearScreen to clear() (now takes in an area).
-		changed getting functions.
+			Renamed Screen to ScreenSpace.
+			Screen is now an Area.
+			added Areas.
+			renamed clearScreen to clear() (now takes in an area).
+			changed getting functions.
 
-		No value needs to be assigned to FULLSCREEN. now just #define FULLSCREEN
-		Clamp function works with floats now.
+			No value needs to be assigned to FULLSCREEN. now just #define FULLSCREEN
+			Clamp function works with floats now.
 
-		added Areas.
-		added Xterm(), which converts a xterm color to rgb.
-		changed colors to look more consistent on different devices.
-		changed color system, to now have more colors, and different colors.
-		map function works with floats now.
-		Error functions now show which line error was caused.
-		resizing console window can now be activated with ALLOW_WINDOW_RESIZE
-		use #define FPS_TICKS val to define how many ticks the fps will be averaged over.
-		dont touch for default
-		added sysDrawPartialArea() function.
-		added max time step
-		added center() function in the header mode of the file.
-		added extern variables.
+			added Areas.
+			added Xterm(), which converts a xterm color to rgb.
+			changed colors to look more consistent on different devices.
+			changed color system, to now have more colors, and different colors.
+			map function works with floats now.
+			Error functions now show which line error was caused.
+			resizing console window can now be activated with ALLOW_WINDOW_RESIZE
+			use #define FPS_TICKS val to define how many ticks the fps will be averaged over.
+			dont touch for default
+			added sysDrawPartialArea() function.
+			added max time step
+			added center() function in the header mode of the file.
+			added extern variables.
 
-		ACRE Extensions:
-			Fonts:
-				ACRE_Fonts now work in OOP.
-				- to be able to use all fonts define ALL_FONTS
-				- to start the fonts, define ACRE_FONTS
+			ACRE Extensions:
+				Fonts:
+					ACRE_Fonts now work in OOP.
+					- to be able to use all fonts define ALL_FONTS
+					- to start the fonts, define ACRE_FONTS
 
-				stringWidth() now called txtWidth() (returns the widest line)
-				added txtHeight(), returns the height of text (accounting for new lines)
-				Updated how fonts work (struct is different)
+					stringWidth() now called txtWidth() (returns the widest line)
+					added txtHeight(), returns the height of text (accounting for new lines)
+					Updated how fonts work (struct is different)
 
-				changed fields in Fonts. now instead of .w, .dat, and .displayW
-				we have ._w (not for user), ._data (not for user), and .width, .height
+					changed fields in Fonts. now instead of .w, .dat, and .displayW
+					we have ._w (not for user), ._data (not for user), and .width, .height
 
-				when drawing text, it now knows its exact size, 
-				and starts drawing from topLeft corner exactly. (this could break things old things.)
+					when drawing text, it now knows its exact size, 
+					and starts drawing from topLeft corner exactly. (this could break things old things.)
 
-				added spacing between fonts. (you can change this if you want font letters rendered further apart.)
+					added spacing between fonts. (you can change this if you want font letters rendered further apart.)
 
-			Gui:
+				Gui:
 
-				Changed ACRE_Window extension, now works like other extensions (#ifdef stuff)
-				ACRE_Window extension, is now called ACRE_Gui.
+					Changed ACRE_Window extension, now works like other extensions (#ifdef stuff)
+					ACRE_Window extension, is now called ACRE_Gui.
 
-			Transform:
+				Transform:
 
-				ACRE_Transform now also works across multiple files.
-				Now also works with Centered.
+					ACRE_Transform now also works across multiple files.
+					Now also works with Centered.
 
-				Major update, transforms now support opacity. just set its opacity with .opacity, to a value between 0-1
+					Major update, transforms now support opacity. just set its opacity with .opacity, to a value between 0-1
 
 
-			Gameplay:
+				Gameplay:
 
-				This adds things used many times when actually making games. 
-				a nicer renderer, menu drawing routines, state system
+					This adds things used many times when actually making games. 
+					a nicer renderer, menu drawing routines, state system
 
-		Images -> Area:
-			removed Images, Areas are now used exclusivly.
-			Image struct gone. Image functions, now use sprite name instead, and return Areas.
-			Removed sysDrawImage()
-			Removed drawImage()
-			flipImage now called flipArea
+			Images -> Area:
+				removed Images, Areas are now used exclusivly.
+				Image struct gone. Image functions, now use sprite name instead, and return Areas.
+				Removed sysDrawImage()
+				Removed drawImage()
+				flipImage now called flipArea
 
-		added spWidth, and spHeight.
-		fixed bug in makeSprite()
-		fixed bug in spDrawNumber()
-		fixed bug in drawCircle() causing it too be create malformed circles.
-		fixed bug in spDrawCircleFilled()
+			added spWidth, and spHeight.
+			fixed bug in makeSprite()
+			fixed bug in spDrawNumber()
+			fixed bug in drawCircle() causing it too be create malformed circles.
+			fixed bug in spDrawCircleFilled()
 
-		Added calcSpace (hopefully can be used instead of getSpace)
+			Added calcSpace (hopefully can be used instead of getSpace)
 
-		Changed terminate() function, to terminateACRE(). it caused issues with cpp
-		renamed stringLength to stringWidth
+			Changed terminate() function, to terminateACRE(). it caused issues with cpp
+			renamed stringLength to stringWidth
 
-		Default Area to draw on, is now configurable. call setDefaultDrawArea().
-			- Note: only draws on area specified, assuming no other draw area is set.
-			- Note: area rendered is still Screen, so you must draw to screen at the end, with sysDrawArea().
+			Default Area to draw on, is now configurable. call setDefaultDrawArea().
+				- Note: only draws on area specified, assuming no other draw area is set.
+				- Note: area rendered is still Screen, so you must draw to screen at the end, with sysDrawArea().
 
-		added legalArea() function. (it checks if a area is able to be drawn properly.
+			added legalArea() function. (it checks if a area is able to be drawn properly.
 
-		Changed FULLSCREEN to be ACRE_FULLSCREEN
+			Changed FULLSCREEN to be ACRE_FULLSCREEN
+			Changed SHOW_FPS to be ACRE_SHOW_FPS
 
-		FINISHED: TODO: Add other drawPartialArea functions.
-		TODO: onResize() function.
-		TODO: Change how fps works, instead of ticks, it goes by time.
-		TODO: Finish textBoxInput()
-		TODO: Performance
-		TODO: check for bugs related to drawing real characters
-		TODO: Check every font, and make sure their numbers are correct.
-		TODO: Change order of parameters in sysDrawRect & sysDrawTriangle, so that characters is after filled.
-		TODO: Make ACRE_Transform work with multiple files again.
-		*/
+			FINISHED: TODO: Add other drawPartialArea functions.
+			TODO: onResize() function.
+			TODO: Change how fps works, instead of ticks, it goes by time.
+			TODO: Finish textBoxInput()
+			TODO: Performance
+			TODO: check for bugs related to drawing real characters
+			TODO: Check every font, and make sure their numbers are correct.
+			TODO: Change order of parameters in sysDrawRect & sysDrawTriangle, so that characters is after filled.
+			TODO: Make ACRE_Transform work with multiple files again.
+*/
 		
 #ifndef ACRE_INCLUDES
 #define ACRE_INCLUDES
 	#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
 		#define _CRT_SECURE_NO_WARNINGS 1
-		#define _WIN32_WINNT 0x0500
 		
-		#if defined(ACRE_FPS) && defined(ACRE_FULLSCREEN)
-		#undef ACRE_FPS
+		#ifdef _WIN32_WINNT
+		#undef _WIN32_WINNT
+			#define _WIN32_WINNT 0x0500
+		#endif	
+		
+		#if defined(ACRE_SHOW_FPS) && defined(ACRE_FULLSCREEN)
+			#undef ACRE_SHOW_FPS
 		#endif
 
 		#include <stdio.h>
@@ -230,8 +234,8 @@
 	enum ACRE_TYPES {Thirds = -502, Centered = -501, Default = -1 };
 
 	enum COLORS { 
+
 		Black = 16, VeryDarkGrey = 234, DarkGrey = 237, Grey = 243, LightGrey = 247, White = 255,
-		
 		Red = 196,  VeryDarkRed = 52,   DarkRed = 124,  Pink = 218,
 		Orange=202, Brown = 130,		DarkOrange=166, Tan = 180,
 		Yellow=226, Olive=100,		    DarkYellow=184, LightYellow=228,
@@ -247,8 +251,10 @@
 		LightShade = 176, MediumShade = 177, DarkShade = 178, FullBlock = 219, LowerHalfBlock = 220,
 		LeftHalfBlock = 221, RightHalfBlock = 222, UpperHalfBlock = 223
 	};
+
 	// variable declarations
 	extern int defaultFrontColor, defaultBackColor;
+	extern float fps;
 	extern MOUSE Mouse;
 	extern Font EightBit;
 
@@ -365,6 +371,7 @@
 
 	int nextOpenSlot = 0, buffW = 100, buffH = 50, globalFontWidth = 12, globalFontHeight = 12;
 	int defaultFrontColor = White, defaultBackColor = Black;
+	
 	float fps = -1;
 	float totalTimes = 0;
 	int currFPSslot = 0;
@@ -1883,10 +1890,10 @@
 
 		char currentTitle[200] = { 0 };
 		
-	#if defined(SHOW_FPS) && !defined(NO_ACRE_WATERMARK)
+	#if defined(ACRE_SHOW_FPS) && !defined(NO_ACRE_WATERMARK)
 		sprintf(currentTitle, "%s - ACREngine - %.1f fps", windowTitle, fps);
 		
-	#elif defined(SHOW_FPS) && defined(NO_ACRE_WATERMARK)
+	#elif defined(ACRE_SHOW_FPS) && defined(NO_ACRE_WATERMARK)
 		sprintf(currentTitle, "%s - %.1f fps", windowTitle, fps);
 
 	#elif !defined(NO_ACRE_WATERMARK)

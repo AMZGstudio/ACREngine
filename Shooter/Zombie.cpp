@@ -127,7 +127,7 @@ float Wave::timeFromSpawned = 0;
 
 int Wave::getNumEntities()
 {
-	return waveNum * 3;
+	return 2 + waveNum * 2;
 }
 
 void Wave::reset()
@@ -148,7 +148,7 @@ bool Wave::spawnZombie()
 
 	Wave::timeFromSpawned += timePerSec(1);
 
-	float secsForZombieSpawn = 3 - (Wave::waveNum / 10);
+	float secsForZombieSpawn = 2 - (Wave::waveNum / 10);
 	if (Wave::timeFromSpawned > secsForZombieSpawn)
 	{
 		Wave::timeFromSpawned -= secsForZombieSpawn;
@@ -158,9 +158,9 @@ bool Wave::spawnZombie()
 	return false;
 }
 
-bool Wave::attemptNext(bool startCondition)
+bool Wave::nextWave()
 {
-	if (!Wave::waveStarted && startCondition)
+	if (!Wave::waveStarted)
 	{
 		waveNum++;
 		Wave::waveStarted = true;

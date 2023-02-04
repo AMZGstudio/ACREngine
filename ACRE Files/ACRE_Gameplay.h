@@ -13,6 +13,9 @@
 
 namespace acre // delcarations
 {
+	void sysDrawShadowedText(int x, int y, Area area, std::string txt, Font font, short colorFront, short colorBack);
+	void drawShadowedText(int x, int y, std::string txt, Font font, short colorFront, short colorBack);
+	
 	class Renderer
 	{
 	private:
@@ -192,6 +195,21 @@ namespace acre // delcarations
 
 namespace acre // definitions
 {
+	void sysDrawShadowedText(int x, int y, Area area, std::string txt, Font font, short colorFront, short colorBack)
+	{
+		const char* ctxt = txt.c_str();
+		if (x == Centered) x = Width(area) / 2 - txtWidth(ctxt, font) / 2;
+		if (y == Centered) y = Height(area) / 2 - txtHeight(ctxt, font) / 2;
+
+		sysDrawText(x + 1, y + 1, area, ctxt, font, Default, colorBack);
+		sysDrawText(x, y, area, ctxt, font, Default, colorFront);
+	}
+	
+	void drawShadowedText(int x, int y, std::string txt, Font font, short colorFront, short colorBack)
+	{
+		sysDrawShadowedText(x, y, *areaToDrawOn, txt, font, colorFront, colorBack);
+	}
+
 	/*-------------------------------------------*\
 	|				 Renderer Class	    		  |
 	\*-------------------------------------------*/
@@ -619,6 +637,120 @@ namespace acre // definitions
 		states = other.states;
 		return *this;
 	}
+
+	class Interval
+	{
+		float time;
+		float maxTime;
+		float minTime;
+		float waitTime;
+
+		bool onlyOneTime;
+		bool _timePassed;
+		
+		bool paused;
+	public:
+		Interval(int shortest, int longest, int startTime)
+		{
+			paused = false;
+			minTime = shortest;
+			maxTime = longest;
+			onlyOneTime = false;
+			time = startTime;
+			_timePassed = false;
+			calculateWait();
+		}
+
+		Interval(int wait, int startTime)
+		{
+			paused = false;
+			minTime = 0;
+			maxTime = wait;
+			onlyOneTime = true;
+			time = startTime;
+			_timePassed = false;
+			calculateWait();
+		}
+
+		bool getPaused()
+		{
+			return paused;
+		}
+		void resetTime()
+		{
+			time = 0;
+		}
+		void wait(float shortest, float longest)
+		{
+			time = 0;
+			minTime = shortest;
+			maxTime = longest;
+			onlyOneTime = false;
+			calculateWait();
+		}
+
+		void wait(float time)
+		{
+			time = 0;
+			maxTime = time;
+			onlyOneTime = true;
+			calculateWait();
+		}
+
+		void calculateWait()
+		{
+			if (onlyOneTime)
+				waitTime = maxTime;
+			else
+				waitTime = Random(minTime, maxTime);
+		}
+
+		bool calculate()
+		{
+			if (paused)
+				return false;
+			
+			time += timePerSec(1);
+
+			if (time >= waitTime)
+			{
+				time = 0;
+				_timePassed = true;
+				return true;
+			}
+			return false;
+		}
+
+		bool timePassed()
+		{
+			if (_timePassed)
+			{
+				_timePassed = false;
+				time = 0;
+				calculateWait();
+				return true;
+			}
+			return false;
+		}
+
+		bool dumbTimePassed()
+		{
+			return time > waitTime;
+		}
+
+		void pause()
+		{
+			paused = true;
+		}
+		void resume()
+		{
+			paused = false;
+		}
+		float getTime()
+		{
+			return time;
+		}
+	};
 }
 
 #endif

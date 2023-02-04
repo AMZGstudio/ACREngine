@@ -24,6 +24,7 @@ public:
 		sysDrawText(0, 0, area, title.c_str(), FONT_USED, Default, White);
 
 		menu.setArea(area, Centered, 20, 3);
+		index = -1;
 	}
 
 	void initalizer() override {}

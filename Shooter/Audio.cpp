@@ -17,11 +17,6 @@ void Audio::playSound(std::string name, bool loop)
 	olc::sound::PlayingWave pw = we.PlayWaveform(&sounds[name], loop);
 }
 
-//void Audio::fadeSoundOut(std::string name)
-//{
-//	we.StopWaveform(sounds[name]);
-//}
-
 Audio aud;
 
 olc::sound::WaveEngine Audio::we;
