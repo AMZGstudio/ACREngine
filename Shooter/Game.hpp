@@ -39,16 +39,14 @@ private:
 	acre::Interval coolDown;
 	acre::Interval background;
 	acre::Interval reloading;
+
+	AreaTrans* at;
 	
 private:
-	void drawWave(int num, AreaTrans& at)
+	void drawWave(int num, AreaTrans* at)
 	{
-		std::string text;
-
-		if (num == -1) text = "Wave XXXX";
-		else text = "Wave " + std::to_string(num);
-
-		acre::sysDrawShadowedText(Centered, 0, at.area, text, Five, Color(200, 200, 200), DarkRed);
+		clear(at->area);
+		acre::sysDrawShadowedText(Centered, 0, at->area, "Wave " + std::to_string(num), Five, Color(200, 200, 200), DarkRed);
 	}
 
 	void shoot()
@@ -67,7 +65,7 @@ private:
 public:
 	static int score;
 	
-	Game(acre::Renderer* r) : coolDown(2, 0), reloading(2, 0), background(9, 16, 0), f(r), waveScreen(DefaultFont, {}), pausedMenu(Five, calcSpace(ScreenSpace, Centered, Centered, 80, 50), true)
+	Game(acre::Renderer* r) : coolDown(2, 0), reloading(0.5, 0), background(9, 16, 0), f(r), waveScreen(DefaultFont, {}), pausedMenu(Five, calcSpace(ScreenSpace, Centered, Centered, 80, 50), true)
 	{ 
 		pausedMenu.addOption("Restart", Centered, Default);
 		pausedMenu.addOption("Resume", Centered, Default);
@@ -78,8 +76,7 @@ public:
 		Area splash = createArea(txtWidth("Wave XXXX", Five) + 1, Five.height + 1, Default, Default);
 		waveScreen.setArea(splash, Centered, 40, 3);
 
-		AreaTrans& at = waveScreen.getAT();
-		at.opacity = 0;
+		at = &waveScreen.getAT();
 	}
 
 	void initalizer() override
@@ -93,8 +90,7 @@ public:
 		ammo = 15;
 		index = -1;
 
-		AreaTrans& at = waveScreen.getAT();
-		at.opacity = 0;
+		at->opacity = 0;
 		timePassed = 0;
 
 		ss = None;
@@ -108,8 +104,6 @@ public:
 		std::for_each(bullets.begin(), bullets.end(), [](auto&& item) { item.update(); });
 		std::for_each(zombies.begin(), zombies.end(), [](auto&& item) { item.update(); });
 		p.update();
-
-		AreaTrans& at = waveScreen.getAT();
 
 		// calculate intervals
 		background.calculate();
@@ -151,11 +145,11 @@ public:
 		zombies.erase(std::remove_if(zombies.begin(), zombies.end(), [this](auto&& item)
 			{ if (!item.isAlive()) { score += 100; }; return !item.isAlive(); }), zombies.end());
 
-		if (ss == FadingIn) at.opacity += timePerSec(1);
-		if (ss == FadingOut) at.opacity -= timePerSec(1);
+		if (ss == FadingIn) at->opacity += timePerSec(1);
+		if (ss == FadingOut) at->opacity -= timePerSec(1);
 		
-		if (at.opacity >= 1) ss = Waiting;
-		if (at.opacity <= 0) ss = None;
+		if (at->opacity >= 1) ss = Waiting;
+		if (at->opacity <= 0) ss = None;
 
 		if (ss == Waiting) timePassed += timePerSec(0.5);
 

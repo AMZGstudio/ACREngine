@@ -39,7 +39,7 @@ namespace acre // delcarations
 		
 		void draw();
 		void render();
-		void clear();
+		void reset();
 
 		// checkers
 		bool isFadingIn();
@@ -254,7 +254,7 @@ namespace acre // definitions
 
 		else if (fs == finished)
 		{
-			clear();
+			reset();
 		}
 		else
 		{
@@ -300,9 +300,9 @@ namespace acre // definitions
 		::render(false);
 	}
 
-	inline void Renderer::clear()
+	inline void Renderer::reset()
 	{
-		::clear(_window);
+		::reset(_window);
 	}
 
 	inline bool Renderer::isFadingIn()

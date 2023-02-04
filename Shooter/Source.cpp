@@ -53,7 +53,7 @@ int main()
 
 	while (states.isRunning())
 	{
-		renderer.clear();
+		renderer.reset();
 		states.runState();
 		renderer.draw();
 		renderer.render();

@@ -71,7 +71,8 @@
 			Renamed Screen to ScreenSpace.
 			Screen is now an Area.
 			added Areas.
-			renamed clearScreen to clear() (now takes in an area).
+			renamed clearScreen to reset() (now takes in an area).
+			added clear(), which sets all pixels to Default (-1);
 			changed getting functions.
 
 			No value needs to be assigned to FULLSCREEN. now just #define FULLSCREEN
@@ -335,7 +336,7 @@
 	Space drawArea(int x, int y, Area areaToDraw);
 	Space drawPartialArea(int x, int y, Area areaToDraw, int startAreaX, int startAreaY, int endAreaX, int endAreaY);
 
-	void clear(Area area);
+	void reset(Area area);
 	Key key(int whichKey);
 	bool textBoxInput(char* outputString, int outputStringLength);
 
@@ -1452,10 +1453,18 @@
 
 	void clear(Area area)
 	{
-		for (int i = 0; i < (buffW * buffH); i++)
+		for (int i = 0; i < (area.width * area.height); i++)
+			area.colBack[i] = Default, area.colFront[i] = Default;
+
+		memset(area.characters, Default, sizeof(char) * (area.width * area.height));
+	}
+
+	void reset(Area area)
+	{
+		for (int i = 0; i < (area.width * area.height); i++)
 			area.colBack[i] = defaultBackColor, area.colFront[i] = defaultFrontColor;
 		
-		memset(area.characters, DEFAULT_CHARACTER, sizeof(char) * (buffW * buffH));
+		memset(area.characters, DEFAULT_CHARACTER, sizeof(char) * (area.width * area.height));
 	}
 
 	/*-------------------------------------------*\
@@ -1798,6 +1807,10 @@
 	|		     Functions for Rendering	  	  |
 	\*-------------------------------------------*/
 
+	void clearRenderBuffer()
+	{
+
+	}
 	void addColorToBuffer(int foregroundColor, int backgroundColor)
 	{
 		screenBufferFull[nextOpenSlot] = '\033', screenBufferFull[nextOpenSlot + 1] = '[';
@@ -1862,7 +1875,7 @@
 			Error(L"Rendering failed.", __LINE__);
 
 		if (clearScreen) 
-			clear(Screen);
+			reset(Screen);
 
 		if (!QueryPerformanceFrequency(&frequency))
 			Error(L"Getting Performance Frequency Failed!", __LINE__);
