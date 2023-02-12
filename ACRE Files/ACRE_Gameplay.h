@@ -180,6 +180,7 @@ namespace acre // delcarations
 		std::string currState;
 
 		States(std::string stateName);
+		~States();
 
 		void runState();
 		void setState(std::string name);
@@ -611,6 +612,12 @@ namespace acre // definitions
 	{
 		_running = true;
 		currState = stateName;
+	}
+
+	States::~States()
+	{
+		for (auto& a : states)
+			delete a.second;
 	}
 
 	void States::runState()
