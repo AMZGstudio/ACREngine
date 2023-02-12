@@ -39,7 +39,7 @@
     <ClCompile Include="Audio.cpp">
       <Filter>Misc</Filter>
     </ClCompile>
-    <ClCompile Include="Source.cpp" />
+    <ClCompile Include="Main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Zombie.hpp">
