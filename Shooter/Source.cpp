@@ -25,7 +25,7 @@
 
 int main()
 {
-	initialize("Shooter Game!", 300, 200, 5, 5, Default, Default);
+	initialize("Shooter Game!", 300, 140, 5, 5, Default, Default);
 
 	drawText(Centered, Centered, "Loading...", Pzim, White);
 	render(true);
@@ -59,11 +59,10 @@ int main()
 		renderer.render();
 	}
 	
-	return terminateACRE();
+	terminateACRE();
 }
 
 /*
-TODO:
 
 DONE: Add restart button in escape menu
 DONE: make menu's work on hover, and only click once
@@ -73,10 +72,10 @@ DONE: Make ACRE_GAMEPLAY work across multiple files.
 DONE: Bullets now hit you.
 DONE: Make reloading take longer.
 DONE: make waves longer.
+DONE: add zombie death sound effect, and zombie scream sound effect.
 
-you get faster.
-you have to collect bullets.
-Add shaking to the screen.
-add zombie death sound effect, and zombie scream sound effect.
+TODO: you get faster.
+TODO: you have to collect bullets.
+TODO: Add shaking to the screen.
 */
 

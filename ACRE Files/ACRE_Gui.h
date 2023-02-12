@@ -295,7 +295,7 @@ void drawShade(int xStart, int yStart, int xEnd, int yEnd)
 Space drawWindow(Window* window, bool dark)
 {
 	Space windowSpace = drawRectFilled(window->x, window->y, window->x+window->width, window->y+window->height, dark ? DARK_WINDOW_COL : LIGHT_WINDOW_COL);
-	sysDrawRect(windowSpace.startX, windowSpace.startY-3, windowSpace.endX, windowSpace.startY, Screen, Default, true, Default, dark ? DARK_TITLE_COL : LIGHT_TITLE_COL);
+	sysDrawRect(windowSpace.startX, windowSpace.startY-3, windowSpace.endX, windowSpace.startY, Screen, true, Default, Default, dark ? DARK_TITLE_COL : LIGHT_TITLE_COL);
 
 	drawShade(windowSpace.startX, windowSpace.startY-3, windowSpace.endX, windowSpace.endY);
 

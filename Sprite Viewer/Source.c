@@ -1,13 +1,13 @@
-#define SHOW_FPS
-#define SPRITE_PATH "../ACRE Sprites/"
-#define FILE_NAME "harry.acre"
+// causes "deprecation" issues, without this
+#define _CRT_SECURE_NO_WARNINGS 1
 
-#include <math.h>
-#include <time.h>
+// Allow the console to be resized
+#define ACRE_ALLOW_RESIZE
 
 #define ACRE_START
 #include "../ACRE Files/ACREngine.h"
 
+// Include all of the different ACRE Extensions
 #define ACRE_TRANSFORM
 #include "../ACRE Files/ACRE_Transform.h"
 
@@ -16,6 +16,10 @@
 
 #define ACRE_FONTS
 #include "../ACRE Files/ACRE_Fonts.h"
+
+
+#define SPRITE_PATH "../ACRE Sprites/"
+#define FILE_NAME "harry.acre"
 
 int main()
 {
