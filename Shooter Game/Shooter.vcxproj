@@ -24,6 +24,7 @@
     <ProjectGuid>{4b087d74-b9bd-4a29-8f61-ce8154bf404e}</ProjectGuid>
     <RootNamespace>Shooter</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>Zombie Shooter</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
