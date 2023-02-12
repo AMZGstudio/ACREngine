@@ -36,6 +36,7 @@ namespace acre // delcarations
 		static bool doShake;
 
 		Renderer();
+		~Renderer();
 		
 		void draw();
 		void render();
@@ -222,6 +223,12 @@ namespace acre // definitions
 		fs = Neither;
 		fadeProgress = 0;
 		fadeIncrement = 2;
+	}
+
+	Renderer::~Renderer()
+	{
+		deleteArea(&_window);
+		setDefaultDrawArea(&Screen);
 	}
 
 	void Renderer::draw()

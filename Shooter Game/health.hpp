@@ -17,6 +17,11 @@ public:
 		bar = calcSpace(ScreenSpace, Centered, Height(Screen) - 12, 52, 6);// { 9, 4, 61, 10 };
 		ammo = { bar.startX-2, bar.startY-5, 2, 2 };
 	}
+	~HealthBar()
+	{
+		deleteArea(&heart);
+	}
+
 	void draw(float health, int ammunition)
 	{
 		// shadow
