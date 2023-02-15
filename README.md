@@ -2,11 +2,11 @@
 # ACREngine 
 ![](https://img.shields.io/badge/License-BSD-blue) ![](https://img.shields.io/badge/Language-C++-Green) ![](https://img.shields.io/badge/Language-C-Green)
 
-ACREngine or AMZG Console Render Engine is a C & C++ Game/Render engine that uses the windows console. It was designed with simplicity in mind, and is very easy to get started with. ACRE is very modular, and (on its own) is just a single header file! In addition, ACRE has expansion packs for additional features.
+ACREngine or _AMZG Console Render Engine_ is a C & C++ Game/Render engine that uses the windows console. It was designed with simplicity in mind, and is very easy to get started with. ACRE is very modular, and (on its own) is just a single header file! In addition, ACRE has expansion packs with additional features! 
 
 
 # When to use it?
-This game engine can be used for a variety of things. You can make fully fledged games that look like normal games, or you can make ascii art games. You can use ACRE as just a means to add colors to the console, or you can use it as a method to print to the console very fast. All of these things, in a simple library, allowing you to focus on the project, and not the engine! Whether a beginner or advanced programmer, creating a game couldn't be easier!
+This game engine can be used for a variety of things. You can make fully fledged games that look like normal games, or you can make ASCII art games. You can use ACRE as a means to add colors to the console, or you can use it as a method to print to the console with high speeds. All of these things, in a simple library, allowing you to focus on the project, and not the engine! Whether a beginner or advanced programmer, creating a game couldn't be easier!
 
 # Features
     ✅ Fullscreen onsole applications.
@@ -23,37 +23,39 @@ This game engine can be used for a variety of things. You can make fully fledged
 # How do I get started?
 there are two methods to set everything up. You can use the included premake build method, that will setup a visual studio for you, or you can setup your project manually, and include ACRE yourself. If you are using visual studio the first method is recommended. 
 
-## Premake mMthod (recommended)
+## Premake Method (recommended)
 
 ➡️ Clone the repository (or download zip): 
 `git clone https://github.com/AMZGstudio/ACREngine.git`
 
 ➡️ Run: `setup.bat`
 
-➡️ open the `ACREngine.sln` file with Visual Studio. 
+➡️ open `ACREngine.sln` with Visual Studio. 
 
 ➡️ That's it! write whatever code you would like in the default application.
 _Note: you are given sample code to get started._
 
 ## DIY Method
 
-if using visual studio, you must create a windows application project, and then include the header file named `"ACREngine.h"` found in the acre files folder.
+if using visual studio, you must create a windows application project, and then include the header file named `"ACREngine.h"` found in the `acre files` folder.
 
 # Compilation
-Visual Studio: just hit build.
+Visual Studio: just hit build
+
 MinGW (gcc/g++): ______
 
 # Disclaimer
 ACREngine gives you control over everything, and therefore you are responsible for initializing the console, creating a main loop, etc. ACRE is "barebones" on its own, and therefore doesn't come with physics, state machine, etc. Therefore ACRE one of the extensions (ACRE_Gameplay.h) adds things like the state machine, advanced render, etc. 
 
-# Code Preview
-How to make a controlable square on the screen:
+# Code Example
+
+_Program to make a moving circle on the screen_
 ```C
 
 #define ACRE_START // only do this in the main file.
 #include "../ACRE Files/ACREngine.h"
 
-int main()
+void start()
 {
     // we create the screen, with the window title, dimensions, the text foreground, and background color. over here, its black text on a white background.
     initialize("Demo Game", 200, 100, 4, 4, Black, White); // TIP: write Default, for default foreground and background.
