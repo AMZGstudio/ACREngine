@@ -9,6 +9,7 @@
 *.vcxproj
 *.vcxproj.user
 *.vcxproj.filters
+*.sln
 
 # Compiled Object files
 *.slo
