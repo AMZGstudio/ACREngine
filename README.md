@@ -25,11 +25,10 @@ there are two methods to set everything up. You can use the included premake bui
 
 ## Premake mMthod (recommended)
 
-:arrow_right: Clone the repository (or download zip): 
-`git clone `
+➡️ Clone the repository (or download zip): 
+`git clone https://github.com/AMZGstudio/ACREngine.git`
 
-➡️ Run:
-`setup.bat`
+➡️ Run: `setup.bat`
 
 ➡️ open the `ACREngine.sln` file with Visual Studio. 
 
