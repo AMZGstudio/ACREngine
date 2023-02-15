@@ -24,7 +24,7 @@ project "Application" -- name of the project
    location "../application"
 
    vpaths {
-      "Header Files",
+      ["Header Files"] = { "../application/**.h", "../application/**.hpp"},
       ["ACRE Files"] = { "../acre files/**.h", "../acre files/**.hpp" },
       ["Source Files"] = {"../application/**.c", "../application/**.cpp"}
    }
