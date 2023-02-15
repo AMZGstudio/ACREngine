@@ -23,6 +23,9 @@ This game engine can be used for a variety of things. You can make fully fledged
 # How do I get started?
 there are two methods to set everything up. You can use the included premake build method, that will setup a visual studio for you, or you can setup your project manually, and include ACRE yourself. If you are using visual studio the first method is recommended. 
 
+Youtube tutorial:
+https://www.youtube.com/watch?v=RuCzrdzU5BI
+
 ## Premake Method (recommended)
 
 ➡️ Clone the repository (or download zip): 
