@@ -1,21 +1,24 @@
 ![ACREngine LogoCropped](https://user-images.githubusercontent.com/99887800/171085888-6702a6a6-8ec6-4ea1-8826-92683f1c3e60.png)
-# What is ACREngine? 
-ACREngine is a C and C++ game/render engine that uses the windows console. It was designed with simplicity in mind, and is very easy to get started with. ACRE is very modular, and is just a single header file! In addition, ACRE has expansion packs for additional features.
+# ACREngine 
+![](https://img.shields.io/badge/License-BSD-blue) ![](https://img.shields.io/badge/Language-C++-Green) ![](https://img.shields.io/badge/Language-C-Green)
+
+ACREngine or AMZG Console Render Engine is a C & C++ Game/Render engine that uses the windows console. It was designed with simplicity in mind, and is very easy to get started with. ACRE is very modular, and (on its own) is just a single header file! In addition, ACRE has expansion packs for additional features.
+
 
 # When to use it?
 This game engine can be used for a variety of things. You can make fully fledged games that look like normal games, or you can make ascii art games. You can use ACRE as just a means to add colors to the console, or you can use it as a method to print to the console very fast. All of these things, in a simple library, allowing you to focus on the project, and not the engine! Whether a beginner or advanced programmer, creating a game couldn't be easier!
 
-# features
-- Fullscreen console applications
-- resizable console window
-- user input handling
-- extremely simple API (with no boiler plate)
-- no dlls, libs, etc. ACRE is a single file. 
-- easy to use drawing routines. 
-- custom image formats.
-- text drawing routines (with different fonts as well)
-- both compatible with C, and C++.
-- compiles with MSVC, and gcc/g++
+# Features
+    ✅ Fullscreen onsole applications.
+    ✅ resizable console window.
+    ✅ user input handling.
+    ✅ extremely simple API (with no boiler plate).
+    ✅ no dlls, libs, etc. ACRE is a single file. 
+    ✅ easy to use drawing routines. 
+    ✅ custom image formats.
+    ✅ text drawing routines (with different fonts as well).
+    ✅ both compatible with C, and C++.
+    ✅ compiles with MSVC, and gcc/g++
 
 # How do I get started?
 there are two methods to set everything up. You can use the included premake build method, that will setup a visual studio for you, or you can setup your project manually, and include ACRE yourself. If you are using visual studio the first method is recommended. 
@@ -38,7 +41,7 @@ if using visual studio, you must create a windows application project, and then 
 Visual Studio: just hit build.
 MinGW (gcc/g++): ______
 
-# Important info
+# Disclaimer
 ACREngine gives you control over everything, and therefore you are responsible for initializing the console, creating a main loop, etc. ACRE is "barebones" on its own, and therefore doesn't come with physics, state machine, etc. Therefore ACRE one of the extensions (ACRE_Gameplay.h) adds things like the state machine, advanced render, etc. 
 
 # Code Preview
