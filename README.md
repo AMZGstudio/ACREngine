@@ -1,20 +1,45 @@
 ![ACREngine LogoCropped](https://user-images.githubusercontent.com/99887800/171085888-6702a6a6-8ec6-4ea1-8826-92683f1c3e60.png)
-# ACREngine
-A simple and easy to use game/render engine for C and C++. ACRE runs entirely in the console/terminal, and doesn't rely on any additional dependencies. ACRE is a very modular game engine. Its a single header file, with extension files as well. usage of the engine is as simple as possible, while also containing advanced features! rendering at high resolutions provides high FPS, and at lower resolutions, fps can be in the thousands. Whether a beginner or advanced programmer, creating a game couldn't be easier!
+# What is ACREngine? 
+ACREngine is a C and C++ game/render engine that uses the windows console. It was designed with simplicity in mind, and is very easy to get started with. ACRE is very modular, and is just a single header file! In addition, ACRE has expansion packs for additional features.
 
-# What is it?
-its a game engine, but not exculsively, it can be used for normal console applications, with more features then you would get by just printing to the screen. ACRE uses the windows default libraries, to render text to the screen, and uses ANSI escape sequences to put colors on the screen. Tt's got dozens of drawing functions that are easy to use, as well as more advanced ones. This allows you to focus on the game, and not the engine behind it!
-Check out the wiki, which explains fundemental concepts, that this game engine uses.
+# When to use it?
+This game engine can be used for a variety of things. You can make fully fledged games that look like normal games, or you can make ascii art games. You can use ACRE as just a means to add colors to the console, or you can use it as a method to print to the console very fast. All of these things, in a simple library, allowing you to focus on the project, and not the engine! Whether a beginner or advanced programmer, creating a game couldn't be easier!
 
-# How to use this?
+# features
+- Fullscreen console applications
+- resizable console window
+- user input handling
+- extremely simple API (with no boiler plate)
+- no dlls, libs, etc. ACRE is a single file. 
+- easy to use drawing routines. 
+- custom image formats.
+- text drawing routines (with different fonts as well)
+- both compatible with C, and C++.
+- compiles with MSVC, and gcc/g++
 
-Step 1) include this header in your code.
-Step 2) initalize the screen.
-Step 3) draw things to the screen memory.
-Step 4) render to the console screen, with the function: render().
+# How do I get started?
+there are two methods to set everything up. You can use the included premake build method, that will setup a visual studio for you, or you can setup your project manually, and include ACRE yourself. If you are using visual studio the first method is recommended. 
 
-Thats it!
-Note: you usually would create a game loop.
+## Premake method (recommend)
+
+1. Clone the repository (or download zip): `git clone `
+
+2. Run: `setup.bat`
+
+3. open the `ACREngine.sln` file with Visual Studio. 
+
+4. That's it! write whatever code you would like in the default application. Note: you are given sample code to get started.
+
+## DIY method
+
+if using visual studio, you must create a windows application project, and then include the header file named `"ACREngine.h"` found in the acre files folder.
+
+## Compilation
+Visual Studio: just hit build.
+MinGW (gcc/g++): ______
+
+# Important info
+ACREngine gives you control over everything, and therefore you are responsible for initializing the console, creating a main loop, etc. ACRE is "barebones" on its own, and therefore doesn't come with physics, state machine, etc. Therefore ACRE one of the extensions (ACRE_Gameplay.h) adds things like the state machine, advanced render, etc. 
 
 # Code Preview
 How to make a controlable square on the screen:
@@ -52,9 +77,9 @@ int main()
     terminateACRE();
 }
 ```
-# Things Created With The Engine
+# Games made in ACRE
 
-(Note all of these run smoothly)
+Zombie shooter:
 
 Tetris:
 [tetris](https://user-images.githubusercontent.com/99887800/180656074-cdce0a86-dcd6-4bed-8709-dcf9b06bd744.png)
