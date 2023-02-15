@@ -155,6 +155,9 @@
 		LeftHalfBlock = 221, RightHalfBlock = 222, UpperHalfBlock = 223
 	};
 
+	// this must be overriden by the user, which acts as the main file.
+
+	void start();
 	// variable declarations
 	extern int defaultFrontColor, defaultBackColor;
 	extern float fps;
@@ -302,7 +305,7 @@
 	//others
 	MOUSE Mouse = { 0, 0, 0, 0 };
 	Key  allKeys[AMOUNT_KEYS] = { 0 };
-	LARGE_INTEGER start = { 0 }, end = { 0 }, frequency = { 0 };
+	LARGE_INTEGER liStart = { 0 }, liEnd = { 0 }, frequency = { 0 };
 	float deltaTime = 0;
 
 	// the eight bit font option in hex
@@ -1763,8 +1766,8 @@
 		memset(screenBufferFull, 0, sizeof(char) * (Screen.width * Screen.height * ANSI_STR_LEN + 1)); // after allocating the screenBufferFull, empty it out.
 				
 		//resizeCorrect();
-		QueryPerformanceCounter(&start);
-		srand((unsigned int)start.QuadPart);
+		QueryPerformanceCounter(&liStart);
+		srand((unsigned int)liStart.QuadPart);
 	}
 
 	/*-------------------------------------------*\
@@ -1844,11 +1847,11 @@
 		if (!QueryPerformanceFrequency(&frequency))
 			Error(L"Getting Performance Frequency Failed!", __LINE__);
 
-		if (!QueryPerformanceCounter(&end))
+		if (!QueryPerformanceCounter(&liEnd))
 			Error(L"Getting Performace Counter Failed!", __LINE__);
 
-		deltaTime = clamp((float)(end.QuadPart - start.QuadPart) / (float)frequency.QuadPart, 0, 1);
-		start = end;
+		deltaTime = clamp((float)(liEnd.QuadPart - liStart.QuadPart) / (float)frequency.QuadPart, 0, 1);
+		liStart = liEnd;
 
 		if (currFPSslot >= FPS_TICKS)
 		{
@@ -1866,6 +1869,17 @@
 		totalTimes += deltaTime;
 		currFPSslot++;
 	}
+
+
+	int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+	{
+		// create a console. Note this project is a windowed application. The reason we do it this way,
+		// is so it will never use the windows terminal, and always the cmd.
+		AllocConsole();
+		start();
+		return 0;
+	}
+
 #endif
 
 	/*
