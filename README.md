@@ -23,21 +23,24 @@ This game engine can be used for a variety of things. You can make fully fledged
 # How do I get started?
 there are two methods to set everything up. You can use the included premake build method, that will setup a visual studio for you, or you can setup your project manually, and include ACRE yourself. If you are using visual studio the first method is recommended. 
 
-## Premake method (recommend)
+## Premake mMthod (recommended)
 
-1. Clone the repository (or download zip): `git clone `
+:arrow_right: Clone the repository (or download zip): 
+`git clone `
 
-2. Run: `setup.bat`
+➡️ Run:
+`setup.bat`
 
-3. open the `ACREngine.sln` file with Visual Studio. 
+➡️ open the `ACREngine.sln` file with Visual Studio. 
 
-4. That's it! write whatever code you would like in the default application. Note: you are given sample code to get started.
+➡️ That's it! write whatever code you would like in the default application.
+_Note: you are given sample code to get started._
 
-## DIY method
+## DIY Method
 
 if using visual studio, you must create a windows application project, and then include the header file named `"ACREngine.h"` found in the acre files folder.
 
-## Compilation
+# Compilation
 Visual Studio: just hit build.
 MinGW (gcc/g++): ______
 
