@@ -1,6 +1,6 @@
 ![ACREngine LogoCropped](https://user-images.githubusercontent.com/99887800/171085888-6702a6a6-8ec6-4ea1-8826-92683f1c3e60.png)
 # ACREngine 
-![](https://img.shields.io/badge/License-BSD-blue) ![](https://img.shields.io/badge/Language-C++-Green) ![](https://img.shields.io/badge/Language-C-Green)
+![](https://img.shields.io/badge/License-BSD-blue) ![](https://img.shields.io/badge/Language-C++-Green) ![](https://img.shields.io/badge/Language-C-Green) ![](https://img.shields.io/badge/Platform-Windows-blue)
 
 ACREngine or _AMZG Console Render Engine_ is a C & C++ Game/Render engine that uses the windows console. It was designed with simplicity in mind, and is very easy to get started with. ACRE is very modular, and (on its own) is just a single header file! In addition, ACRE has expansion packs with additional features! 
 
@@ -43,6 +43,9 @@ if using visual studio, you must create a windows application project, and then 
 Visual Studio: just hit build
 
 MinGW (gcc/g++): ______
+
+# Documentation
+Take a look at the wiki, with documentation for every function. Additionally, you can look at example programs to understand how to use the game engine.
 
 # Disclaimer
 ACREngine gives you control over everything, and therefore you are responsible for initializing the console, creating a main loop, etc. ACRE is "barebones" on its own, and therefore doesn't come with physics, state machine, etc. Therefore ACRE one of the extensions (ACRE_Gameplay.h) adds things like the state machine, advanced render, etc. 
