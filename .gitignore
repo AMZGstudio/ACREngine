@@ -5,6 +5,11 @@
 # Prerequisites
 *.d
 
+# Visual studio files
+*.vcxproj
+*.vcxproj.user
+*.vcxproj.filters
+
 # Compiled Object files
 *.slo
 *.lo
@@ -434,4 +439,4 @@ FodyWeavers.xsd
 ### VisualStudio Patch ###
 # Additional files built by Visual Studio
 
-# End of https://www.toptal.com/developers/gitignore/api/visualstudio,c++
+!premake5.exe
