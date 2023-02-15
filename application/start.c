@@ -13,7 +13,7 @@ void start()
     while (key(Esc).pressed == false)
     {
         // draw a circle on the screen, with the coordinates of x and y, and the radius of 15.
-        // drawCircle(x, y, 15, Blue);
+        drawCircle(x, y, 15, Blue);
 
         // check if any of the WASD keys are pressed, and move the x and y of the circle accordingly.
         // timePerSec adds the correct amount to the coordinates, to make them move 40 units every second.
