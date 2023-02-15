@@ -20,7 +20,9 @@ workspace "ACREngine" -- name of the solution
 
 project "Application" -- name of the project
    kind "WindowedApp" -- despite running in the console, we want to create the console at runtime.
-   language "C"
+   language "C++"
+   cppdialect "C++20"
+
    location "../application"
 
    vpaths {
