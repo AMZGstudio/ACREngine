@@ -6,7 +6,8 @@ workspace "ACREngine" -- name of the solution
    location "../"
 
    configurations { "Debug", "Release" } -- configurations of the solution
-   
+   defines "_CRT_SECURE_NO_WARNINGS"
+
    -- specifications when using Debug configuration
    filter "configurations:Debug"
       defines { "DEBUG" }
