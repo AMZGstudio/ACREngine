@@ -3,9 +3,7 @@
 #ifdef ACRE_3_COMPATIBLE
 
 #ifdef ACRE_EX_TRANSFORM
-	#ifndef ACRE_EX_GAMEPLAY
-		#define ACRE_EX_GAMEPLAY
-	#endif
+	#define ACRE_EX_GAMEPLAY
 
 	#include <vector> 
 	#include <string>
@@ -194,6 +192,7 @@ namespace acre // delcarations
 }
 
 #ifdef ACRE_GAMEPLAY
+#undef ACRE_GAMEPLAY
 
 namespace acre // definitions
 {

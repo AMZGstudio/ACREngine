@@ -4,6 +4,21 @@
 	#define ACRE_EX_GUI
 
 	#define TEXT_SIZE 100
+	#define LIGHT_WINDOW_COL Color(160, 160, 160)
+	#define LIGHT_BUT_ON_COL Color(100, 100, 100)
+	#define LIGHT_BUT_OF_COL Color(120, 120, 120)
+	#define LIGHT_SLIDEB_COL Color(80, 80, 80)
+	#define LIGHT_SLIDEF_COL Color(100, 100, 100)
+	#define LIGHT_TITLE_COL Color(100, 100, 100)
+	#define LIGHT_TEXT_COL Black
+
+	#define DARK_WINDOW_COL Color(70, 70, 70)
+	#define DARK_BUT_ON_COL Color(80, 80, 80)
+	#define DARK_BUT_OF_COL Color(105, 105, 105)
+	#define DARK_SLIDEB_COL Color(50, 50, 50)
+	#define DARK_SLIDEF_COL Color(100, 100, 100)
+	#define DARK_TITLE_COL Color(100, 100, 100)
+	#define DARK_TEXT_COl White
 
 	enum OptionStates { Button, Slider, TextBox };
 	typedef struct Window Window;
@@ -33,22 +48,6 @@
 
 	} Window;
 
-	#define LIGHT_WINDOW_COL Color(160, 160, 160)
-	#define LIGHT_BUT_ON_COL Color(100, 100, 100)
-	#define LIGHT_BUT_OF_COL Color(120, 120, 120)
-	#define LIGHT_SLIDEB_COL Color(80, 80, 80)
-	#define LIGHT_SLIDEF_COL Color(100, 100, 100)
-	#define LIGHT_TITLE_COL Color(100, 100, 100)
-	#define LIGHT_TEXT_COL Black
-
-	#define DARK_WINDOW_COL Color(70, 70, 70)
-	#define DARK_BUT_ON_COL Color(80, 80, 80)
-	#define DARK_BUT_OF_COL Color(105, 105, 105)
-	#define DARK_SLIDEB_COL Color(50, 50, 50)
-	#define DARK_SLIDEF_COL Color(100, 100, 100)
-	#define DARK_TITLE_COL Color(100, 100, 100)
-	#define DARK_TEXT_COl White
-
 	// delcarations go here
 	Window* createWindow(const int x, const int y, const int width, const int height, const char* name);
 	Option* createButton(Window* parentWindow, int x, int y, int width, int height, const char* title);
@@ -64,6 +63,7 @@
 	void drawOption(Option* op, bool dark);
 	
 #ifdef ACRE_GUI
+#undef ACRE_GUI
 
 	void _addOption(Option* op, Window* wn)
 	{

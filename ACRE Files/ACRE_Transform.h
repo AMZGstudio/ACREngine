@@ -1,9 +1,7 @@
 #pragma once
 
 #ifdef ACRE_31_COMPATIBLE
-	#ifndef ACRE_EX_TRANSFORM
-		#define ACRE_EX_TRANSFORM
-	#endif
+	#define ACRE_EX_TRANSFORM
 	
 	typedef struct AreaTrans {
 		Area area;
@@ -35,7 +33,7 @@
 
 	
 #ifdef ACRE_TRANSFORM
-		
+#undef ACRE_TRANSFORM
 AreaTrans createAT(Area areaData, float x, float y)
 {
 	Space as = calcSpace(ScreenSpace, (int)x, (int)y, areaData.width, areaData.height);
