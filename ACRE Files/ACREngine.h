@@ -180,6 +180,7 @@
 	void intToStr(char* string, int num);
 	float map(float numberToMap, int numberBegin, int numberEnd, int numberMapStart, int numberMapEnd);
 	float clamp(float numToClamp, float min, float max);
+	void clampSpace(Space* space, Space spaceToClampTo);
 	void Xterm(short col, short* r, short* g, short* b);
 	int Color(int r, int g, int b);
 	int txtWidth(const char* string, Font fontType);
@@ -188,9 +189,8 @@
 	bool legalArea(Area area);
 
 	bool wasResized();
-	bool pointSpaceCollide(int x, int y, Space screenSpace);
-	bool rectangleCollide(int xStart1, int yStart1, int xEnd1, int yEnd1, int xStart2, int yStart2, int xEnd2, int yEnd2);
-	bool spaceCollide(Space space1, Space space2);
+	bool pointSpaceOverlap(int x, int y, Space screenSpace);
+	bool spaceOverlap(Space space1, Space space2);
 
 	void sysGetPoint(int x, int y, Area area, int data[3]);
 	char getChar(int x, int y);
@@ -351,16 +351,11 @@
 		for (; x1 <= x2; x1++) sysDrawPoint(x1, y, area, charater, front_color, back_color);
 	}
 	
-	void Error(const wchar_t* errorMsg, int line)
+	void Error(const char* errorMsg, int line)
 	{
-
-		wchar_t thing[200] = { 0 };
-		#ifdef __GNUC__
-			swprintf(thing, L"ACRError: (LINE:%d): %s", line, errorMsg);
-		#else 
-			swprintf(thing, 200, L"ACRError: (LINE:%d): %s", line, errorMsg);
-		#endif
-		MessageBoxW(NULL, (LPCWSTR)thing, NULL, MB_OK);
+		char thing[200] = { 0 };
+		sprintf(thing, "ACRError: (LINE:%d): %s", line, errorMsg);
+		MessageBoxA(NULL, thing, NULL, MB_OK);
 		exit(EXIT_FAILURE);
 	}
 
@@ -470,6 +465,17 @@
 		return numToClamp;
 	}
 
+	void clampSpace(Space* space, Space spaceToClampTo)
+	{
+		if (!spaceOverlap(*space, spaceToClampTo))
+			return;
+
+		space->xStart = clamp(space->xStart, spaceToClampTo.xStart, spaceToClampTo.xEnd);
+		space->yStart = clamp(space->yStart, spaceToClampTo.yStart, spaceToClampTo.yEnd);
+		space->xEnd = clamp(space->xEnd, spaceToClampTo.xStart, spaceToClampTo.xEnd);
+		space->yEnd = clamp(space->yEnd, spaceToClampTo.yStart, spaceToClampTo.yEnd);
+	}
+
 	int strToInt(char* string)
 	{
 		return atoi(string);
@@ -565,12 +571,11 @@
 		char ch;
 		FILE* spriteFile = fopen(spriteFilePath, "r");
 		bool includeText = false;
+
 		if (spriteFile == NULL)
 		{
-			wchar_t msg[100] = { L"Opening ACRE file: "};
-			wchar_t wszDest[100];
-			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, spriteFilePath, -1, wszDest, 100);
-			wcscat(msg, wszDest);
+			char msg[100] = "Opening ACRE file: ";
+			sprintf(msg, "Opening ACRE file: %s", spriteFilePath);
 			Error(msg, __LINE__);
 		}
 
@@ -603,23 +608,17 @@
 		char newPath[200] = { 0 };
 		strcat(newPath, spriteFilePath);
 
-		bool foundDot = false;
-		for (int i = 0; i < 200; i++)
-		{
-			if (newPath[i] == '.' && i < 199 && i>0)
-				if(newPath[i+1] != '.' && newPath[i-1] != '.')
-					foundDot = true;
-
-			if (foundDot) newPath[i] = 0;
-		}
-		strcat(newPath, ".acre");
+		// if .acre doesnt exist in the path, then append it to the end
+		if (strstr(newPath, ".acre") == NULL)
+			strcat(newPath, ".acre");
+		
 		char extraModes[5] = { 0 };
 
 		if (areaToMakeSprite.drawText)
 			strcat(extraModes, ":T");
 
 		FILE* file = fopen(newPath, "w");
-		fprintf(file, "acrev3.0%s;%d;%d\n", extraModes, areaToMakeSprite.width, areaToMakeSprite.height);
+		fprintf(file, "acrev3.1%s;%d;%d\n", extraModes, areaToMakeSprite.width, areaToMakeSprite.height);
 		
 		for (int y = 0; y < areaToMakeSprite.height; y++)
 		{
@@ -647,21 +646,18 @@
 	|		       Collision Functions	     	  |
 	\*-------------------------------------------*/
 
-	bool pointSpaceCollide(int x, int y, Space screenSpace)
+	bool pointSpaceOverlap(int x, int y, Space screenSpace)
 	{
 		if (x < screenSpace.xStart || x >= screenSpace.xEnd || y < screenSpace.yStart || y >= screenSpace.yEnd)
 			return false;
 		return true;
 	}
-	bool rectangleCollide(int xStart1, int yStart1, int xEnd1, int yEnd1, int xStart2, int yStart2, int xEnd2, int yEnd2)
+
+	bool spaceOverlap(Space space1, Space space2)
 	{
-		if ((yStart1 > yEnd2 || yEnd1 < yStart2) || (xStart1 > xEnd2 || xEnd1 < xStart2))
-			return false;
-		return true;
-	}
-	bool spaceCollide(Space space1, Space space2)
-	{
-		return(rectangleCollide(space1.xStart, space1.yStart, space1.xEnd, space1.yEnd, space2.xStart, space2.yStart, space2.xEnd, space2.yEnd));
+		
+		return max(space1.xStart, space2.xStart) < min(space1.xEnd, space2.xEnd)
+			&& max(space1.yStart, space2.yStart) < min(space1.yEnd, space2.yEnd);
 	}
 
 	/*-------------------------------------------*\
@@ -710,17 +706,17 @@
 
 		if (character != Default)
 			if (character == '\n' || character > 256 || character <= 0) // or invalid color
-				Error(L"Tried to add newline (\'\\n\'), or invalid character, to the screen buffer!", __LINE__);
+				Error("Tried to add newline (\'\\n\'), or invalid character, to the screen buffer!", __LINE__);
 			else area.characters[slot] = character;
 
 		if (front_color != Default)
 			if (front_color < 0 || front_color > 255)
-				Error(L"Tried to add invalid foreground color, to the screen buffer!", __LINE__);
+				Error("Tried to add invalid foreground color, to the screen buffer!", __LINE__);
 			else area.colFront[slot] = front_color;
 
 		if (back_color != Default)
 			if (back_color < 0 || back_color  > 255)
-				Error(L"Tried to add invalid background color, to the screen buffer!", __LINE__);
+				Error("Tried to add invalid background color, to the screen buffer!", __LINE__);
 			else area.colBack[slot] = back_color;
 		
 		return loc;
@@ -1035,7 +1031,7 @@
 
 	void sysDrawArea(int x, int y, Area area, Area areaToDraw)
 	{
-		if (!legalArea(areaToDraw)) Error(L"Can't draw deleted Area!", __LINE__);
+		if (!legalArea(areaToDraw)) Error("Can't draw deleted Area!", __LINE__);
 
 		for (int ys = 0; ys < areaToDraw.height; ys++)
 			for (int xs = 0; xs < areaToDraw.width; xs++)
@@ -1048,8 +1044,8 @@
 	void sysDrawPartialArea(int x, int y, Area area, Area areaToDraw, int startAreaX, int startAreaY, int endAreaX, int endAreaY)
 	{
 		int newX=0, newY=0;
-		if (!legalArea(areaToDraw)) Error(L"Can't draw deleted Area!", __LINE__);
-		if (endAreaX > areaToDraw.width || endAreaY > areaToDraw.height || startAreaX < 0 || startAreaY < 0) Error(L"Can't draw partial Area bigger than area itself.", __LINE__);
+		if (!legalArea(areaToDraw)) Error("Can't draw deleted Area!", __LINE__);
+		if (endAreaX > areaToDraw.width || endAreaY > areaToDraw.height || startAreaX < 0 || startAreaY < 0) Error("Can't draw partial Area bigger than area itself.", __LINE__);
 
 		for (int ys = startAreaY; ys < endAreaY; ys++)
 		{
@@ -1268,8 +1264,7 @@
 		area->width = width;
 		area->height = height;
 
-		if (area->characters == NULL)
-			Error(L"NULL AREA", __LINE__);
+		if (!legalArea(*area)) Error("Can't draw deleted Area!", __LINE__);
 
 		char* newVal = (char*)realloc(NULL, (sizeof(char) * width * height) + 1);
 
@@ -1320,9 +1315,9 @@
 		info.FontWeight = FONT_WEIGHT;
 		info.FontFamily = FF_DONTCARE;
 		wcscpy(info.FaceName, L"Consolas");
-		if (!SetConsoleOutputCP(codePage)) Error(L"Setting consoles codepage failed.", __LINE__);
+		if (!SetConsoleOutputCP(codePage)) Error("Setting consoles codepage failed.", __LINE__);
 
-		if (!SetCurrentConsoleFontEx(hConsoleOutput, 0, &info)) Error(L"Setting console font failed.", __LINE__);
+		if (!SetCurrentConsoleFontEx(hConsoleOutput, 0, &info)) Error("Setting console font failed.", __LINE__);
 	}
 
 	void getConsoleWindowSize(int* w, int* h)
@@ -1330,7 +1325,7 @@
 		CONSOLE_SCREEN_BUFFER_INFO csbi;
 
 		if (!GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi))
-			Error(L"Unable to get the current console window size", __LINE__);
+			Error("Unable to get the current console window size", __LINE__);
 
 		*w = csbi.srWindow.Right - csbi.srWindow.Left + 1;
 		*h = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
@@ -1348,17 +1343,17 @@
 
 			COORD size = { (short)(*x), (short)(*y) };
 			if (!SetConsoleScreenBufferSize(hConsoleOutput, size))
-				Error(L"Unable to resize screen buffer!", __LINE__);
+				Error("Unable to resize screen buffer!", __LINE__);
 
 			SMALL_RECT info = { 0, 0, (short)(*x - 1), (short)(*y - 1) };
 			if (!SetConsoleWindowInfo(hConsoleOutput, TRUE, &info))
-				Error(L"Unable to resize window after resizing buffer!", __LINE__);
+				Error("Unable to resize window after resizing buffer!", __LINE__);
 
 			return;
 		}
 
 		if (_consoleFontHeight != _consoleFontWidth)
-			Error(L"When using fullscreen in x64, font width and height must be equal!", __LINE__);
+			Error("When using fullscreen in x64, font width and height must be equal!", __LINE__);
 
 		// if it failed, then make the console fullscreen the x64 way.
 		COORD size = { largestSize.X, largestSize.Y };
@@ -1387,17 +1382,13 @@
 
 		COORD sizeOther = { (short)(*x), (short)(*y) };
 		if (!SetConsoleScreenBufferSize(hConsoleOutput, sizeOther))
-			Error(L"Unable to set screen buffer size in x64 mode!", __LINE__);
+			Error("Unable to set screen buffer size in x64 mode!", __LINE__);
 	}
 	
 	void dimensionTooBigError(char dimension, int currSize, int maxSize)
 	{
-		wchar_t errMsg[200] = { 0 };
-			#ifdef __GNUC__ // gcc uses different swprintf declaration.
-				swprintf(errMsg, L"%c dimension too big (%d > %d)", dimension, currSize, maxSize);
-			#else
-				swprintf(errMsg, 200, L"%c dimension too big (%d > %d)", dimension, currSize, maxSize);
-			#endif
+		char errMsg[200] = { 0 };
+		sprintf(errMsg, "%c dimension too big (%d > %d)", dimension, currSize, maxSize);
 		Error(errMsg, __LINE__);
 	}
 
@@ -1422,16 +1413,16 @@
 			// window size needs to be adjusted before the buffer size can be reduced.
 			SMALL_RECT info = { 0,0, (short)(*x < width ? *x - 1 : width - 1), (short)(*y < height ? *y - 1 : height - 1) };
 			if (!SetConsoleWindowInfo(hConsoleOutput, TRUE, &info))
-				if (!Errors) return; else Error(L"Resizing window failed!", __LINE__);
+				if (!Errors) return; else Error("Resizing window failed!", __LINE__);
 		}
 
 		COORD size = { (short)(*x), (short)(*y) };
 		if (!SetConsoleScreenBufferSize(hConsoleOutput, size))
-			if (!Errors) return; else Error(L"Unable to resize screen buffer!", __LINE__);
+			if (!Errors) return; else Error("Unable to resize screen buffer!", __LINE__);
 
 		SMALL_RECT info = { 0, 0, (short)(*x - 1), (short)(*y - 1) };
 		if (!SetConsoleWindowInfo(hConsoleOutput, TRUE, &info))
-			if (!Errors) return; else Error(L"Unable to resize window after resizing buffer!", __LINE__);
+			if (!Errors) return; else Error("Unable to resize window after resizing buffer!", __LINE__);
 	
 		#endif
 	}
@@ -1454,9 +1445,9 @@
 
 		// Set flags to allow mouse input, and disable selecting, and support for ANSI escape sequences.	
 		if (!SetConsoleMode(hConsoleInput, ENABLE_EXTENDED_FLAGS | ENABLE_WINDOW_INPUT | ENABLE_MOUSE_INPUT))
-			Error(L"Setting The consoles Input modes did not work.", __LINE__);
+			Error("Setting The consoles Input modes did not work.", __LINE__);
 		if (!SetConsoleMode(hConsoleOutput, ENABLE_PROCESSED_OUTPUT | ENABLE_VIRTUAL_TERMINAL_PROCESSING | ENABLE_WRAP_AT_EOL_OUTPUT | DISABLE_NEWLINE_AUTO_RETURN))
-			Error(L"Setting The consoles Output modes did not work.", __LINE__);
+			Error("Setting The consoles Output modes did not work.", __LINE__);
 	
 		ShowScrollBar(ConsoleWindow, SB_BOTH, FALSE);
 	}
@@ -1477,7 +1468,7 @@
 		GetNumberOfConsoleInputEvents(hConsoleInput, &events);
 		if (events > 0)
 			if (!ReadConsoleInputA(hConsoleInput, irInBuf, events, &events))
-				Error(L"failed reading console inputs\n", __LINE__);
+				Error("failed reading console inputs\n", __LINE__);
 
 		bool didResize = false, scrollWMOVED = false, scrollHMOVED = false;
 
@@ -1548,7 +1539,7 @@
 	void terminateACRE()
 	{
 		if (SetConsoleOutputCP(65001) == 0)
-			Error(L"Changing codepage back to default failed.", __LINE__);
+			Error("Changing codepage back to default failed.", __LINE__);
 
 		free(screenBufferFull);
 		deleteArea(&Screen);
@@ -1610,7 +1601,7 @@
 		if ((int)title != Default) strcpy(windowTitle, title);
 
 		if (_consoleFontWidth < 2)
-			Error(L"The minimum font height is 2!", __LINE__);
+			Error("The minimum font height is 2!", __LINE__);
 
 		if (_firstInitialize)
 		{
@@ -1621,8 +1612,8 @@
 			hConsoleOutput = GetStdHandle(STD_OUTPUT_HANDLE);
 			hConsoleInput = GetStdHandle(STD_INPUT_HANDLE);
 
-			if (hConsoleOutput == INVALID_HANDLE_VALUE) Error(L"Retreiving Console Output Handle Failed", __LINE__);
-			if (hConsoleInput == INVALID_HANDLE_VALUE) Error(L"Retreiving Console Input Handle Failed", __LINE__);
+			if (hConsoleOutput == INVALID_HANDLE_VALUE) Error("Retreiving Console Output Handle Failed", __LINE__);
+			if (hConsoleInput == INVALID_HANDLE_VALUE) Error("Retreiving Console Input Handle Failed", __LINE__);
 
 			ConsoleWindow = GetConsoleWindow();
 
@@ -1630,7 +1621,7 @@
 			initializeKeys();
 
 			if (!QueryPerformanceFrequency(&frequency))
-				Error(L"Getting Performance Frequency Failed!", __LINE__);
+				Error("Getting Performance Frequency Failed!", __LINE__);
 
 			WriteConsoleA(hConsoleOutput, "\x1b[?25l", 7, NULL, NULL); // hide the console cursor
 
@@ -1725,7 +1716,7 @@
 
 		// actual render
 		if (!WriteConsoleA(hConsoleOutput, screenBufferFull, nextSlot, NULL, NULL))
-			Error(L"Rendering failed.", __LINE__);
+			Error("Rendering failed.", __LINE__);
 
 		if (clearScreen) 
 			reset(Screen);
@@ -1758,7 +1749,6 @@
 
 #endif
 
-
 	/*
 	Changelog:
 	keys are now calculated once (in render function)
@@ -1783,6 +1773,14 @@
 	Changed fps to work differently. FPS_TICKS no longer exists. To change how many fps were counted use FPS_COUNTS
 	Variables the user shouldnt touch now begin with "_"
 	Removed Timers. They just aren't needed.
+	Removed rectangleCollide function.
+
+	Removed spaceCollide.
+	Added spaceOverlap
+	Renamed spacePointCollide to spacePointOverlap
+	Added clampSpace()
+
+	Made Error not need wide chars.
 	*/
 
 /*

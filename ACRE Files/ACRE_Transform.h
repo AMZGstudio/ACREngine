@@ -17,7 +17,6 @@
 			bool worldSpacePivot;
 			bool allowDownscaleZoom;
 			float xPivot, yPivot;
-			Key oldStateLMB;
 		} AreaTrans;
 
 		AreaTrans createAT(Area areaData, float x, float y);
@@ -44,22 +43,18 @@ AreaTrans createAT(Area areaData, float x, float y)
 	Space as = calcSpace(ScreenSpace, (int)x, (int)y, areaData.width, areaData.height);
 
 	AreaTrans a;
-	a.x = (float)as.
-		
-		;
+	a.x = (float)as.xStart;
 	a.y = (float)as.yStart;
-	a.opacity = 1;
-
 	a.area = areaData;
 	a.spx = 0, a.spy = 0;
 
+	a.opacity = 1;
 	a.zoom = 1;
-	a.xPivot = (float)areaData.width / 2;
-	a.yPivot = (float)areaData.width / 2;
-	a.worldSpacePivot = false;
+	a.xPivot = (float)areaData.width / 2.0f;
+	a.yPivot = (float)areaData.width / 2.0f;
 
+	a.worldSpacePivot = false;
 	a.allowDownscaleZoom = false;
-	a.oldStateLMB = key(LMB);
 	return a;
 }
 
@@ -107,63 +102,35 @@ void sysDrawAT(AreaTrans* at, Area area)
 	for (int y = 0; y < at->area.height; y++)
 		for (int x = 0; x < at->area.width; x++)
 		{
-			// this is a space, for the square that is created after zooming
-			// the reason we do it this way, is that when using opacity, we have to draw
-			// and calculate each pixel on the bigger square.
-			Space shape;
+			// this is the rectangle for a single pixel, and it is adjusted to the world coordinates.
+			// for now it just has the world coordinates, it will then be filled in further.
+			Space shape = { at->x, at->y, at->x, at->y };
 
-			if (at->zoom == 1) // if there is no zoom, then it is 1 wide
-			{
-				shape.xStart = x, shape.xEnd = x + 1;
-				shape.yStart = y, shape.yEnd = y + 1;
-			}
+			// adust coordinates according to the x and y manipulated by the zoom.
+			shape.xStart += (int)(x * at->zoom);
+			shape.yStart += (int)(y * at->zoom);
+			shape.xEnd += (int)((x + 1) * at->zoom);
+			shape.yEnd += (int)((y + 1) * at->zoom);
 
-			else // otherwise the size will be dependent on the zoom
-			{
-				shape.xStart = (int)(x * at->zoom);
-				shape.yStart = (int)(y * at->zoom);
-				shape.xEnd = (int)((x + 1) * at->zoom);
-				shape.yEnd = (int)((y + 1) * at->zoom);
-			}
-
-			// create another space, but this one adjusts for actual screen space
-			Space other = { shape.xStart + (int)at->x, shape.yStart + (int)at->y, shape.xEnd + (int)at->x, shape.yEnd + (int)at->y };
-
-			// only draw this space if it collides (is on) with the screen space.
-			if (spaceCollide(areaToDrawOnSpace, other))
+			// only draw this space if it overlaps (is on) with the screen space.
+			if (spaceOverlap(areaToDrawOnSpace, shape))
 			{
 				// even if it collides it is then clamped to not be any bigger than necessary.
-				shape.xStart = (int)(clamp((float)shape.xStart + at->x, 0, (float)area.width) - at->x);
-				shape.yStart = (int)(clamp((float)shape.yStart + at->y, 0, (float)area.height) - at->y);
-				shape.xEnd = (int)(clamp((float)shape.xEnd + at->x, 0, (float)area.width) - at->x);
-				shape.yEnd = (int)(clamp((float)shape.yEnd + at->y, 0, (float)area.height) - at->y);
-
+				clampSpace(&shape, areaToDrawOnSpace);
+			
 				for (int y2 = shape.yStart; y2 < shape.yEnd; y2++)
 					for (int x2 = shape.xStart; x2 < shape.xEnd; x2++)
 					{
-						// if this pixel square is not on the screen, continue
-						if (x2 + at->x > area.width || x2 + at->x < 0)
-							continue;
-						if (y2 + at->y > area.height || y2 + at->y < 0)
-							continue;
-
 						int area_i = y * at->area.width + x;
-
-						// note the at-x < 0 ? 1:0 part is because when x & y are in the negative domain, integers get
-						// rounded weirdly, and therefore this corrects them. (fixes camera glitches)
-						int xUse = (int)at->x + (int)x2 - (at->x < 0 ? 1 : 0);
-						int yUse = (int)at->y + (int)y2 - (at->y < 0 ? 1 : 0);
-
-						int screen_i = (yUse) * (Screen.width) + (xUse);
+						int screen_i = y2 * Screen.width + x2;
 
 						short color = calculateColor(at->area.colBack[area_i], area.colBack[screen_i], at->opacity);
 
 						// finally draw each point in the square.
-						sysDrawPoint((int)at->x + x2, (int)at->y + y2, area,
+						sysDrawPoint(x2, y2, area,
 							at->area.drawText ? at->area.characters[area_i] : Default,
 							at->area.drawFront ? at->area.colFront[area_i] : Default,
-							at->area.drawBack ? color : Default
-						);
+							at->area.drawBack ? color : Default );
 					}
 			}
 		}
@@ -229,31 +196,18 @@ void calculateAT(AreaTrans* at)
 {
 	setPivotAT(at, (float)Mouse.x, (float)Mouse.y, true);
 	
-	Key keyState = key(LMB);
-
-	if (keyState.held && !at->oldStateLMB.held)
+	if (key(LMB).pressed)
 		at->spx = (float)Mouse.x, at->spy = (float)Mouse.y;
 	
-	if (keyState.held)
+	if (key(LMB).held)
 	{
 		at->x += (Mouse.x - at->spx);
 		at->y += (Mouse.y - at->spy);
 		at->spx = (float)Mouse.x, at->spy = (float)Mouse.y;
 	}
 	
-	if (Mouse.scrollH < 0 || Mouse.scrollH > 0)
-	{
+	if (Mouse.scrollH != 0)
 		sysChangeZoomAT(at, Mouse.scrollH > 0 ? 1.05f : 0.95f, true);
-		/*if (!at->allowDownscaleZoom)
-			if (at->zoom < 1)
-			{
-				at->zoom = 1;
-				
-			}*/
-
-	}
-	
-	at->oldStateLMB = key(LMB);
 }
 
 void flipArea(Area ar)
@@ -273,4 +227,3 @@ void flipArea(Area ar)
 #else
 #error You need to use a ACRE 3.0 Compatible version
 #endif
-
