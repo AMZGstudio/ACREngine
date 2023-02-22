@@ -1,31 +1,35 @@
-#define ACRE_START // only do this in the main file.
+//#define ACRE_FULLSCREEN
+#define ACRE_ALLOW_RESIZE
+#define ACRE_START 
 #include "../acre files/ACREngine.h"
+
+#define ACRE_FONTS
+#include "../ACRE Files/ACRE_Fonts.h"
 
 void start()
 {
-    // we create the screen, with the window title, dimensions, the text foreground, and background color. over here, its black text on a white background.
-    initialize("Demo Game", 200, 100, 4, 4, Black, White); // TIP: write Default, for default foreground and background.
+    initialize("Command Prompt", Default, Default, Default, Default, Default, Default);
+    
+    char text[100] = { 0 };
+    bool on = true;
+    float level = 0;
 
-    // circle coordinates.
-    float x = 20, y = 20;
-
-    // keep on running the game loop, as long as the escape key is not pressed.
-    while (key(Esc).pressed == false)
+    while (true)
     {
-        // draw a circle on the screen, with the coordinates of x and y, and the radius of 15.
-        drawCircle(x, y, 15, Blue);
+        level += timePerSec(1);
+        if (level >= 0.5)
+            level = 0, on = !on;
 
-        // check if any of the WASD keys are pressed, and move the x and y of the circle accordingly.
-        // timePerSec adds the correct amount to the coordinates, to make them move 40 units every second.
-        if (key(W).held) y -= timePerSec(40);
-        if (key(S).held) y += timePerSec(40);
-        if (key(A).held) x -= timePerSec(40);
-        if (key(D).held) x += timePerSec(40);
+        drawText(0, 0, "Microsoft Windows [Version 10.0.22623.1325]\n(c) Microsoft Corporation. All rights reserved.", DefaultFont, White);
+        drawText(0, 3, "C:\\Users\\test0>", DefaultFont, White);
 
-        // render to screen, true tells it to clear the screen after rendering.
+        textBoxInput(text, 100);
+        drawText(16, 3, text, DefaultFont, Red);
+
+        if (on)
+        sysDrawPoint(16 + strlen(text), 3, Screen, Default, Default, Grey);
+
         render(true);
     }
-
-    //close the API, (stops memory from leaking)
     terminateACRE();
 }

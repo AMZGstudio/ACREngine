@@ -78,7 +78,6 @@
 		#include <winbase.h>
 		#include <wincon.h>
 		#include <stdbool.h>
-		#include <stdarg.h>
 		#include <ctype.h>
 
 		#ifdef __GNUC__
@@ -119,11 +118,11 @@
 
 	// all structs used by ACRE
 	typedef struct Point { int x, y; } Point;
-	typedef struct Space { int startX, startY, endX, endY; } Space;
+	typedef struct Space { int xStart, yStart, xEnd, yEnd; } Space;
 	typedef struct MOUSE { int x, y; int scrollH, scrollW; } MOUSE;
 	typedef struct Font { int _w, width, height, spacingX, spacingY; const unsigned char *data; } Font;
 	typedef struct Area { int width, height; short* colFront, * colBack; char* characters; bool drawFront, drawBack, drawText; } Area;
-	typedef struct Key {bool pressed, held, released; int letter;} Key;
+	typedef struct Key { bool pressed, held, released; char character; int code; } Key;
 	typedef struct Timer { double elapsedTime; } Timer;
 
 	extern Area Screen;
@@ -131,7 +130,7 @@
 	// all enums
 	enum KEYS {
 		A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z, Up, Down, Left, Right,
-		Enter, Esc, LeftM, RightM, Spacebar, Shift, Alt, Tab, Comma, Period, Colon, Slash, QuestionMark, Backspace,
+		Enter, Esc, LMB, RMB, Spacebar, Shift, Alt, Tab, Comma, Period, Colon, Slash, QuestionMark, Backspace,
 		Num0, Num1, Num2, Num3, Num4, Num5, Num6, Num7, Num8, Num9
 	};
 	enum ACRE_TYPES {Thirds = -502, Centered = -501, Default = -1 };
@@ -177,7 +176,6 @@
 	int spHeight(Space space);
 	int Random(int rangeStart, int rangeEnd);
 	float timePerSec(float amount);
-	Space getSpace(Space prevSpace, int xStart, int yStart, int xEnd, int yEnd);
 	Space calcSpace(Space prevSpace, int xStart, int yStart, int width, int height);
 	void calculateTimer(Timer* timer);
 	Timer createTimer();
@@ -202,51 +200,48 @@
 	int getPointFront(int x, int y);
 	int getPointBack(int x, int y);
 	
-	Point sysDrawPoint(int x, int y, Area area, char character, int colorFront, int colorBack);
-	void sysDrawRect(int xStart, int yStart, int xEnd, int yEnd, Area area, bool filled, char character, int colorFront, int colorBack);
-	void sysDrawCircle(int x, int y, Area area, int radius, char character, bool filled, int colorFront, int colorBack);
-	void sysDrawLine(int xStart, int yStart, int xEnd, int yEnd, Area area, char character, int colorFront, int colorBack);
-	void sysDrawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, Area area, bool filled, char character, int colorFront, int colorBack);
-	void sysDrawText(int x, int y, Area area, const char* text, Font fontType, int colorFront, int colorBack);
-	void sysDrawNumber(int x, int y, Area area, double number, int numDecimal, Font fontType, int colorFront, int colorBack);
+	Point sysDrawPoint(int x, int y, Area area, char character, short front_color, short back_color);
+	void sysDrawRect(int xStart, int yStart, int xEnd, int yEnd, Area area, bool filled, char character, short front_color, short back_color);
+	void sysDrawCircle(int x, int y, Area area, int radius, bool filled, char character, short front_color, short back_color);
+	void sysDrawLine(int xStart, int yStart, int xEnd, int yEnd, Area area, char character, short front_color, short back_color);
+	void sysDrawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, Area area, bool filled, char character, short front_color, short back_color);
+	void sysDrawText(int x, int y, Area area, const char* text, Font fontType, short front_color, short back_color);
+	void sysDrawNumber(int x, int y, Area area, double number, int numDecimal, Font fontType, short front_color, short back_color);
 	void sysDrawArea(int x, int y, Area area, Area areaToDraw);
 	void sysDrawPartialArea(int x, int y, Area area, Area areaToDraw, int startAreaX, int startAreaY, int endAreaX, int endAreaY);
-
-	Space spDrawPixel(int x, int y, Space space, int color);
-	Space spDrawChar(int x, int y, Space space, char character, int color);
-	Space spDrawRect(int xStart, int yStart, int xEnd, int yEnd, Space space, int color);
-	Space spDrawRectFilled(int xStart, int yStart, int xEnd, int yEnd, Space space, int color);
-	Space spDrawCircle(int x, int y, Space space, int radius, short color);
-	Space spDrawCircleFilled(int x, int y, Space space, int radius, short color);
-	Space spDrawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, Space space, int color);
-	Space spDrawTriangleFilled(int x1, int y1, int x2, int y2, int x3, int y3, Space space, int color);
-	Space spDrawLine(int xStart, int yStart, int xEnd, int yEnd, Space space, int color);
-	Space spDrawText(int x, int y, Space space, const char* text, Font fontType, int color);
-	Space spDrawNumber(int x, int y, Space space, double number, int numDecimal, Font fontType, int color);
+	
+	Space spDrawPixel(int x, int y, Space space, short color);
+	Space spDrawChar(int x, int y, Space space, char character, short color);
+	Space spDrawRect(int xStart, int yStart, int xEnd, int yEnd, Space space, bool filled, short color);
+	Space spDrawCircle(int x, int y, Space space, int radius, bool filled, short color);
+	Space spDrawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, Space space, bool filled, short color);
+	Space spDrawLine(int xStart, int yStart, int xEnd, int yEnd, Space space, short color);
+	Space spDrawText(int x, int y, Space space, const char* text, Font fontType, short color);
+	Space spDrawNumber(int x, int y, Space space, double number, int numDecimal, Font fontType, short color);
 	Space spDrawArea(int x, int y, Space space, Area areaToDraw);
 	Space spDrawPartialArea(int x, int y, Space space, Area areaToDraw, int startAreaX, int startAreaY, int endAreaX, int endAreaY);
 
-	Space drawPixel(int x, int y, int color);
-	Space drawChar(int x, int y, char character, int color);
-	Space drawRect(int xStart, int yStart, int xEnd, int yEnd, int color);
-	Space drawRectFilled(int xStart, int yStart, int xEnd, int yEnd, int color);
-	Space drawCircle(int x, int y, int radius, int color);
-	Space drawCircleFilled(int x, int y, int radius, int color);
+	Space drawPixel(int x, int y, short color);
+	Space drawChar(int x, int y, char character, short color);
+	Space drawRect(int xStart, int yStart, int xEnd, int yEnd, short color);
+	Space drawRectFilled(int xStart, int yStart, int xEnd, int yEnd, short color);
+	Space drawCircle(int x, int y, int radius, short color);
+	Space drawCircleFilled(int x, int y, int radius, short color);
 
-	void drawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, int color);
-	void drawTriangleFilled(int x1, int y1, int x2, int y2, int x3, int y3, int color);
+	Space drawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, short color);
+	Space drawTriangleFilled(int x1, int y1, int x2, int y2, int x3, int y3, short color);
 
-	Space drawLine(int xStart, int yStart, int xEnd, int yEnd, int color);
-	Space drawText(int x, int y, const char* text, Font fontType, int color);
-	Space drawNumber(int x, int y, double number, Font fontType, int color);
+	Space drawLine(int xStart, int yStart, int xEnd, int yEnd, short color);
+	Space drawText(int x, int y, const char* text, Font fontType, short color);
+	Space drawNumber(int x, int y, double number, Font fontType, short color);
 	Space drawArea(int x, int y, Area areaToDraw);
 	Space drawPartialArea(int x, int y, Area areaToDraw, int startAreaX, int startAreaY, int endAreaX, int endAreaY);
 
 	void reset(Area area);
 	Key key(int whichKey);
-	bool textBoxInput(char* outputString, int outputStringLength);
+	bool textBoxInput(char* outputString, size_t length);
 
-	Area createArea(int width, int height, short colorFront, short colorBack);
+	Area createArea(int width, int height, short front_color, short back_color);
 	void deleteArea(Area* area);
 	void initialize(const char* title, int width, int height, int fontWidth, int fontHeight, int defaultFront, int defaultBack);
 	void render(bool clearScreen);
@@ -261,8 +256,8 @@
 		#define ANSI_STR_LEN 24
 		#define AMOUNT_KEYS 54
 
-		#ifndef FPS_TICKS
-			#define FPS_TICKS 20
+		#ifndef FPS_COUNTS
+			#define FPS_COUNTS 100
 		#endif
 		#ifndef FONT_WEIGHT
 			#define FONT_WEIGHT 500
@@ -281,19 +276,21 @@
 	#endif
 #endif
 	char* screenBufferFull = NULL, windowTitle[200] = { 0 };
+	size_t nextSlot;
 
-	int nextOpenSlot = 0, globalFontWidth = 12, globalFontHeight = 12;
+	int _consoleFontWidth = 8, _consoleFontHeight = 16;
 	int defaultFrontColor = FRONT_COLOR, defaultBackColor = BACK_COLOR;
-	int defaultScreenWidth = 100, defaultScreenHeight = 50;
+	int defaultScreenWidth = 100, defaultScreenHeight = 30;
 
-	float fps = -1;
-	float totalTimes = 0;
-	int currFPSslot = 0;
-	//bool terminated = true; // bool checkActiveWindow = false, 
-	bool firstInitialize = true;
-	bool needsResizeCorrection = false;
-	bool hasBeenResized = false;
-	bool showDefaultFPS = true;
+	float fps = 0;
+	float _pastPerformance[FPS_COUNTS] = { 0 };
+	unsigned int _countIndex = 0;
+
+	bool _firstInitialize = true;
+	bool _needsResizeCorrection = false;
+	bool _hasBeenResized = false;
+	bool _finishedFPSLoop = false;
+
 	//windows handles
 	HANDLE hConsoleOutput, hConsoleInput;
 	HWND ConsoleWindow;
@@ -343,7 +340,7 @@
 		{0x00,0x00,0x3F,0x19,0x0C,0x26,0x3F,0x00},{0x38,0x0C,0x0C,0x07,0x0C,0x0C,0x38,0x00},{0x18,0x18,0x18,0x00,0x18,0x18,0x18,0x00},
 		{0x07,0x0C,0x0C,0x38,0x0C,0x0C,0x07,0x00},{0x6E,0x3B,0x00,0x00,0x00,0x00,0x00,0x00},{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00}
 	};
-	Font EightBit = { 8, 8, 8, 1, 1, (const unsigned char*)font8x8_basic }; //sysDrawFontChar(x, y, Screen, EIGHT_BIT, text[slot], colorFront, colorBack);
+	Font EightBit = { 8, 8, 8, 1, 1, (const unsigned char*)font8x8_basic }; //sysDrawFontChar(x, y, Screen, EIGHT_BIT, text[slot], front_color, back_color);
 	Font DefaultFont = { 0, 1, 1, 0, 0, NULL };
 	Timer timer = { 0 };
 	/*-------------------------------------------*\
@@ -351,10 +348,10 @@
 	\*-------------------------------------------*/
 
 	// used for sysDrawTri-angle
-	void simple_draw_line(int x1, int x2, unsigned int y, Area area, char charater, int colorFront, int colorBack)
+	void simple_draw_line(int x1, int x2, unsigned int y, Area area, char charater, short front_color, short back_color)
 	{
 		if (x1 >= x2) SWAP(x1, x2);
-		for (; x1 <= x2; x1++) sysDrawPoint(x1, y, area, charater, colorFront, colorBack);
+		for (; x1 <= x2; x1++) sysDrawPoint(x1, y, area, charater, front_color, back_color);
 	}
 	
 	void Error(const wchar_t* errorMsg, int line)
@@ -374,7 +371,7 @@
 	{
 		if (mode == X)
 		{
-			int screenSpaceWidth = screenSpace.endX - screenSpace.startX;
+			int screenSpaceWidth = screenSpace.xEnd - screenSpace.xStart;
 			float halfWayThrough = (float)screenSpaceWidth / 2.0f;
 			float halfText = (float)length / 2.0f;
 
@@ -382,7 +379,7 @@
 		}
 		else if (mode == Y)
 		{
-			int screenSpaceWidth = screenSpace.endY - screenSpace.startY; // include the other end.
+			int screenSpaceWidth = screenSpace.yEnd - screenSpace.yStart; // include the other end.
 			float halfWayThrough = (float)screenSpaceWidth / 2.0f;
 			float halfText = (float)length / 2.0f;
 
@@ -391,45 +388,18 @@
 		return -1;
 	}
 
-	Space getSpace(Space prevSpace, int xStart, int yStart, int xEnd, int yEnd)
-	{
-		Space currSpace = { 0,0,0,0 };
-
-		if (xStart == Centered)
-		{
-			currSpace.startX = prevSpace.startX + center(xEnd, prevSpace, X);
-			currSpace.endX = currSpace.startX + xEnd;
-		}
-		else
-		{
-			currSpace.startX = prevSpace.startX + xStart;
-			currSpace.endX = prevSpace.startX + xEnd;
-		}
-		if (yStart == Centered)
-		{
-			currSpace.startY = prevSpace.startY + center(yEnd, prevSpace, Y);
-			currSpace.endY = currSpace.startY + yEnd;
-		}
-		else
-		{
-			currSpace.startY = prevSpace.startY + yStart;
-			currSpace.endY = prevSpace.startY + yEnd;
-		}
-		return currSpace;
-	}
-
 	inline Space calcSpace(Space prevSpace, int xStart, int yStart, int width, int height)
 	{
-		Space sp = { prevSpace.startX, prevSpace.startY, 0, 0  };//prevSpace.startX, prevSpace.startY };
+		Space sp = { prevSpace.xStart, prevSpace.yStart, 0, 0  };//prevSpace.xStart, prevSpace.yStart };
 
-		if (xStart == Centered) sp.startX += center(width, prevSpace, X);
-		else sp.startX += xStart;
+		if (xStart == Centered) sp.xStart += center(width, prevSpace, X);
+		else sp.xStart += xStart;
 
-		if (yStart == Centered) sp.startY += center(height, prevSpace, Y);
-		else sp.startY += yStart;
+		if (yStart == Centered) sp.yStart += center(height, prevSpace, Y);
+		else sp.yStart += yStart;
 
-		sp.endX += sp.startX + width;
-		sp.endY += sp.startY + height;
+		sp.xEnd += sp.xStart + width;
+		sp.yEnd += sp.yStart + height;
 		return sp;
 	}
 	
@@ -439,12 +409,9 @@
 
 	inline int Width(Area area) { return area.width; }
 	inline int Height(Area area) { return area.height; }
-	inline int spWidth(Space space) { return abs(space.endX - space.startX); }
-	inline int spHeight(Space space) { return abs(space.endY - space.startY); }
-	inline int Random(int rangeStart, int rangeEnd)
-	{
-		return (rand() % (rangeEnd - rangeStart + 1)) + rangeStart;
-	}
+	inline int spWidth(Space space) { return abs(space.xEnd - space.xStart); }
+	inline int spHeight(Space space) { return abs(space.yEnd - space.yStart); }
+	inline int Random(int rangeStart, int rangeEnd) { return (rand() % (rangeEnd - rangeStart + 1)) + rangeStart;}
 
 	int txtWidth(const char* string, Font fontType)
 	{
@@ -479,9 +446,9 @@
 
 	bool wasResized()
 	{
-		if (hasBeenResized)
+		if (_hasBeenResized)
 		{
-			hasBeenResized = false;
+			_hasBeenResized = false;
 			return true;
 		}
 		return false;
@@ -696,7 +663,7 @@
 
 	bool pointSpaceCollide(int x, int y, Space screenSpace)
 	{
-		if (x < screenSpace.startX || x >= screenSpace.endX || y < screenSpace.startY || y >= screenSpace.endY)
+		if (x < screenSpace.xStart || x >= screenSpace.xEnd || y < screenSpace.yStart || y >= screenSpace.yEnd)
 			return false;
 		return true;
 	}
@@ -708,7 +675,7 @@
 	}
 	bool spaceCollide(Space space1, Space space2)
 	{
-		return(rectangleCollide(space1.startX, space1.startY, space1.endX, space1.endY, space2.startX, space2.startY, space2.endX, space2.endY));
+		return(rectangleCollide(space1.xStart, space1.yStart, space1.xEnd, space1.yEnd, space2.xStart, space2.yStart, space2.xEnd, space2.yEnd));
 	}
 
 	/*-------------------------------------------*\
@@ -748,40 +715,40 @@
 	|		   System Drawing Functions			  |
 	\*-------------------------------------------*/
 
-	Point sysDrawPoint(int x, int y, Area area, char character, int colorFront, int colorBack)
+	Point sysDrawPoint(int x, int y, Area area, char character, short front_color, short back_color)
 	{
 		Point loc = { x, y };
 		if (x < 0 || y < 0 || x >= area.width || y >= area.height) return loc;
 
 		int slot = y * (area.width) + x;
 
-		if (character != Default)// or invalid color
-			if ((character == '\n' || character > 256 || character <= 0) && character != -1)
+		if (character != Default)
+			if (character == '\n' || character > 256 || character <= 0) // or invalid color
 				Error(L"Tried to add newline (\'\\n\'), or invalid character, to the screen buffer!", __LINE__);
-		else area.characters[slot] = character;
+			else area.characters[slot] = character;
 
-		if (colorFront != Default)
-			if ((colorFront < 0 || colorFront > 255) && colorFront != -1)
+		if (front_color != Default)
+			if (front_color < 0 || front_color > 255)
 				Error(L"Tried to add invalid foreground color, to the screen buffer!", __LINE__);
-		else area.colFront[slot] = colorFront;
+			else area.colFront[slot] = front_color;
 
-		if (colorBack != Default)
-			if ((colorBack < 0 || colorBack  > 255) && colorBack != -1)
+		if (back_color != Default)
+			if (back_color < 0 || back_color  > 255)
 				Error(L"Tried to add invalid background color, to the screen buffer!", __LINE__);
-		else area.colBack[slot] = colorBack;
-			
+			else area.colBack[slot] = back_color;
+		
 		return loc;
 	}
 	
-	void sysDrawRect(int xStart, int yStart, int xEnd, int yEnd, Area area, bool filled, char character, int colorFront, int colorBack)
+	void sysDrawRect(int xStart, int yStart, int xEnd, int yEnd, Area area, bool filled, char character, short front_color, short back_color)
 	{
 		for (int x = xStart; x < xEnd; x++)
 			for (int y = yStart; y < yEnd; y++)
-				if (filled || ((x == xStart || x == xEnd-1) || (y == yStart || y == yEnd-1)))
-					sysDrawPoint(x, y, area, character, colorFront, colorBack);
+				if (filled || ((x == xStart || x == xEnd - 1) || (y == yStart || y == yEnd - 1)))
+					sysDrawPoint(x, y, area, character, front_color, back_color);
 	}
 
-	void sysDrawCircle(int x, int y, Area area, int radius, char character, bool filled, int colorFront, int colorBack)
+	void sysDrawCircle(int x, int y, Area area, int radius, bool filled, char character, short front_color, short back_color)
 	{
 		// this code was modified from the olcConsoleGameEngine on github
 		int xa = 0, ya = radius;
@@ -794,32 +761,32 @@
 				// Modified to draw scan-lines instead of edges
 				for (int ia = x - xa; ia <= x + xa; ia++)
 				{
-					sysDrawPoint(ia, y - ya, area, character, colorFront, colorBack);
-					sysDrawPoint(ia, y + ya, area, character, colorFront, colorBack);
+					sysDrawPoint(ia, y - ya, area, character, front_color, back_color);
+					sysDrawPoint(ia, y + ya, area, character, front_color, back_color);
 				}
 				for (int ia = x - ya; ia <= x + ya; ia++)
 				{
-					sysDrawPoint(ia, y - xa, area, character, colorFront, colorBack);
-					sysDrawPoint(ia, y + xa, area, character, colorFront, colorBack);
+					sysDrawPoint(ia, y - xa, area, character, front_color, back_color);
+					sysDrawPoint(ia, y + xa, area, character, front_color, back_color);
 				}
 			}
 			else
 			{
-				sysDrawPoint(x - xa, y - ya, area, character, colorFront, colorBack);//upper left left
-				sysDrawPoint(x - ya, y - xa, area, character, colorFront, colorBack);//upper upper left
-				sysDrawPoint(x + ya, y - xa, area, character, colorFront, colorBack);//upper upper right
-				sysDrawPoint(x + xa, y - ya, area, character, colorFront, colorBack);//upper right right
-				sysDrawPoint(x - xa, y + ya, area, character, colorFront, colorBack);//lower left left
-				sysDrawPoint(x - ya, y + xa, area, character, colorFront, colorBack);//lower lower left
-				sysDrawPoint(x + ya, y + xa, area, character, colorFront, colorBack);//lower lower right
-				sysDrawPoint(x + xa, y + ya, area, character, colorFront, colorBack);//lower right right
+				sysDrawPoint(x - xa, y - ya, area, character, front_color, back_color);//upper left left
+				sysDrawPoint(x - ya, y - xa, area, character, front_color, back_color);//upper upper left
+				sysDrawPoint(x + ya, y - xa, area, character, front_color, back_color);//upper upper right
+				sysDrawPoint(x + xa, y - ya, area, character, front_color, back_color);//upper right right
+				sysDrawPoint(x - xa, y + ya, area, character, front_color, back_color);//lower left left
+				sysDrawPoint(x - ya, y + xa, area, character, front_color, back_color);//lower lower left
+				sysDrawPoint(x + ya, y + xa, area, character, front_color, back_color);//lower lower right
+				sysDrawPoint(x + xa, y + ya, area, character, front_color, back_color);//lower right right
 			}
 			if (pa < 0) pa += 4 * xa++ + 6;
 			else pa += 4 * (xa++ - ya--) + 10;
 		}
 	}
 
-	void sysDrawLine(int xStart, int yStart, int xEnd, int yEnd, Area area, char character, int colorFront, int colorBack)
+	void sysDrawLine(int xStart, int yStart, int xEnd, int yEnd, Area area, char character, short front_color, short back_color)
 	{
 		// this code is a variation of code written by oneLoneCoder
 		int x, y, dx, dy, dx1, dy1, px, py, xe, ye, i;
@@ -835,7 +802,7 @@
 			else
 				x = xEnd, y = yEnd, xe = xStart;
 
-			sysDrawPoint(x, y, area, character, colorFront, colorBack);
+			sysDrawPoint(x, y, area, character, front_color, back_color);
 
 			for (i = 0; x < xe; i++)
 			{
@@ -847,7 +814,7 @@
 					if ((dx < 0 && dy < 0) || (dx > 0 && dy > 0)) y = y + 1; else y = y - 1;
 					px = px + 2 * (dy1 - dx1);
 				}
-				sysDrawPoint(x, y, area, character, colorFront, colorBack);
+				sysDrawPoint(x, y, area, character, front_color, back_color);
 			}
 		}
 		else
@@ -860,7 +827,7 @@
 			{
 				x = xEnd; y = yEnd; ye = yStart;
 			}
-			sysDrawPoint(x, y, area, character, colorFront, colorBack);
+			sysDrawPoint(x, y, area, character, front_color, back_color);
 
 			for (i = 0; y < ye; i++)
 			{
@@ -872,20 +839,20 @@
 					if ((dx < 0 && dy < 0) || (dx > 0 && dy > 0)) x = x + 1; else x = x - 1;
 					py = py + 2 * (dx1 - dy1);
 				}
-				sysDrawPoint(x, y, area, character, colorFront, colorBack);
+				sysDrawPoint(x, y, area, character, front_color, back_color);
 			}
 		}
 	}
 
-	void sysDrawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, Area area, bool filled, char character, int colorFront, int colorBack)
+	void sysDrawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, Area area, bool filled, char character, short front_color, short back_color)
 	{
 		if (!filled)
 		{
-			sysDrawLine(x1, y1, x2, y2, area, character, colorFront, colorBack);
-			sysDrawLine(x2, y2, x3, y3, area, character, colorFront, colorBack);
-			sysDrawLine(x1, y1, x3, y3, area, character, colorFront, colorBack);
-
+			sysDrawLine(x1, y1, x2, y2, area, character, front_color, back_color);
+			sysDrawLine(x2, y2, x3, y3, area, character, front_color, back_color);
+			sysDrawLine(x1, y1, x3, y3, area, character, front_color, back_color);
 		}
+
 		else //https://www.avrfreaks.net/sites/default/files/triangles.c
 		{
 			unsigned int t1x, t2x, y, minx, maxx, t1xp, t2xp;
@@ -954,7 +921,7 @@
 			next2:
 				if (minx > t1x) minx = t1x; if (minx > t2x) minx = t2x;
 				if (maxx < t1x) maxx = t1x; if (maxx < t2x) maxx = t2x;
-				simple_draw_line(minx, maxx, y, area, character, colorFront, colorBack);    // Draw line from min to max points found on the y
+				simple_draw_line(minx, maxx, y, area, character, front_color, back_color);    // Draw line from min to max points found on the y
 				// Now increase y
 				if (!changed1) t1x += signx1;
 				t1x += t1xp;
@@ -1011,7 +978,7 @@
 
 				if (minx > t1x) minx = t1x; if (minx > t2x) minx = t2x;
 				if (maxx < t1x) maxx = t1x; if (maxx < t2x) maxx = t2x;
-				simple_draw_line(minx, maxx, y, area, character, colorFront, colorBack);    // Draw line from min to max points found on the y
+				simple_draw_line(minx, maxx, y, area, character, front_color, back_color);    // Draw line from min to max points found on the y
 				// Now increase y
 				if (!changed1) t1x += signx1;
 				t1x += t1xp;
@@ -1023,43 +990,44 @@
 		}
 	}
 
-	void sysDrawText(int x, int y, Area area, const char* text, Font fontType, int colorFront, int colorBack)
+	void sysDrawText(int x, int y, Area area, const char* text, Font fontType, short front_color, short back_color)
 	{
-		int slot = 0, xPrev = x;
-		while (text[slot] != 0)
+		int xPrev = x;
+		for (size_t i = 0; text[i] != 0; i++)
 		{
-			if (text[slot] == '\n')
+			if (text[i] == '\n')
+			{
 				x = xPrev, y += fontType.height + fontType.spacingY;
+				continue;
+			}
 
+			if (fontType.data == NULL)
+				sysDrawPoint(x, y, area, text[i], front_color, back_color);
+			
 			else
 			{
-				if (fontType.data == NULL) sysDrawPoint(x, y, area, text[slot], colorFront, colorBack);
-				else
-				{
-					const unsigned char* letter = (fontType.data + (((char)text[slot]) - ' ') * fontType._w);
+				const unsigned char* letter = (fontType.data + (((char)text[i]) - ' ') * fontType._w);
 
-					const int num_bits = 8;
-					int yOffset = num_bits - fontType.height - 1;
+				#define NUM_BITS 8
+				int yOffset = NUM_BITS - fontType.height - 1;
 
-					// loop through x and y of data
+				// loop through x and y of data
+				for (int py = yOffset; py < NUM_BITS; py++)
 					for (int px = 0; px < fontType._w; px++)
-						for (int py = yOffset; py < num_bits; py++)
-						{
-							int set = letter[px] & 1 << py;
+					{
+						bool set = letter[px] & 1 << py;
+						int addX = (fontType.data == (const unsigned char*)font8x8_basic) ? py - yOffset : px; // here yOffset is not needed, because its 8 bit
+						int addY = (fontType.data == (const unsigned char*)font8x8_basic) ? px : py - yOffset; // over here it is, because there is more memory than actually used.
 
-							int addX = (fontType.data == (const unsigned char*)font8x8_basic) ? py - yOffset : px; // here yOffset is not needed, because its 8 bit
-							int addY = (fontType.data == (const unsigned char*)font8x8_basic) ? px : py - yOffset; // over here it is, because there is more memory than actually used.
-
-							sysDrawPoint(x + addX, y + addY, area, Default, colorFront, set ? colorBack : Default);
-						}
-				}
-				x += fontType.width + fontType.spacingX;
+						if (set)
+							sysDrawPoint(x + addX, y + addY, area, Default, front_color, back_color);
+					}
 			}
-			slot++;
+			x += fontType.width + fontType.spacingX;
 		}
 	}
 
-	void sysDrawNumber(int x, int y, Area area, double number, int numDecimal, Font fontType, int colorFront, int colorBack)
+	void sysDrawNumber(int x, int y, Area area, double number, int numDecimal, Font fontType, short front_color, short back_color)
 	{
 		if (numDecimal == Default)
 		{
@@ -1076,7 +1044,7 @@
 		strcat(formatText, "f");
 
 		snprintf(text, 30, formatText, number);
-		return sysDrawText(x, y, area, text, fontType, colorFront, colorBack);
+		return sysDrawText(x, y, area, text, fontType, front_color, back_color);
 	}
 
 	void sysDrawArea(int x, int y, Area area, Area areaToDraw)
@@ -1113,123 +1081,82 @@
 	|		   Space Drawing Functions			  |
 	\*-------------------------------------------*/
 
-	Space spDrawPixel(int x, int y, Space space, int color)
+	Space spDrawPixel(int x, int y, Space space, short color)
 	{
-		Space pix = getSpace(space, x, y, x, y);
-		sysDrawPoint(pix.startX, pix.startY, *areaToDrawOn, Default, Default, color);
-		return pix;
+		space = calcSpace(space, x, y, 1, 1);
+		sysDrawPoint(space.xStart, space.yStart, *areaToDrawOn, Default, Default, color);
+		return space;
 	}
-	Space spDrawChar(int x, int y, Space space, char character, int color)
+	Space spDrawChar(int x, int y, Space space, char character, short color)
 	{
-		Space chr = getSpace(space, x, y, x, y);
-		sysDrawPoint(chr.startX, chr.startY, *areaToDrawOn, character, color, Default);
-		return chr;
+		space = calcSpace(space, x, y, 1, 1);
+		sysDrawPoint(space.xStart, space.yStart, *areaToDrawOn, character, color, Default);
+		return space;
 	}
 
-	Space spDrawRect(int xStart, int yStart, int xEnd, int yEnd, Space space, int color)
+	Space spDrawRect(int x, int y, int width, int height, Space space, bool filled, short color)
 	{	
-		Space rectLocation = getSpace(space, xStart, yStart, xEnd, yEnd);
-		sysDrawRect(rectLocation.startX, rectLocation.startY, rectLocation.endX, rectLocation.endY, *areaToDrawOn, false, Default, Default, color);
-		return rectLocation;
-	}
-	Space spDrawRectFilled(int xStart, int yStart, int xEnd, int yEnd, Space space, int color)
-	{
-		Space rectLocation = getSpace(space, xStart, yStart, xEnd, yEnd);
-		sysDrawRect(rectLocation.startX, rectLocation.startY, rectLocation.endX, rectLocation.endY, *areaToDrawOn, true, Default, Default, color);
-		return rectLocation;
+		space = calcSpace(space, x, y, width, height);
+		sysDrawRect(space.xStart, space.yStart, space.xEnd, space.yEnd, *areaToDrawOn, filled, Default, Default, color);
+		return space;
 	}
 
-	Space spDrawCircle(int x, int y, Space space, int radius, short color)
+	Space spDrawCircle(int x, int y, Space space, int radius, bool filled, short color)
 	{
-		Space circleSpace = getSpace(space, x == Centered ? x : x - radius, y == Centered ? y : y - radius, x == Centered ? radius : x + radius, y == Centered ? radius : y + radius);
-		sysDrawCircle(x, y, *areaToDrawOn, radius, Default, false, Default, color);
-		return circleSpace;
-	}
-	Space spDrawCircleFilled(int x, int y, Space space, int radius, short color)
-	{
-		Space circleSpace = getSpace(space, x == Centered ? x : x - radius, y == Centered ? y : y - radius, x == Centered ? radius : x + radius, y == Centered ? radius : y + radius);
-		sysDrawCircle(x, y, *areaToDrawOn, radius, Default, true, Default, color);
-		return circleSpace;
+		space = calcSpace(space, x, y, radius * 2, radius * 2);
+		sysDrawCircle(x, y, *areaToDrawOn, radius, filled, Default, Default, color);
+		return space;
 	}
 	
-	Space spDrawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, Space space, int color)
+	Space spDrawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, Space space, bool filled, short color)
 	{
-		int closestX = x1, closestY = y1;
-		int furthestX = x1, furthestY = y1;
+		int closestX = min(x1, min(x2, x3));
+		int closestY = min(y1, min(y2, y3));
+		int furthestX = max(x1, max(x2, x3));
+		int furthestY = max(y1, max(y2, y3));
 
-		if (x2 < closestX) closestX = x2;
-		if (x3 < closestX) closestX = x3;
-		if (y2 < closestY) closestY = y2;
-		if (y3 < closestY) closestY = y3;
-
-		if (x2 > furthestX) furthestX = x2;
-		if (x3 > furthestX) furthestX = x3;
-		if (y2 > furthestY) furthestY = y2;
-		if (y3 > furthestY) furthestY = y3;
-
-		Space triLocation = getSpace(space, closestX, closestY, furthestX, furthestY);
-		sysDrawTriangle(triLocation.startX + x1, triLocation.startY + y1, triLocation.startX + x2, triLocation.startY + y2,
-			triLocation.startX + x3, triLocation.startY + y3, *areaToDrawOn, false, Default, Default, color);
-		return triLocation;
-	}
-	Space spDrawTriangleFilled(int x1, int y1, int x2, int y2, int x3, int y3, Space space, int color)
-	{
-		int closestX = x1, closestY = y1;
-		int furthestX = x1, furthestY = y1;
-
-		if (x2 < closestX) closestX = x2;
-		if (x3 < closestX) closestX = x3;
-		if (y2 < closestY) closestY = y2;
-		if (y3 < closestY) closestY = y3;
-
-		if (x2 > furthestX) furthestX = x2;
-		if (x3 > furthestX) furthestX = x3;
-		if (y2 > furthestY) furthestY = y2;
-		if (y3 > furthestY) furthestY = y3;
-
-		Space triLocation = getSpace(space, closestX, closestY, furthestX, furthestY);
-		sysDrawTriangle(triLocation.startX + x1, triLocation.startY + y1, triLocation.startX + x2, triLocation.startY + y2,
-			triLocation.startX + x3, triLocation.startY + y3, *areaToDrawOn, false, Default, Default, color);
-		return triLocation;
+		space = calcSpace(space, closestX, closestY, furthestX - closestX, furthestY - closestY);
+		sysDrawTriangle(space.xStart+x1,space.yStart+y1,space.xStart+x2,space.yStart+y2,space.xStart+x3,space.yStart+y3, *areaToDrawOn, filled, Default, Default, color);
+		return space;
 	}
 
-	Space spDrawLine(int xStart, int yStart, int xEnd, int yEnd, Space space, int color)
+	Space spDrawLine(int xStart, int yStart, int xEnd, int yEnd, Space space, short color)
 	{
-		Space line = getSpace(space, xStart, yStart, xEnd, yEnd);
-		sysDrawLine(line.startX, line.startY, line.endX, line.endY, *areaToDrawOn, Default, Default, color);
-		return line;
+		space = calcSpace(space, xStart, yStart, xEnd-xStart, yEnd-xEnd);
+		sysDrawLine(space.xStart, space.yStart, space.xEnd, space.yEnd, *areaToDrawOn, Default, Default, color);
+		return space;
 	}
-	Space spDrawText(int x, int y, Space space, const char* text, Font fontType, int color)
+	Space spDrawText(int x, int y, Space space, const char* text, Font fontType, short color)
 	{
-		Space textSpace = calcSpace(space, x, y, txtWidth(text, fontType), txtHeight(text, fontType));
+		space = calcSpace(space, x, y, txtWidth(text, fontType), txtHeight(text, fontType));
+		sysDrawText(space.xStart, space.yStart, *areaToDrawOn, text, fontType, fontType.data == NULL ? color : Default, fontType.data == NULL ? Default : color);
+		return space;
+	}
+	Space spDrawNumber(int x, int y, Space space, double number, int numDecimal, Font fontType, short color)
+	{
+		int count = number < 0 ? 1 : 0, n = (int)number;
 		
-		sysDrawText(textSpace.startX, textSpace.startY, *areaToDrawOn, text, fontType, fontType.data == NULL ? color : Default, fontType.data == NULL ? Default : color);
-		return textSpace;
-	}
-	Space spDrawNumber(int x, int y, Space space, double number, int numDecimal, Font fontType, int color)
-	{
-		int count = number < 0 ? 1 : 0;
-		int n = (int)number;
-		do {(int)(n = n/10), ++count;} 
+		do {(n = n / (int)10), ++count;} 
 		while (n != 0);
-		int textWidth = (count + numDecimal) * fontType.width;
 
-		Space numSpace = getSpace(space, x, y, (x == Centered) ? textWidth : x + textWidth, (y == Centered) ? fontType.width : y + fontType.width);
-		sysDrawNumber(numSpace.startX, numSpace.startY, *areaToDrawOn, number, numDecimal, fontType, Default, color);
-		return numSpace;
+		int textWidth = (count + numDecimal) * (fontType.width + fontType.spacingX) - fontType.spacingX; // because last spacing is not existant.
+
+		space = calcSpace(space, x, y, textWidth, fontType.height); // x is a placeholder, for any letter
+		sysDrawNumber(space.xStart, space.yStart, *areaToDrawOn, number, numDecimal, fontType, Default, color);
+		return space;
 	}
 
 	Space spDrawArea(int x, int y, Space space, Area areaToDraw)
 	{
-		Space areaSpace = getSpace(space, x, y, x == Centered ? areaToDraw.width : x + areaToDraw.width, y == Centered ? areaToDraw.height : y + areaToDraw.height);
-		sysDrawArea(areaSpace.startX, areaSpace.startY, *areaToDrawOn, areaToDraw);
-		return areaSpace;
+		space = calcSpace(space, x, y, areaToDraw.width, areaToDraw.height);
+		sysDrawArea(space.xStart, space.yStart, *areaToDrawOn, areaToDraw);
+		return space;
 	}
 	Space spDrawPartialArea(int x, int y, Space space, Area areaToDraw, int startAreaX, int startAreaY, int endAreaX, int endAreaY)
 	{
-		Space areaSpace = getSpace(space, x, y, x == Centered ? endAreaX - startAreaX : x + endAreaX - startAreaX, y == Centered ? endAreaY - startAreaY : x + endAreaY - startAreaY);
-		sysDrawPartialArea(areaSpace.startX, areaSpace.startY, *areaToDrawOn, areaToDraw, startAreaX, startAreaY, endAreaX, endAreaY);
-		return areaSpace;
+		space = calcSpace(space, x, y, endAreaX - startAreaX, endAreaY - startAreaY);
+		sysDrawPartialArea(space.xStart, space.yStart, *areaToDrawOn, areaToDraw, startAreaX, startAreaY, endAreaX, endAreaY);
+		return space;
 	}
 
 	void clear(Area area)
@@ -1252,22 +1179,22 @@
 	|		   User Drawing Functions			  |
 	\*-------------------------------------------*/
 
-	Space drawPixel(int x, int y, int color)									{ return spDrawPixel(x, y, ScreenSpace, color); }
-	Space drawChar(int x, int y, char character, int color)						{ return spDrawChar(x, y, ScreenSpace, character, color); }
+	Space drawPixel(int x, int y, short color)									{ return spDrawPixel(x, y, ScreenSpace, color); }
+	Space drawChar(int x, int y, char character, short color)						{ return spDrawChar(x, y, ScreenSpace, character, color); }
 
-	Space drawRect(int xStart, int yStart, int xEnd, int yEnd, int color)       { return spDrawRect(xStart, yStart, xEnd, yEnd, ScreenSpace, color); }
-	Space drawRectFilled(int xStart, int yStart, int xEnd, int yEnd, int color) { return spDrawRectFilled(xStart, yStart, xEnd, yEnd, ScreenSpace, color); }
+	Space drawRect(int x, int y, int width, int height, short color)				{ return spDrawRect(x, y, width, height, ScreenSpace, false, color); }
+	Space drawRectFilled(int x, int y, int width, int height, short color)		{ return spDrawRect(x, y, width, height, ScreenSpace, true,  color); }
 	  
-	Space drawCircle(int x, int y, int radius, int color)                       { return spDrawCircle(x, y, ScreenSpace, radius, color);       }
-	Space drawCircleFilled(int x, int y, int radius, int color)                 { return spDrawCircleFilled(x, y, ScreenSpace, radius, color); }
+	Space drawCircle(int x, int y, int radius, short color)                       { return spDrawCircle(x, y, ScreenSpace, radius, false, color); }
+	Space drawCircleFilled(int x, int y, int radius, short color)                 { return spDrawCircle(x, y, ScreenSpace, radius, true,  color); }
 
-	void drawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, int color) { spDrawTriangle(x1, y1, x2, y2, x3, y3, ScreenSpace, color); }
-	void drawTriangleFilled(int x1, int y1, int x2, int y2, int x3, int y3, int color) { spDrawTriangleFilled(x1, y1, x2, y2, x3, y3, ScreenSpace, color); }
+	Space drawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, short color) { return spDrawTriangle(x1, y1, x2, y2, x3, y3, ScreenSpace, false, color); }
+	Space drawTriangleFilled(int x1, int y1, int x2, int y2, int x3, int y3, short color) { return spDrawTriangle(x1, y1, x2, y2,x3,y3,ScreenSpace,true,color); }
 	
-	Space drawLine(int xStart, int yStart, int xEnd, int yEnd, int color)		{ return spDrawLine(xStart, yStart, xEnd, yEnd, ScreenSpace, color); }
-	Space drawText(int x, int y, const char* text, Font fontType, int color)	{ return spDrawText(x, y, ScreenSpace, text, fontType, color); }
+	Space drawLine(int xStart, int yStart, int xEnd, int yEnd, short color)		{ return spDrawLine(xStart, yStart, xEnd, yEnd, ScreenSpace, color); }
+	Space drawText(int x, int y, const char* text, Font fontType, short color)	{ return spDrawText(x, y, ScreenSpace, text, fontType, color); }
 
-	Space drawNumber(int x, int y, double number, Font fontType, int color)		{ return spDrawNumber(x,y,ScreenSpace,number,Default,fontType,color);}
+	Space drawNumber(int x, int y, double number, Font fontType, short color)		{ return spDrawNumber(x,y,ScreenSpace,number,Default,fontType,color);}
 	Space drawArea(int x, int y, Area areaToDraw)								{ return spDrawArea(x, y, ScreenSpace, areaToDraw); }
 	Space drawPartialArea(int x, int y, Area area, int sX,int sY,int eX,int eY) { return spDrawPartialArea(x, y, ScreenSpace, area, sX, sY, eX, eY); }
 	
@@ -1277,75 +1204,50 @@
 
 	Key key(int whichKey)
 	{
-		bool pressed = false;
-		if ((GetAsyncKeyState(allKeys[whichKey].letter) & 0x8000) && isWindowActive())
-			pressed = true;
+		if (whichKey < 0 || whichKey >= AMOUNT_KEYS)
+			Error("Tried to access key that doesn't exist!", __LINE__);
 
-		if (pressed == true && allKeys[whichKey].held == false)
-		{
-			allKeys[whichKey].pressed = true;
-			allKeys[whichKey].released = false;
-		}
-		else if (pressed == false && allKeys[whichKey].held == true)
-			allKeys[whichKey].released = true;
-
-		else
-		{
-			allKeys[whichKey].pressed = false;
-			allKeys[whichKey].released = false;
-		}
-
-		allKeys[whichKey].held = pressed;
 		return allKeys[whichKey];
 	}
 
-	bool textBoxInput(char* outputString, int outputStringLength)
+	void keyCalc(int code, char normal, char shift, char* output)
 	{
-		size_t nextSlot = strlen(outputString);
-		for (int i = 0; i < AMOUNT_KEYS; i++)
-			if (key(i).pressed && isWindowActive())
-			{
-				if (allKeys[i].letter == allKeys[Esc].letter || allKeys[i].letter == allKeys[Enter].letter)
-				{
-					allKeys[i].pressed = false;
-					return false;
-				}
-				else if (allKeys[i].letter == allKeys[Spacebar].letter && (signed)strlen(outputString) < outputStringLength - 1)
-				{
-					outputString[nextSlot] = ' ';
-					break;
-				}
-				else if (allKeys[i].letter == allKeys[Comma].letter)
-					outputString[nextSlot] = ',';
-				
-				else if (allKeys[i].letter == allKeys[Period].letter)
-					outputString[nextSlot] = '.';
-				
-				else if (allKeys[i].letter == allKeys[Colon].letter)
-				{
-					if (key(Shift).held)
-						outputString[nextSlot] = ':';
-					else
-						outputString[nextSlot] = ';';
-				}
-				else if (allKeys[i].letter == allKeys[Slash].letter)
-				{
-					if (key(Shift).held)
-						outputString[nextSlot] = '?';
-					else
-						outputString[nextSlot] = '/';
-				}
-				else if (allKeys[i].letter == allKeys[Backspace].letter)
-					outputString[nextSlot - 1] = 0;
+		if (key(Shift).held && key(code).pressed)
+			output[strlen(output)] = shift;
+		else if (key(code).pressed)
+			output[strlen(output)] = normal;
+	}
 
-				else if ((signed)strlen(outputString) < outputStringLength - 1 && (allKeys[i].letter != allKeys[Shift].letter) && (allKeys[i].letter != allKeys[LeftM].letter) && (allKeys[i].letter != allKeys[RightM].letter) && (allKeys[i].letter != allKeys[Alt].letter))
-				{
-					if (!key(Shift).held)
-						outputString[nextSlot] = tolower(key(i).letter);
-					else 
-						outputString[nextSlot] = key(i).letter;
-				}
-			}
+	bool textBoxInput(char* outputString, size_t length)
+	{
+		if (!isWindowActive() || strlen(outputString) > length - 1)
+			return true;
+		if (allKeys[Esc].pressed || allKeys[Enter].pressed)
+			return false;
+
+		keyCalc(Spacebar, ' ', ' ', outputString);
+		keyCalc(Comma, ',', '<', outputString);
+		keyCalc(Period, '.', '>', outputString);
+		keyCalc(Colon, ';', ':', outputString);
+		keyCalc(Slash, '/', '?', outputString);
+		
+		keyCalc(Num1, '1', '!', outputString);
+		keyCalc(Num2, '2', '@', outputString);
+		keyCalc(Num3, '3', '#', outputString);
+		keyCalc(Num4, '4', '$', outputString);
+		keyCalc(Num5, '5', '%', outputString);
+		keyCalc(Num6, '6', '^', outputString);
+		keyCalc(Num7, '7', '&', outputString);
+		keyCalc(Num8, '8', '*', outputString);
+		keyCalc(Num9, '9', '(', outputString);
+		keyCalc(Num0, '0', ')', outputString);
+
+		if (allKeys[Backspace].pressed)
+			outputString[strlen(outputString)-1] = 0;
+
+		for (int i = A; i <= Z; i++)
+			keyCalc(i, tolower(allKeys[i].character), allKeys[i].character, outputString);
+			
 		return true;
 	}
 
@@ -1353,7 +1255,7 @@
 	|		 Creating And Destroying Areas        |
 	\*-------------------------------------------*/
 
-	Area createArea(int width, int height, short colorFront, short colorBack)
+	Area createArea(int width, int height, short front_color, short back_color)
 	{
 		Area area;
 		area.width = width;
@@ -1368,8 +1270,8 @@
 
 		for (int i = 0; i < (width * height); i++)
 		{
-			area.colFront[i] = colorFront;
-			area.colBack[i] = colorBack;
+			area.colFront[i] = front_color;
+			area.colBack[i] = back_color;
 			area.characters[i] = DEFAULT_CHARACTER;
 		}
 		return area;
@@ -1408,11 +1310,12 @@
 		if (area->width == -1 || area->height == -1)
 			return;
 
+		area->width = -1;
+		area->height = -1;
+
 		free(area->characters);
 		free(area->colFront);
 		free(area->colBack);
-		area->width = -1;
-		area->height = -1;
 		area->characters = NULL;
 		area->colFront = NULL;
 		area->colBack = NULL;
@@ -1468,7 +1371,7 @@
 			return;
 		}
 
-		if (globalFontHeight != globalFontWidth)
+		if (_consoleFontHeight != _consoleFontWidth)
 			Error(L"When using fullscreen in x64, font width and height must be equal!", __LINE__);
 
 		// if it failed, then make the console fullscreen the x64 way.
@@ -1479,8 +1382,8 @@
 		SetWindowLongA(ConsoleWindow, GWL_STYLE, dwStyle & ~WS_OVERLAPPEDWINDOW);
 		SendMessageA(ConsoleWindow, WM_SYSCOMMAND, SC_MAXIMIZE, 0);
 
-		DWORD dwWidth = GetSystemMetrics(SM_CXSCREEN) / globalFontWidth;
-		DWORD dwHeight = GetSystemMetrics(SM_CYSCREEN) / globalFontHeight;
+		DWORD dwWidth = GetSystemMetrics(SM_CXSCREEN) / _consoleFontWidth;
+		DWORD dwHeight = GetSystemMetrics(SM_CYSCREEN) / _consoleFontHeight;
 
 		double ratio = (double)dwWidth / (double)largestSize.X;
 		
@@ -1488,15 +1391,12 @@
 		*y = (int)((double)dwHeight / ratio);
 
 		// Super janky, but works??? it corrects the dimensions depending on the font size
-		if (globalFontHeight == 5 || globalFontHeight == 7 || globalFontHeight == 10 || globalFontHeight == 11 ||
-			globalFontHeight == 14 || globalFontHeight == 29 || globalFontHeight == 30)
+		if (_consoleFontHeight == 5 || _consoleFontHeight == 7 || _consoleFontHeight == 10 || _consoleFontHeight == 11 ||
+			_consoleFontHeight == 14 || _consoleFontHeight == 29 || _consoleFontHeight == 30 || _consoleFontHeight == 17 || _consoleFontHeight == 27)
 			*y += 1;
 
-		if (globalFontHeight == 17 || globalFontHeight == 27)
-			*y -= 1;
-
-		if (globalFontHeight == 22 || globalFontHeight == 23 || globalFontHeight == 24 || globalFontHeight == 26 ||
-			globalFontHeight == 27 || globalFontHeight == 29 || globalFontHeight == 30)
+		if (_consoleFontHeight == 22 || _consoleFontHeight == 23 || _consoleFontHeight == 24 || _consoleFontHeight == 26 ||
+			_consoleFontHeight == 27 || _consoleFontHeight == 29 || _consoleFontHeight == 30)
 			*x -= 1;
 
 		COORD sizeOther = { (short)(*x), (short)(*y) };
@@ -1507,12 +1407,11 @@
 	void dimensionTooBigError(char dimension, int currSize, int maxSize)
 	{
 		wchar_t errMsg[200] = { 0 };
-		#ifdef __GNUC__ // gcc uses different swprintf declaration.
-		swprintf(errMsg, L"%c dimension too big (%d > %d)", dimension, currSize, maxSize);
-		#else
-		swprintf(errMsg, 200, L"%c dimension too big (%d > %d)", dimension, currSize, maxSize);
-		#endif
-
+			#ifdef __GNUC__ // gcc uses different swprintf declaration.
+				swprintf(errMsg, L"%c dimension too big (%d > %d)", dimension, currSize, maxSize);
+			#else
+				swprintf(errMsg, 200, L"%c dimension too big (%d > %d)", dimension, currSize, maxSize);
+			#endif
 		Error(errMsg, __LINE__);
 	}
 
@@ -1521,16 +1420,13 @@
 		COORD largestSize = GetLargestConsoleWindowSize(hConsoleOutput);
 		
 		#ifdef ACRE_FULLSCREEN
-		windowFullscreen(x, y, largestSize);
+			windowFullscreen(x, y, largestSize);
 		#else
 
-		if (Errors)
-		{
-			if (*x > largestSize.X)
-				dimensionTooBigError('X', *x, largestSize.X);
-			if (*y > largestSize.Y)
-				dimensionTooBigError('Y', *y, largestSize.Y);
-		}
+		if (*x > largestSize.X && Errors)
+			dimensionTooBigError('X', *x, largestSize.X);
+		if (*y > largestSize.Y && Errors)
+			dimensionTooBigError('Y', *y, largestSize.Y);
 		
 		int width, height;
 		getConsoleWindowSize(&width, &height);
@@ -1558,9 +1454,10 @@
 	{
 		#ifdef ACRE_IGNORE_ACTIVE_WINDOW
 		return true;
-		#endif
+		#else
 		if (ConsoleWindow == GetForegroundWindow()) return true;
 		return false;
+		#endif
 	}
 
 	void setRequiredModes()
@@ -1587,20 +1484,17 @@
 	void consoleEvents()
 	{
 		//get mouse location
-		INPUT_RECORD irInBuf[300];
+		INPUT_RECORD irInBuf[100];
 		DWORD events = 0;
 
 		// Wait for the events.
 		GetNumberOfConsoleInputEvents(hConsoleInput, &events);
 		if (events > 0)
-			if (!ReadConsoleInput(hConsoleInput, irInBuf, events, &events))
+			if (!ReadConsoleInputA(hConsoleInput, irInBuf, events, &events))
 				Error(L"failed reading console inputs\n", __LINE__);
 
-		bool scrollWMOVED = false, scrollHMOVED = false;
+		bool didResize = false, scrollWMOVED = false, scrollHMOVED = false;
 
-		bool didResize = false;
-
-		// get mouse events
 		for (DWORD i = 0; i < events; i++)
 		{
 			switch (irInBuf[i].EventType)
@@ -1638,15 +1532,14 @@
 
 				resizeArea(wbsr.dwSize.X, wbsr.dwSize.Y, &Screen);
 
-				needsResizeCorrection = true;
-				hasBeenResized = true;
+				_needsResizeCorrection = true;
+				_hasBeenResized = true;
 				didResize = true;
 				
-				ScreenSpace.endX = Screen.width, ScreenSpace.endY = Screen.height;
+				ScreenSpace.xEnd = Screen.width, ScreenSpace.yEnd = Screen.height;
 
 				screenBufferFull = (char*)realloc(screenBufferFull, sizeof(char) * ((Screen.width * Screen.height) * ANSI_STR_LEN + 1));
 				memset(screenBufferFull, 0, sizeof(char) * (Screen.width * Screen.height * ANSI_STR_LEN + 1)); // after allocating the screenBufferFull, empty it out.
-
 			}
 			#endif
 
@@ -1654,18 +1547,16 @@
 			}	
 		}
 
-		if (!didResize && needsResizeCorrection)
+		if (!didResize && _needsResizeCorrection)
 		{
 			int w, h;
 			getConsoleWindowSize(&w, &h);
 			calculateConsoleSize(&w, &h, false);
 
-			needsResizeCorrection = false;
+			_needsResizeCorrection = false;
 		}
-		if (!scrollHMOVED)
-			Mouse.scrollH = 0;
-		if (!scrollWMOVED)
-			Mouse.scrollW = 0;
+		if (!scrollHMOVED) Mouse.scrollH = 0;
+		if (!scrollWMOVED) Mouse.scrollW = 0;
 	}
 
 	void terminateACRE()
@@ -1684,19 +1575,19 @@
 			allKeys[i].held = false;
 			allKeys[i].pressed = false;
 			allKeys[i].released = false;
-			allKeys[i].letter = 0;
+			allKeys[i].character = -1;
 		}
 		
 		for (char letter = 'A'; letter <= 'Z'; letter++)
-			allKeys[letter - 'A'].letter = letter;
+			allKeys[letter - 'A'].code = letter, allKeys[letter - 'A'].character = letter;
 		
-		allKeys[Up].letter = VK_UP, allKeys[Down].letter = VK_DOWN, allKeys[Left].letter = VK_LEFT, allKeys[Right].letter = VK_RIGHT;
-		allKeys[Enter].letter = VK_RETURN, allKeys[Esc].letter = VK_ESCAPE, allKeys[LeftM].letter = VK_LBUTTON, allKeys[RightM].letter = VK_RBUTTON;
-		allKeys[Spacebar].letter = VK_SPACE, allKeys[Shift].letter = VK_SHIFT, allKeys[Alt].letter = VK_MENU, allKeys[Tab].letter = VK_TAB, allKeys[Comma].letter = VK_OEM_COMMA, allKeys[Period].letter = VK_OEM_PERIOD;
-		allKeys[Colon].letter = VK_OEM_1, allKeys[Slash].letter = VK_OEM_2, allKeys[QuestionMark].letter = '?', allKeys[Backspace].letter = VK_BACK;
+		allKeys[Up].code = VK_UP, allKeys[Down].code = VK_DOWN, allKeys[Left].code = VK_LEFT, allKeys[Right].code = VK_RIGHT;
+		allKeys[Enter].code = VK_RETURN, allKeys[Esc].code = VK_ESCAPE, allKeys[LMB].code = VK_LBUTTON, allKeys[RMB].code = VK_RBUTTON;
+		allKeys[Spacebar].code = VK_SPACE, allKeys[Shift].code = VK_SHIFT, allKeys[Alt].code = VK_MENU, allKeys[Tab].code = VK_TAB, allKeys[Comma].code = VK_OEM_COMMA, allKeys[Period].code = VK_OEM_PERIOD;
+		allKeys[Colon].code = VK_OEM_1, allKeys[Slash].code = VK_OEM_2, allKeys[QuestionMark].code = '?', allKeys[Backspace].code = VK_BACK;
 
-		allKeys[Num0].letter = '0', allKeys[Num1].letter = '1', allKeys[Num2].letter = '2', allKeys[Num3].letter = '3', allKeys[Num4].letter = '4';
-		allKeys[Num5].letter = '5', allKeys[Num6].letter = '6', allKeys[Num7].letter = '7', allKeys[Num8].letter = '8', allKeys[Num9].letter = '9';
+		allKeys[Num0].code = '0', allKeys[Num1].code = '1', allKeys[Num2].code = '2', allKeys[Num3].code = '3', allKeys[Num4].code = '4';
+		allKeys[Num5].code = '5', allKeys[Num6].code = '6', allKeys[Num7].code = '7', allKeys[Num8].code = '8', allKeys[Num9].code = '9';
 	}
 
 	void calculateAndSetWindowTitle(char* userTitleName)
@@ -1704,10 +1595,10 @@
 		char currentTitle[200] = { 0 };
 
 		#if defined(ACRE_SHOW_FPS) && !defined(NO_ACRE_WATERMARK)
-			sprintf(currentTitle, "%s - AMZG Studio - ACREngine - %.1f fps", windowTitle, fps);
+			sprintf(currentTitle, "%s - AMZG Studio - ACREngine - %.2f fps", windowTitle, fps);
 
 		#elif defined(ACRE_SHOW_FPS) && defined(NO_ACRE_WATERMARK)
-			sprintf(currentTitle, "%s - %.1f fps", windowTitle, fps);
+			sprintf(currentTitle, "%s - %.2f fps", windowTitle, fps);
 
 		#elif !defined(NO_ACRE_WATERMARK)
 			sprintf(currentTitle, "%s - AMZG Studio - ACREngine", windowTitle);
@@ -1725,18 +1616,22 @@
 		if (width == Default) width = defaultScreenWidth;
 		if (height == Default) height = defaultScreenHeight;
 
-		if (frontColor == Default) frontColor = defaultFrontColor;
-		if (backColor == Default) backColor = defaultBackColor;
+		if (frontColor != Default) defaultFrontColor = frontColor;
+		if (backColor != Default) defaultBackColor = backColor;
 
-		if (fontWidth != Default) globalFontWidth = fontWidth;
-		if (fontHeight != Default) globalFontHeight = fontHeight;
+		if (fontWidth != Default) _consoleFontWidth = fontWidth;
+		if (fontHeight != Default) _consoleFontHeight = fontHeight;
 		if ((int)title != Default) strcpy(windowTitle, title);
 
-		if (fontHeight == 1)
+		if (_consoleFontWidth < 2)
 			Error(L"The minimum font height is 2!", __LINE__);
 
-		if (firstInitialize)
+		if (_firstInitialize)
 		{
+			// initialize the fps stuff
+			_countIndex = 0;
+			for (size_t i = 0; i < FPS_COUNTS; i++) _pastPerformance[i] = 1;
+
 			hConsoleOutput = GetStdHandle(STD_OUTPUT_HANDLE);
 			hConsoleInput = GetStdHandle(STD_INPUT_HANDLE);
 
@@ -1747,25 +1642,28 @@
 
 			setRequiredModes();
 			initializeKeys();
-			printf("\x1b[?25l"); // hide the console cursor
+
+			if (!QueryPerformanceFrequency(&frequency))
+				Error(L"Getting Performance Frequency Failed!", __LINE__);
+
+			WriteConsoleA(hConsoleOutput, "\x1b[?25l", 7, NULL, NULL); // hide the console cursor
 
 			areaToDrawOn = &Screen;
-			firstInitialize = false;
+			_firstInitialize = false;
 		}
 
-		SetFont(globalFontWidth, globalFontHeight, FONT_WEIGHT, 65001);
+		SetFont(_consoleFontWidth, _consoleFontHeight, FONT_WEIGHT, 65001);
 		calculateConsoleSize(&width, &height, true);
 		calculateAndSetWindowTitle(windowTitle);
 
 		deleteArea(&Screen);
 		Screen = createArea(width, height, defaultFrontColor, defaultBackColor);
-		ScreenSpace.endX = Screen.width, ScreenSpace.endY = Screen.height;
+		ScreenSpace.xEnd = Screen.width, ScreenSpace.yEnd = Screen.height;
 		
 		// realloc, so that if initialize is called more than once, we dont leak memory
 		screenBufferFull = (char*)realloc(screenBufferFull, sizeof(char) * ((Screen.width * Screen.height) * ANSI_STR_LEN + 1));
 		memset(screenBufferFull, 0, sizeof(char) * (Screen.width * Screen.height * ANSI_STR_LEN + 1)); // after allocating the screenBufferFull, empty it out.
 				
-		//resizeCorrect();
 		QueryPerformanceCounter(&liStart);
 		srand((unsigned int)liStart.QuadPart);
 	}
@@ -1773,108 +1671,100 @@
 	/*-------------------------------------------*\
 	|		     Functions for Rendering	  	  |
 	\*-------------------------------------------*/
-
-	static inline void addSingleColor(short color)
+	
+	static inline void addString(char* string, size_t size)
 	{
-		char buffer[8] = { 0 };
-		_itoa((int)color, buffer, 10);
-		strncpy(screenBufferFull + nextOpenSlot, buffer, 3);
-		nextOpenSlot += 3;
+		memcpy(&screenBufferFull[nextSlot], string, size);
+		nextSlot += size;
 	}
 
-	static inline void addColorToBuffer(int foregroundColor, int backgroundColor)
+	static inline void addSingleColor(char* before, unsigned char color)
 	{
-		// if nothing needs to be changed, then just exit
-		if (foregroundColor == Default && backgroundColor == Default)
-			return;
-
-		screenBufferFull[nextOpenSlot] = '\033', screenBufferFull[nextOpenSlot + 1] = '[';
-		nextOpenSlot += 2;
-
-		if (foregroundColor != Default)
-		{
-			memcpy(&screenBufferFull[nextOpenSlot], "38;5;", 5);
-			nextOpenSlot += 5;
-			
-			addSingleColor(foregroundColor);
-		}
-		if (foregroundColor != Default && backgroundColor != Default) 
-			screenBufferFull[nextOpenSlot] = ';', nextOpenSlot++;
-		
-		if (backgroundColor != Default)
-		{
-			memcpy(&screenBufferFull[nextOpenSlot], "48;5;", 5);
-			nextOpenSlot += 5;
-
-			addSingleColor(backgroundColor);
-		}
-		screenBufferFull[nextOpenSlot] = 'm';
-		nextOpenSlot++;
+		char buffer[4] = { 0 };
+		_itoa(color, buffer, 10);
+		addString(before, 5);
+		addString(buffer, 3);
 	}
 	
+	void calculateKeys()
+	{
+		for (size_t i = 0; i < AMOUNT_KEYS; i++)
+		{
+			bool down = (GetAsyncKeyState(allKeys[i].code) & 0x8000) && isWindowActive();
+			
+			allKeys[i].pressed = false;
+			allKeys[i].released = false;
+
+			if (down && !allKeys[i].held)
+				allKeys[i].pressed = true;
+			
+			if (!down && allKeys[i].held)
+				allKeys[i].released = true;
+		
+			allKeys[i].held = down;
+		}
+	}
+
 	void render(bool clearScreen)
 	{
-		consoleEvents();
-
 		memcpy(screenBufferFull, "\033[0;0H", 6);
-		nextOpenSlot = 6;
+		nextSlot = 6;
 
-		int currentForeground = Default, currentBackground = Default;
-		
-		for (int i = 0; i < Screen.width * Screen.height; i++)
+		short currentForeground = Default, currentBackground = Default;
+		for (size_t i = 0; i < Screen.width * Screen.height; i++)
 		{
-			addColorToBuffer(
-				Screen.colFront[i] != currentForeground ? Screen.colFront[i] : Default, 
-				Screen.colBack[i] != currentBackground ? Screen.colBack[i] : Default);
+			bool drawForeground = Screen.colFront[i] != currentForeground;
+			bool drawBackground = Screen.colBack[i] != currentBackground;
 			
-			if (Screen.colFront[i] != currentForeground)
-				currentForeground = Screen.colFront[i];
-			
-			if (Screen.colBack[i] != currentBackground)
-				currentBackground = Screen.colBack[i];
+			if (drawForeground || drawBackground)
+			{
+				addString("\033[", 2);
 
-			screenBufferFull[nextOpenSlot] = Screen.characters[i];
-			nextOpenSlot++;
+				if (drawForeground)
+					addSingleColor("38;5;", Screen.colFront[i]);
+
+				if (drawForeground && drawBackground)
+					screenBufferFull[nextSlot] = ';', nextSlot++;
+
+				if (drawBackground)
+					addSingleColor("48;5;", Screen.colBack[i]);
+
+				screenBufferFull[nextSlot] = 'm'; nextSlot++; // m is needed for ansi stuff
+
+				currentForeground = Screen.colFront[i];
+				currentBackground = Screen.colBack[i];
+			} 
+			screenBufferFull[nextSlot] = Screen.characters[i]; nextSlot++;
 		}
 
 		// actual render
-		if (!WriteConsoleA(hConsoleOutput, screenBufferFull, nextOpenSlot, NULL, NULL))
+		if (!WriteConsoleA(hConsoleOutput, screenBufferFull, nextSlot, NULL, NULL))
 			Error(L"Rendering failed.", __LINE__);
 
 		if (clearScreen) 
 			reset(Screen);
 
-		if (!QueryPerformanceFrequency(&frequency))
-			Error(L"Getting Performance Frequency Failed!", __LINE__);
-
-		if (!QueryPerformanceCounter(&liEnd))
-			Error(L"Getting Performace Counter Failed!", __LINE__);
-
-		deltaTime = clamp((float)(liEnd.QuadPart - liStart.QuadPart) / (float)frequency.QuadPart, 0, 1);
-		liStart = liEnd;
-
-		if (currFPSslot >= FPS_TICKS)
-		{
-			fps = 1.0f / (totalTimes / currFPSslot);
-			totalTimes = 0;
-			currFPSslot = 0;
-			showDefaultFPS = false;
-		}
-		else if (showDefaultFPS)
-		{
-			fps = 1.0f / (totalTimes / currFPSslot);
-		}
+		consoleEvents();
+		calculateKeys();
 		calculateAndSetWindowTitle(windowTitle);
 
-		totalTimes += deltaTime;
-		currFPSslot++;
-	}
+		QueryPerformanceCounter(&liEnd);
+		deltaTime = clamp((float)(liEnd.QuadPart - liStart.QuadPart) / (float)frequency.QuadPart, 0, 2);
+		liStart = liEnd;
+		
+		if (_countIndex >= FPS_COUNTS) _countIndex = 0, _finishedFPSLoop = true;
+		_pastPerformance[_countIndex++] = deltaTime;
 
+		float totalTime = 0;
+		for (size_t i = 0; i < (_finishedFPSLoop ? FPS_COUNTS : _countIndex); i++)
+			totalTime += _pastPerformance[i];
+
+		fps = 1.0f / (totalTime / (float)(_finishedFPSLoop ? FPS_COUNTS : _countIndex));
+	}
 
 	int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 	{
-		// create a console. Note this project is a windowed application. The reason we do it this way,
-		// is so it will never use the windows terminal, and always the cmd.
+		// create a console. Note this project is a windowed application. The reason we do it this way, is so it will never use the windows terminal, and always the cmd.
 		AllocConsole();
 		start();
 		return 0;
@@ -1882,11 +1772,62 @@
 
 #endif
 
+
 	/*
-	1947
-	1920
-	1950 (After fullscreen x64)
-	1937
-	1973 (Fixed console resizing etc.)
-	1871 (After removing changelog)
+	Changelog:
+	keys are now calculated once (in render function)
+	getSpace removed
+	drawRect functions now uses width, and height
+	textBoxInput now updated signature
+	textBoxInput supports many more keys now.
+
+
+	spDraw...Filled() no longer exist.
+	spDraw...() Now have filled parameter.
+	drawTriangle functions now return space.
+	function color parameters are now shorts
+	Cleaned up renderer.
+	Changed order of parameters in sysDrawCircle (to be more consistent)
+	renamed colorFront to front_color, and colorBack to back_color
+	renamed startX to xStart, startY to yStart, endX to xEnd, endY to yEnd.
+	Renamed LeftM to LMB, renamed RightM to RMB
+	Added character to sysDrawText
+	Cleaned up sysDrawText
+	Cleaned up sysDrawPoint
+	Changed fps to work differently. FPS_TICKS no longer exists. To change how many fps were counted use FPS_COUNTS
+	Variables the user shouldnt touch now begin with "_"
 	*/
+
+/*
+
+TODO: Test if this function is faster
+
+void _byteToStr(unsigned char x, char* s) // modified from https://johnnylee-sde.github.io/Fast-unsigned-integer-to-string/
+	{
+		if (x <= 9) *s = (char)(x | 0x30);
+		else if (x <= 99)
+		{
+			UINT64 low = x;
+			UINT64 ll = ((low * 103) >> 9) & 0x1E; low += ll * 3;
+			ll = ((low & 0xF0) >> 4) | ((low & 0x0F) << 8);
+			*(UINT16*)s = (UINT16)(ll | 0x3030);
+		}
+		else
+		{
+			UINT64 low, ll;
+			UINT32 digits;
+
+			low = x; digits = (low > 999) ? 4 : 3;
+			ll = ((low * 5243) >> 19) & 0xFF; low -= ll * 100;
+			low = (low << 16) | ll;
+			ll = ((low * 103) >> 9) & 0x1E001E; low += ll * 3;
+			ll = ((low & 0x00F000F0) << 28) | (low & 0x000F000F) << 40;
+			ll |= 0x3030303000000000;
+
+			UINT8* p = (UINT8*)&ll;
+			if (digits == 4) *(UINT32*)s = *(UINT32*)(&p[4]);
+			else { *(UINT16*)s = *(UINT16*)(&p[5]); *(((UINT8*)s) + 2) = *(UINT8*)(&p[7]); }
+		}
+	}
+
+*/

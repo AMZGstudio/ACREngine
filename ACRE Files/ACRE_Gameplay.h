@@ -13,8 +13,8 @@
 
 namespace acre // delcarations
 {
-	void sysDrawShadowedText(int x, int y, Area area, std::string txt, Font font, short colorFront, short colorBack);
-	void drawShadowedText(int x, int y, std::string txt, Font font, short colorFront, short colorBack);
+	void sysDrawShadowedText(int x, int y, Area area, std::string txt, Font font, short front_color, short back_color);
+	void drawShadowedText(int x, int y, std::string txt, Font font, short front_color, short back_color);
 	
 	class Renderer
 	{
@@ -197,19 +197,19 @@ namespace acre // delcarations
 
 namespace acre // definitions
 {
-	void sysDrawShadowedText(int x, int y, Area area, std::string txt, Font font, short colorFront, short colorBack)
+	void sysDrawShadowedText(int x, int y, Area area, std::string txt, Font font, short front_color, short back_color)
 	{
 		const char* ctxt = txt.c_str();
 		if (x == Centered) x = Width(area) / 2 - txtWidth(ctxt, font) / 2;
 		if (y == Centered) y = Height(area) / 2 - txtHeight(ctxt, font) / 2;
 
-		sysDrawText(x + 1, y + 1, area, ctxt, font, Default, colorBack);
-		sysDrawText(x, y, area, ctxt, font, Default, colorFront);
+		sysDrawText(x + 1, y + 1, area, ctxt, font, Default, back_color);
+		sysDrawText(x, y, area, ctxt, font, Default, front_color);
 	}
 	
-	void drawShadowedText(int x, int y, std::string txt, Font font, short colorFront, short colorBack)
+	void drawShadowedText(int x, int y, std::string txt, Font font, short front_color, short back_color)
 	{
-		sysDrawShadowedText(x, y, *areaToDrawOn, txt, font, colorFront, colorBack);
+		sysDrawShadowedText(x, y, *areaToDrawOn, txt, font, front_color, back_color);
 	}
 
 	/*-------------------------------------------*\
@@ -497,7 +497,7 @@ namespace acre // definitions
 	inline void Menu::calculations()
 	{
 		int i = 0, y = _tv.y + _tv.area.height * _tv.zoom + 5;
-		bool leftMPressed = key(LeftM).pressed;
+		bool LMBPressed = key(LMB).pressed;
 
 		for (Option& o : _options)
 		{
@@ -509,11 +509,12 @@ namespace acre // definitions
 			Space textSpace = calcSpace(_spOptions, o.x, o.y, txtWidth(o.text.c_str(), _font), txtHeight(o.text.c_str(), _font));
 
 			// adjust colision space by making bounding box bigger
-			textSpace.startX -= _hitSpace;
-			textSpace.startY -= _hitSpace;
+			textSpace.
+				-= _hitSpace;
+			textSpace.yStart -= _hitSpace;
 
-			textSpace.endX += _shadowOffsetX + _hitSpace;
-			textSpace.endY += _shadowOffsetY + _hitSpace;
+			textSpace.xEnd += _shadowOffsetX + _hitSpace;
+			textSpace.yEnd += _shadowOffsetY + _hitSpace;
 
 			if (!_usingKeyboard)
 				deselectOptions();
@@ -524,7 +525,7 @@ namespace acre // definitions
 				_highlighted = i;
 				optionHovered(o);
 
-				if (leftMPressed)
+				if (LMBPressed)
 					optionPressed(o);
 			}
 

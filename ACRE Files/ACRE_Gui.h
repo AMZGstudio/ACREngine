@@ -19,7 +19,7 @@ typedef struct Option {
 
 	Font font;
 	Window* windowBelongTo;
-	bool oldLeftMState;
+	bool oldLMBState;
 } Option;
 
 typedef struct Window {
@@ -67,10 +67,10 @@ Space getWindowSpace(Window* wn)
 	Space w = { 0,0,0,0 };
 	if (wn != NULL)
 	{
-		w.startX = wn->x;
-		w.startY = wn->y;
-		w.endX = wn->x + wn->width;
-		w.endY = wn->y + wn->height;
+		w.xStart = wn->x;
+		w.yStart = wn->y;
+		w.xEnd = wn->x + wn->width;
+		w.yEnd = wn->y + wn->height;
 	}
 	return w;
 }
@@ -78,7 +78,7 @@ Space getWindowSpace(Window* wn)
 Space getWindowSpaceFull(Window* wn)
 {
 	Space w = getWindowSpace(wn);
-	w.startY -= 3;
+	w.yStart -= 3;
 	return w;
 }
 
@@ -125,7 +125,7 @@ Option* createOption(Window* parentWindow)
 	op->type = NULL;
 	op->pressed = false;
 	op->held = false;
-	op->oldLeftMState = false;
+	op->oldLMBState = false;
 	op->font = DefaultFont;
 
 	if (parentWindow != NULL)
@@ -198,16 +198,16 @@ Option* createSlider(Window* parentWindow, int xStart, int yStart, int xEnd, int
 bool calculateWindow(Window* window)
 {
 	bool returnVal = false;
-	bool leftMHeld = key(LeftM).held;
+	bool LMBHeld = key(LMB).held;
 
 	Space titlebar = { window->x, window->y - 3, window->x + window->width, window->y };
 	
-	if ((pointSpaceCollide(Mouse.x, Mouse.y, titlebar) && leftMHeld) || (leftMHeld && window->beingHeld))
+	if ((pointSpaceCollide(Mouse.x, Mouse.y, titlebar) && LMBHeld) || (LMBHeld && window->beingHeld))
 	{
 		if (!window->beingHeld)
 		{
-			window->heldOffsetY = titlebar.startY - Mouse.y + 3;
-			window->heldOffsetX = titlebar.startX - Mouse.x;
+			window->heldOffsetY = titlebar.yStart - Mouse.y + 3;
+			window->heldOffsetX = titlebar.xStart - Mouse.x;
 
 			window->beingHeld = true;
 		}
@@ -218,7 +218,7 @@ bool calculateWindow(Window* window)
 	}
 	/*if (window->resizeable)
 	{
-		if (leftMHeld)
+		if (LMBHeld)
 		{
 			
 		}
@@ -239,11 +239,11 @@ void calculateButton(Option* button)
 						 button->windowBelongTo->x + button->xEnd, 
 						 button->windowBelongTo->y + button->yEnd };
 
-	//sysDrawRect(finalSpace.startX, finalSpace.startY, finalSpace.endX, finalSpace.endY, Screen, Default, false, Default, Red);
-	Key keyState = key(LeftM);
+	//sysDrawRect(finalSpace.xStart, finalSpace.yStart, finalSpace.xEnd, finalSpace.yEnd, Screen, Default, false, Default, Red);
+	Key keyState = key(LMB);
 	if (pointSpaceCollide(Mouse.x, Mouse.y, finalSpace))
 	{
-		if (keyState.held && (!button->oldLeftMState || button->held))
+		if (keyState.held && (!button->oldLMBState || button->held))
 			button->held = true;
 
 		else button->held = false;
@@ -251,11 +251,11 @@ void calculateButton(Option* button)
 	else
 		button->held = false;
 	
-	if (button->oldLeftMState == false && button->held)
+	if (button->oldLMBState == false && button->held)
 		button->pressed = true;
 	else button->pressed = false;
 
-	button->oldLeftMState = keyState.held;
+	button->oldLMBState = keyState.held;
 }
 
 void calculateSlider(Option* slider)
@@ -267,9 +267,9 @@ void calculateSlider(Option* slider)
 
 	slider->sliderVal = clamp(slider->sliderVal, 1, 100);
 
-	if (pointSpaceCollide(Mouse.x, Mouse.y, finalSpace) && key(LeftM).held)
+	if (pointSpaceCollide(Mouse.x, Mouse.y, finalSpace) && key(LMB).held)
 	{
-		slider->sliderVal = map(Mouse.x, finalSpace.startX, finalSpace.endX, 1, 100);
+		slider->sliderVal = map(Mouse.x, finalSpace.xStart, finalSpace.xEnd, 1, 100);
 	}
 }
 
@@ -295,12 +295,12 @@ void drawShade(int xStart, int yStart, int xEnd, int yEnd)
 Space drawWindow(Window* window, bool dark)
 {
 	Space windowSpace = drawRectFilled(window->x, window->y, window->x+window->width, window->y+window->height, dark ? DARK_WINDOW_COL : LIGHT_WINDOW_COL);
-	sysDrawRect(windowSpace.startX, windowSpace.startY-3, windowSpace.endX, windowSpace.startY, Screen, true, Default, Default, dark ? DARK_TITLE_COL : LIGHT_TITLE_COL);
+	sysDrawRect(windowSpace.xStart, windowSpace.yStart-3, windowSpace.xEnd, windowSpace.yStart, Screen, true, Default, Default, dark ? DARK_TITLE_COL : LIGHT_TITLE_COL);
 
-	drawShade(windowSpace.startX, windowSpace.startY-3, windowSpace.endX, windowSpace.endY);
+	drawShade(windowSpace.xStart, windowSpace.yStart-3, windowSpace.xEnd, windowSpace.yEnd);
 
 	if(window->name != NULL)
-		sysDrawText(windowSpace.startX + 2, windowSpace.startY-2, Screen, window->name, DefaultFont, dark ? White : Black, Default);
+		sysDrawText(windowSpace.xStart + 2, windowSpace.yStart-2, Screen, window->name, DefaultFont, dark ? White : Black, Default);
 	
 	return windowSpace;
 }
@@ -313,7 +313,7 @@ Space drawButton(Option* button, bool dark)
 	if (button->held) buttonSpace = spDrawRectFilled(button->xStart, button->yStart, button->xEnd, button->yEnd, windowSpace, dark ? DARK_BUT_ON_COL : LIGHT_BUT_ON_COL);
 	else				  buttonSpace = spDrawRectFilled(button->xStart, button->yStart, button->xEnd, button->yEnd, windowSpace, dark ? DARK_BUT_OF_COL : LIGHT_BUT_OF_COL);
 	
-	drawShade(buttonSpace.startX, buttonSpace.startY, buttonSpace.endX, buttonSpace.endY);
+	drawShade(buttonSpace.xStart, buttonSpace.yStart, buttonSpace.xEnd, buttonSpace.yEnd);
 	spDrawText(Centered, Centered, buttonSpace, button->title, DefaultFont, Black);
 	
 	return buttonSpace;
