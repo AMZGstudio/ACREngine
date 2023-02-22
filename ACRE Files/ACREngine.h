@@ -1220,7 +1220,7 @@
 
 	bool textBoxInput(char* outputString, size_t length)
 	{
-		if (!isWindowActive() || strlen(outputString) > length - 1)
+		if (!isWindowActive() || strlen(outputString) >= length - 1)
 			return true;
 		if (allKeys[Esc].pressed || allKeys[Enter].pressed)
 			return false;
