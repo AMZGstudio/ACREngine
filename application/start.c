@@ -1,7 +1,6 @@
 #define ACRE_FULLSCREEN
 #define ACRE_ALLOW_RESIZE
 
-
 #define ACRE_START 
 #include "../acre files/ACREngine.h"
 

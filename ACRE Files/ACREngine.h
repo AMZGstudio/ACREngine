@@ -123,7 +123,6 @@
 	typedef struct Font { int _w, width, height, spacingX, spacingY; const unsigned char *data; } Font;
 	typedef struct Area { int width, height; short* colFront, * colBack; char* characters; bool drawFront, drawBack, drawText; } Area;
 	typedef struct Key { bool pressed, held, released; char character; int code; } Key;
-	typedef struct Timer { double elapsedTime; } Timer;
 
 	extern Area Screen;
 	extern Space ScreenSpace;
@@ -177,8 +176,6 @@
 	int Random(int rangeStart, int rangeEnd);
 	float timePerSec(float amount);
 	Space calcSpace(Space prevSpace, int xStart, int yStart, int width, int height);
-	void calculateTimer(Timer* timer);
-	Timer createTimer();
 	int strToInt(char* string);
 	void intToStr(char* string, int num);
 	float map(float numberToMap, int numberBegin, int numberEnd, int numberMapStart, int numberMapEnd);
@@ -342,7 +339,7 @@
 	};
 	Font EightBit = { 8, 8, 8, 1, 1, (const unsigned char*)font8x8_basic }; //sysDrawFontChar(x, y, Screen, EIGHT_BIT, text[slot], front_color, back_color);
 	Font DefaultFont = { 0, 1, 1, 0, 0, NULL };
-	Timer timer = { 0 };
+
 	/*-------------------------------------------*\
 	|			 System Only Functions   		  |
 	\*-------------------------------------------*/
@@ -457,17 +454,6 @@
 	float timePerSec(float amount)
 	{
 		return amount * deltaTime;
-	}
-
-	Timer createTimer()
-	{
-		Timer timer;
-		timer.elapsedTime = 0.0f;
-		return timer;
-	}
-	void calculateTimer(Timer* timer)
-	{
-		timer->elapsedTime += deltaTime;
 	}
 
 	float map(float numberToMap, int numberBegin, int numberEnd, int numberMapStart, int numberMapEnd)
@@ -1796,6 +1782,7 @@
 	Cleaned up sysDrawPoint
 	Changed fps to work differently. FPS_TICKS no longer exists. To change how many fps were counted use FPS_COUNTS
 	Variables the user shouldnt touch now begin with "_"
+	Removed Timers. They just aren't needed.
 	*/
 
 /*
