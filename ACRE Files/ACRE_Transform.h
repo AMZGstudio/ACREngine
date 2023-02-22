@@ -1,41 +1,39 @@
 #pragma once
 
-#ifdef ACRE_3_COMPATIBLE
+#ifdef ACRE_31_COMPATIBLE
 	#ifndef ACRE_EX_TRANSFORM
 		#define ACRE_EX_TRANSFORM
 	#endif
 	
-	#ifndef TRANSFORM_INCLUDES
-		#define TRANSFORM_INCLUDES
-		typedef struct AreaTrans {
-			Area area;
-			float zoom;
-			float opacity; // between 0-1
-			float x, y;
-			float spy, spx;
+	typedef struct AreaTrans {
+		Area area;
+		float zoom;
+		float opacity; // between 0-1
+		float x, y;
+		float spy, spx;
 
-			bool worldSpacePivot;
-			bool allowDownscaleZoom;
-			float xPivot, yPivot;
-		} AreaTrans;
+		bool worldSpacePivot;
+		bool allowDownscaleZoom;
+		float xPivot, yPivot;
+	} AreaTrans;
 
-		AreaTrans createAT(Area areaData, float x, float y);
-		short calculateColor(short colorArea, short colorScreen, float opacity);
+	AreaTrans createAT(Area areaData, float x, float y);
+	short calculateColor(short colorArea, short colorScreen, float opacity);
 
-		void setPivotAT(AreaTrans* at, float xPivot, float yPivot, bool worldSpace);
+	void setPivotAT(AreaTrans* at, float xPivot, float yPivot, bool worldSpace);
 
-		void sysDrawAT(AreaTrans* at, Area area);
-		void sysChangeZoomAT(AreaTrans* at, float zoomLevel, bool mulOrSet);
+	void sysDrawAT(AreaTrans* at, Area area);
+	void sysChangeZoomAT(AreaTrans* at, float zoomLevel, bool mulOrSet);
 
-		void drawAT(AreaTrans* at);
-		void setZoomAT(AreaTrans* at, float zoom);
-		void incZoomAT(AreaTrans* at, float zoom);
-		void mulZoomAT(AreaTrans* at, float zoom);
+	void drawAT(AreaTrans* at);
+	void setZoomAT(AreaTrans* at, float zoom);
+	void incZoomAT(AreaTrans* at, float zoom);
+	void mulZoomAT(AreaTrans* at, float zoom);
 
-		void calculateAT(AreaTrans* at);
-		void flipArea(Area ar);
+	void calculateAT(AreaTrans* at);
+	void flipArea(Area ar);
 
-	#endif
+	
 #ifdef ACRE_TRANSFORM
 		
 AreaTrans createAT(Area areaData, float x, float y)
@@ -213,7 +211,7 @@ void calculateAT(AreaTrans* at)
 void flipArea(Area ar)
 {
 	for (int y = 0; y<ar.height; y++)
-		for (int x = 0; x < ar.width/2; x++)
+		for (int x = 0; x < ar.width / 2; x++)
 		{
 			short sideOne = ar.colBack[y * ar.width + x];
 			short sideTwo = ar.colBack[y * ar.width + (ar.width-x-1)];
@@ -225,5 +223,5 @@ void flipArea(Area ar)
 
 #endif
 #else
-#error You need to use a ACRE 3.0 Compatible version
+#error You need to use an ACRE 3.1 compatible version
 #endif

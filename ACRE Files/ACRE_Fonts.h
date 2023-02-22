@@ -46,7 +46,7 @@
 	*/
 #define ACRE_EX_FONTS
 
-#ifdef ACRE_3_COMPATIBLE
+#ifdef ACRE_31_COMPATIBLE
 
 	extern const Font Renew;
 	extern const Font FormPlex12;

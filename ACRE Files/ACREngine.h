@@ -111,7 +111,7 @@
 
 #ifndef ACRE_DECLARATIONS
 #define ACRE_DECLARATIONS
-	#define ACRE_3_COMPATIBLE // its in here, because we only want it to be defined once, regardless of if ACRE_START is defined.
+	#define ACRE_31_COMPATIBLE // its in here, because we only want it to be defined once, regardless of if ACRE_START is defined.
 
 	// used for triangle drawing
 	#define SWAP(x,y) do { (x)=(x)^(y); (y)=(x)^(y); (x)=(x)^(y); } while(0)
@@ -1649,13 +1649,13 @@
 	|		     Functions for Rendering	  	  |
 	\*-------------------------------------------*/
 	
-	static inline void addString(char* string, size_t size)
+	static inline void addString(const char* string, size_t size)
 	{
 		memcpy(&screenBufferFull[nextSlot], string, size);
 		nextSlot += size;
 	}
 
-	static inline void addSingleColor(char* before, unsigned char color)
+	static inline void addSingleColor(const char* before, unsigned char color)
 	{
 		char buffer[4] = { 0 };
 		_itoa(color, buffer, 10);
@@ -1781,6 +1781,9 @@
 	Added clampSpace()
 
 	Made Error not need wide chars.
+
+	ACRE_Gui:
+		Now works across multiple files!
 	*/
 
 /*
