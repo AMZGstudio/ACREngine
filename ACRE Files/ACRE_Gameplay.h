@@ -246,7 +246,7 @@ namespace acre // definitions
 						g -= map(fs == startedFadeOut ? 1 - fadeProgress : fadeProgress, 0, 1, 0, 255);
 						b -= map(fs == startedFadeOut ? 1 - fadeProgress : fadeProgress, 0, 1, 0, 255);
 
-						sysDrawPoint(x, y, Screen, Default, Default, Color(clamp(r, 0, 255), clamp(g, 0, 255), clamp(b, 0, 255)));
+						sysDrawPixel(x, y, Screen, Default, Default, Color(clamp(r, 0, 255), clamp(g, 0, 255), clamp(b, 0, 255)));
 					}
 
 			fadeProgress += timePerSec(fadeIncrement);

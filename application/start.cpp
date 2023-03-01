@@ -1,5 +1,45 @@
+#define ACRE_START
+#define FPS_COUNTS 3
+#define ACRE_SHOW_FPS
+#include "../acre files/ACREngine.h"
+
+void start()
+{
+	initialize("Title", 400, 300, 2, 2, Default, Default);
+
+	while (true)
+	{
+		for (int y = 0; y < Height(Screen); y++)
+			for (int x = 0; x < Width(Screen); x++)
+				drawPixel(x, y, (x) % 256);
+
+
+		render(true);
+	}
+}
+
+/*
+
+Benchmark after updating everything:
+	around 2.03 ms with FPS_COUNTS 3
+
+*/
+
+
+
+
+
+
+
+
+
+
+
+
+/*#define ACRE_FULLSCREEN
 #define ACRE_ALLOW_RESIZE
 #define ACRE_START
+
 #include "../ACRE Files/ACREngine.h"
 
 // Include all of the different ACRE Extensions
@@ -12,14 +52,13 @@
 #define ACRE_FONTS
 #include "../ACRE Files/ACRE_Fonts.h"
 
-#define FILE_NAME "../hb.acre"
-
 void start()
 {
+	const char* fileName = "../harry.acre";
 	bool darkMode = true;
 
 	// start ACRE engine
-	initialize("New Version!", 190, 105, 6, 6, Default, VeryDarkGrey);
+	initialize("New Version!", 190, 105, 8, 8, Default, VeryDarkGrey);
 
 	// ~~~~~~~~~~~ Create Resources ~~~~~~~~~~~~~ //
 	Window* w = createWindow(2, 2, 45, 60, "Sprite Controls");
@@ -35,7 +74,7 @@ void start()
 	Option* slider2 = createSlider(w, Centered, 36, w->width - 4, 5, 1);
 
 	// ~~~~~~~~ Create Transformed Area ~~~~~~~~~ //
-	Area spr = loadSprite(FILE_NAME);
+	Area spr = loadSprite(fileName);
 	AreaTrans at = createAT(spr, Centered, Centered);
 
 	// ~~~~~~~~~~~~~~~ Main Loop ~~~~~~~~~~~~~~~~ //
@@ -76,11 +115,11 @@ void start()
 		drawAT(&at);
 		drawWindowAndContents(w, darkMode);
 
-		sprintf_s(text->title, TEXT_SIZE, "File name:\n%s\n\nZoom scale: %.2f\nOpacity: %.3f\n\nFPS: %.2f", FILE_NAME, at.zoom, at.opacity, fps);
+		sprintf_s(text->title, TEXT_SIZE, "File name:\n%s\n\nZoom scale: %.2f\nOpacity: %.3f\n\nFPS: %.2f", fileName, at.zoom, at.opacity, fps);
 
 		render(true);
 	}
 
 	deleteArea(&spr);
 	terminateACRE();
-}
+}*/

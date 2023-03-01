@@ -197,7 +197,7 @@
 	int getPointFront(int x, int y);
 	int getPointBack(int x, int y);
 	
-	Point sysDrawPoint(int x, int y, Area area, char character, short front_color, short back_color);
+	Point sysDrawPixel(int x, int y, Area area, char character, short front_color, short back_color);
 	void sysDrawRect(int xStart, int yStart, int xEnd, int yEnd, Area area, bool filled, char character, short front_color, short back_color);
 	void sysDrawCircle(int x, int y, Area area, int radius, bool filled, char character, short front_color, short back_color);
 	void sysDrawLine(int xStart, int yStart, int xEnd, int yEnd, Area area, char character, short front_color, short back_color);
@@ -348,7 +348,7 @@
 	void simple_draw_line(int x1, int x2, unsigned int y, Area area, char charater, short front_color, short back_color)
 	{
 		if (x1 >= x2) SWAP(x1, x2);
-		for (; x1 <= x2; x1++) sysDrawPoint(x1, y, area, charater, front_color, back_color);
+		for (; x1 <= x2; x1++) sysDrawPixel(x1, y, area, charater, front_color, back_color);
 	}
 	
 	void Error(const char* errorMsg, int line)
@@ -637,9 +637,7 @@
 	}
 	bool legalArea(Area area)
 	{
-		if (area.width == -1 && area.height == -1)
-			return false;
-		return true;
+		return (area.width != -1 && area.height != -1);
 	}
 
 	/*-------------------------------------------*\
@@ -648,14 +646,11 @@
 
 	bool pointSpaceOverlap(int x, int y, Space screenSpace)
 	{
-		if (x < screenSpace.xStart || x >= screenSpace.xEnd || y < screenSpace.yStart || y >= screenSpace.yEnd)
-			return false;
-		return true;
+		return (x >= screenSpace.xStart && x < screenSpace.xEnd && y >= screenSpace.yStart && y < screenSpace.yEnd);
 	}
 
 	bool spaceOverlap(Space space1, Space space2)
 	{
-		
 		return max(space1.xStart, space2.xStart) < min(space1.xEnd, space2.xEnd)
 			&& max(space1.yStart, space2.yStart) < min(space1.yEnd, space2.yEnd);
 	}
@@ -697,7 +692,7 @@
 	|		   System Drawing Functions			  |
 	\*-------------------------------------------*/
 
-	Point sysDrawPoint(int x, int y, Area area, char character, short front_color, short back_color)
+	Point sysDrawPixel(int x, int y, Area area, char character, short front_color, short back_color)
 	{
 		Point loc = { x, y };
 		if (x < 0 || y < 0 || x >= area.width || y >= area.height) return loc;
@@ -727,7 +722,7 @@
 		for (int x = xStart; x < xEnd; x++)
 			for (int y = yStart; y < yEnd; y++)
 				if (filled || ((x == xStart || x == xEnd - 1) || (y == yStart || y == yEnd - 1)))
-					sysDrawPoint(x, y, area, character, front_color, back_color);
+					sysDrawPixel(x, y, area, character, front_color, back_color);
 	}
 
 	void sysDrawCircle(int x, int y, Area area, int radius, bool filled, char character, short front_color, short back_color)
@@ -743,25 +738,25 @@
 				// Modified to draw scan-lines instead of edges
 				for (int ia = x - xa; ia <= x + xa; ia++)
 				{
-					sysDrawPoint(ia, y - ya, area, character, front_color, back_color);
-					sysDrawPoint(ia, y + ya, area, character, front_color, back_color);
+					sysDrawPixel(ia, y - ya, area, character, front_color, back_color);
+					sysDrawPixel(ia, y + ya, area, character, front_color, back_color);
 				}
 				for (int ia = x - ya; ia <= x + ya; ia++)
 				{
-					sysDrawPoint(ia, y - xa, area, character, front_color, back_color);
-					sysDrawPoint(ia, y + xa, area, character, front_color, back_color);
+					sysDrawPixel(ia, y - xa, area, character, front_color, back_color);
+					sysDrawPixel(ia, y + xa, area, character, front_color, back_color);
 				}
 			}
 			else
 			{
-				sysDrawPoint(x - xa, y - ya, area, character, front_color, back_color);//upper left left
-				sysDrawPoint(x - ya, y - xa, area, character, front_color, back_color);//upper upper left
-				sysDrawPoint(x + ya, y - xa, area, character, front_color, back_color);//upper upper right
-				sysDrawPoint(x + xa, y - ya, area, character, front_color, back_color);//upper right right
-				sysDrawPoint(x - xa, y + ya, area, character, front_color, back_color);//lower left left
-				sysDrawPoint(x - ya, y + xa, area, character, front_color, back_color);//lower lower left
-				sysDrawPoint(x + ya, y + xa, area, character, front_color, back_color);//lower lower right
-				sysDrawPoint(x + xa, y + ya, area, character, front_color, back_color);//lower right right
+				sysDrawPixel(x - xa, y - ya, area, character, front_color, back_color);//upper left left
+				sysDrawPixel(x - ya, y - xa, area, character, front_color, back_color);//upper upper left
+				sysDrawPixel(x + ya, y - xa, area, character, front_color, back_color);//upper upper right
+				sysDrawPixel(x + xa, y - ya, area, character, front_color, back_color);//upper right right
+				sysDrawPixel(x - xa, y + ya, area, character, front_color, back_color);//lower left left
+				sysDrawPixel(x - ya, y + xa, area, character, front_color, back_color);//lower lower left
+				sysDrawPixel(x + ya, y + xa, area, character, front_color, back_color);//lower lower right
+				sysDrawPixel(x + xa, y + ya, area, character, front_color, back_color);//lower right right
 			}
 			if (pa < 0) pa += 4 * xa++ + 6;
 			else pa += 4 * (xa++ - ya--) + 10;
@@ -784,7 +779,7 @@
 			else
 				x = xEnd, y = yEnd, xe = xStart;
 
-			sysDrawPoint(x, y, area, character, front_color, back_color);
+			sysDrawPixel(x, y, area, character, front_color, back_color);
 
 			for (i = 0; x < xe; i++)
 			{
@@ -796,7 +791,7 @@
 					if ((dx < 0 && dy < 0) || (dx > 0 && dy > 0)) y = y + 1; else y = y - 1;
 					px = px + 2 * (dy1 - dx1);
 				}
-				sysDrawPoint(x, y, area, character, front_color, back_color);
+				sysDrawPixel(x, y, area, character, front_color, back_color);
 			}
 		}
 		else
@@ -809,7 +804,7 @@
 			{
 				x = xEnd; y = yEnd; ye = yStart;
 			}
-			sysDrawPoint(x, y, area, character, front_color, back_color);
+			sysDrawPixel(x, y, area, character, front_color, back_color);
 
 			for (i = 0; y < ye; i++)
 			{
@@ -821,7 +816,7 @@
 					if ((dx < 0 && dy < 0) || (dx > 0 && dy > 0)) x = x + 1; else x = x - 1;
 					py = py + 2 * (dx1 - dy1);
 				}
-				sysDrawPoint(x, y, area, character, front_color, back_color);
+				sysDrawPixel(x, y, area, character, front_color, back_color);
 			}
 		}
 	}
@@ -984,7 +979,7 @@
 			}
 
 			if (fontType.data == NULL)
-				sysDrawPoint(x, y, area, text[i], front_color, back_color);
+				sysDrawPixel(x, y, area, text[i], front_color, back_color);
 			
 			else
 			{
@@ -1002,7 +997,7 @@
 						int addY = (fontType.data == (const unsigned char*)font8x8_basic) ? px : py - yOffset; // over here it is, because there is more memory than actually used.
 
 						if (set)
-							sysDrawPoint(x + addX, y + addY, area, Default, front_color, back_color);
+							sysDrawPixel(x + addX, y + addY, area, Default, front_color, back_color);
 					}
 			}
 			x += fontType.width + fontType.spacingX;
@@ -1037,7 +1032,7 @@
 			for (int xs = 0; xs < areaToDraw.width; xs++)
 			{
 				int loc = ys * (areaToDraw.width) + xs;
-				sysDrawPoint(x + xs, y + ys, area, (area.drawText) ? areaToDraw.characters[loc] : Default, (area.drawFront) ? areaToDraw.colFront[loc] : Default, (area.drawBack) ? areaToDraw.colBack[loc] : Default);
+				sysDrawPixel(x + xs, y + ys, area, (area.drawText) ? areaToDraw.characters[loc] : Default, (area.drawFront) ? areaToDraw.colFront[loc] : Default, (area.drawBack) ? areaToDraw.colBack[loc] : Default);
 			}
 	}
 
@@ -1052,7 +1047,7 @@
 			for (int xs = startAreaX; xs < endAreaX; xs++)
 			{
 				int loc = ys * (areaToDraw.width) + xs;
-				sysDrawPoint(x+newX, y+newY, area, areaToDraw.characters[loc], areaToDraw.colFront[loc], areaToDraw.colBack[loc]);
+				sysDrawPixel(x+newX, y+newY, area, areaToDraw.characters[loc], areaToDraw.colFront[loc], areaToDraw.colBack[loc]);
 				newX++;
 			}
 			newX=0, newY++;
@@ -1066,13 +1061,13 @@
 	Space spDrawPixel(int x, int y, Space space, short color)
 	{
 		space = calcSpace(space, x, y, 1, 1);
-		sysDrawPoint(space.xStart, space.yStart, *areaToDrawOn, Default, Default, color);
+		sysDrawPixel(space.xStart, space.yStart, *areaToDrawOn, Default, Default, color);
 		return space;
 	}
 	Space spDrawChar(int x, int y, Space space, char character, short color)
 	{
 		space = calcSpace(space, x, y, 1, 1);
-		sysDrawPoint(space.xStart, space.yStart, *areaToDrawOn, character, color, Default);
+		sysDrawPixel(space.xStart, space.yStart, *areaToDrawOn, character, color, Default);
 		return space;
 	}
 
@@ -1736,7 +1731,8 @@
 		for (size_t i = 0; i < (_finishedFPSLoop ? FPS_COUNTS : _countIndex); i++)
 			totalTime += _pastPerformance[i];
 
-		fps = 1.0f / (totalTime / (float)(_finishedFPSLoop ? FPS_COUNTS : _countIndex));
+		fps = (totalTime);
+		//fps = 1.0f / (totalTime / (float)(_finishedFPSLoop ? FPS_COUNTS : _countIndex));
 	}
 
 	int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
@@ -1761,7 +1757,7 @@
 	spDraw...Filled() no longer exist.
 	spDraw...() Now have filled parameter.
 	drawTriangle functions now return space.
-	function color parameters are now shorts
+	function color parameters are now shorts.
 	Cleaned up renderer.
 	Changed order of parameters in sysDrawCircle (to be more consistent)
 	renamed colorFront to front_color, and colorBack to back_color
@@ -1769,7 +1765,7 @@
 	Renamed LeftM to LMB, renamed RightM to RMB
 	Added character to sysDrawText
 	Cleaned up sysDrawText
-	Cleaned up sysDrawPoint
+	Cleaned up sysDrawPoint and renamed to sysDrawPixel
 	Changed fps to work differently. FPS_TICKS no longer exists. To change how many fps were counted use FPS_COUNTS
 	Variables the user shouldnt touch now begin with "_"
 	Removed Timers. They just aren't needed.
@@ -1784,6 +1780,11 @@
 
 	ACRE_Gui:
 		Now works across multiple files!
+		This extension was completely reworked.
+
+	TODO:
+		Make fullscreen a toggleable option
+
 	*/
 
 /*

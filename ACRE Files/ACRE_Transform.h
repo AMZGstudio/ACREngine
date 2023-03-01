@@ -123,7 +123,7 @@ void sysDrawAT(AreaTrans* at, Area area)
 						short color = calculateColor(at->area.colBack[area_i], area.colBack[screen_i], at->opacity);
 
 						// finally draw each point in the square.
-						sysDrawPoint(x2, y2, area,
+						sysDrawPixel(x2, y2, area,
 							at->area.drawText ? at->area.characters[area_i] : Default,
 							at->area.drawFront ? at->area.colFront[area_i] : Default,
 							at->area.drawBack ? color : Default );
