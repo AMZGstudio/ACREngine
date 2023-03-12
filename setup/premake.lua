@@ -27,9 +27,9 @@ project "Application" -- name of the project
 
    vpaths {
       ["Header Files"] = { "../application/**.h", "../application/**.hpp"},
-      ["ACRE Files"] = { "../acre files/**.h", "../acre files/**.hpp" },
+      ["ACRE Files"] = { "../acre_files/**.h", "../acre_files/**.hpp" },
       ["Source Files"] = {"../application/**.c", "../application/**.cpp"}
    }
   
-   files { "../application/**.c", "../application/**.h", "../application/**.hpp", "../application/**.cpp", "../acre files/**.h", "../acre files/**.hpp" }
+   files { "../application/**.c", "../application/**.h", "../application/**.hpp", "../application/**.cpp", "../acre files/**.h", "../acre_files/**.hpp" }
    targetdir "../build/%{cfg.buildcfg}"
