@@ -4,7 +4,7 @@
 	#define ACRE_EX_TRANSFORM
 	
 	typedef struct AreaTrans {
-		Area area;
+		Area* area;
 		float zoom;
 		float opacity; // between 0-1
 		float x, y;
@@ -15,7 +15,7 @@
 		float xPivot, yPivot;
 	} AreaTrans;
 
-	AreaTrans createAT(Area areaData, float x, float y);
+	AreaTrans createAT(Area* areaData, float x, float y);
 	short calculateColor(short colorArea, short colorScreen, float opacity);
 
 	void setPivotAT(AreaTrans* at, float xPivot, float yPivot, bool worldSpace);
@@ -34,9 +34,9 @@
 	
 #ifdef ACRE_TRANSFORM
 #undef ACRE_TRANSFORM
-AreaTrans createAT(Area areaData, float x, float y)
+AreaTrans createAT(Area* areaData, float x, float y)
 {
-	Space as = calcSpace(ScreenSpace, (int)x, (int)y, areaData.width, areaData.height);
+	Space as = calcSpace(ScreenSpace, (int)x, (int)y, areaData->width, areaData->height);
 
 	AreaTrans a;
 	a.x = (float)as.xStart;
@@ -46,8 +46,8 @@ AreaTrans createAT(Area areaData, float x, float y)
 
 	a.opacity = 1;
 	a.zoom = 1;
-	a.xPivot = (float)areaData.width / 2.0f;
-	a.yPivot = (float)areaData.width / 2.0f;
+	a.xPivot = (float)areaData->width / 2.0f;
+	a.yPivot = (float)areaData->width / 2.0f;
 
 	a.worldSpacePivot = false;
 	a.allowDownscaleZoom = false;
@@ -82,10 +82,10 @@ void setPivotAT(AreaTrans* at, float xPivot, float yPivot, bool worldSpace)
 {
 	at->worldSpacePivot = worldSpace;
 
-	if (xPivot == Centered) at->xPivot = (float)at->area.width / 2.0f;
+	if (xPivot == Centered) at->xPivot = (float)at->area->width / 2.0f;
 	else at->xPivot = xPivot;
 
-	if (yPivot == Centered) at->yPivot = (float)at->area.height / 2.0f;
+	if (yPivot == Centered) at->yPivot = (float)at->area->height / 2.0f;
 	else at->yPivot = yPivot;
 }
 
@@ -95,8 +95,8 @@ void sysDrawAT(AreaTrans* at, Area area)
 		return;
 
 	Space areaToDrawOnSpace = { 0, 0, area.width, area.height };
-	for (int y = 0; y < at->area.height; y++)
-		for (int x = 0; x < at->area.width; x++)
+	for (int y = 0; y < at->area->height; y++)
+		for (int x = 0; x < at->area->width; x++)
 		{
 			// this is the rectangle for a single pixel, and it is adjusted to the world coordinates.
 			// for now it just has the world coordinates, it will then be filled in further.
@@ -117,16 +117,16 @@ void sysDrawAT(AreaTrans* at, Area area)
 				for (int y2 = shape.yStart; y2 < shape.yEnd; y2++)
 					for (int x2 = shape.xStart; x2 < shape.xEnd; x2++)
 					{
-						int area_i = y * at->area.width + x;
+						int area_i = y * at->area->width + x;
 						int screen_i = y2 * Screen.width + x2;
 
-						short color = calculateColor(at->area.colBack[area_i], area.colBack[screen_i], at->opacity);
+						short color = calculateColor(at->area->colBack[area_i], area.colBack[screen_i], at->opacity);
 
 						// finally draw each point in the square.
 						sysDrawPixel(x2, y2, area,
-							at->area.drawText ? at->area.characters[area_i] : Default,
-							at->area.drawFront ? at->area.colFront[area_i] : Default,
-							at->area.drawBack ? color : Default );
+							at->area->drawText ? at->area->characters[area_i] : Default,
+							at->area->drawFront ? at->area->colFront[area_i] : Default,
+							at->area->drawBack ? color : Default );
 					}
 			}
 		}

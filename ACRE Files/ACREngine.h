@@ -169,7 +169,7 @@
 	int Center(int objLength, int worldLength);
 	int Random(int rangeStart, int rangeEnd);
 
-	float timePerSec(float amount);
+	float amntPerSec(float amount);
 	Space calcSpace(Space prevSpace, int xStart, int yStart, int width, int height);
 	void intToStr(char* string, int num);
 	float map(float numberToMap, int numberBegin, int numberEnd, int numberMapStart, int numberMapEnd);
@@ -184,6 +184,8 @@
 	void setDefaultDrawArea(Area* ar);
 	bool legalArea(Area area);
 	bool wasResized();
+
+	// collision functions
 	bool pointSpaceOverlap(int x, int y, Space screenSpace);
 	bool spaceOverlap(Space space1, Space space2);
 	
@@ -196,7 +198,6 @@
 	Color getFrontColor(int x, int y);
 	Color getBackColor(int x, int y);
 	char getChar(int x, int y);
-
 	
 	Point sysDrawPixel(int x, int y, Area area, char character, short front_color, short back_color);
 	void sysDrawRect(int xStart, int yStart, int xEnd, int yEnd, Area area, bool filled, char character, short front_color, short back_color);
@@ -241,7 +242,18 @@
 
 	Area createArea(int width, int height, short front_color, short back_color);
 	void deleteArea(Area* area);
-	void initialize(const char* title, int width, int height, int fontWidth, int fontHeight, Color frontColor, Color backColor);
+	
+	/// <summary>
+	/// This function will initialize ACREngine. It should be the first function called in void start()
+	/// </summary>
+	/// <param name="title"> - string that contains the window title.</param>
+	/// <param name="width"> - the amount of characters wide the console should be.</param>
+	/// <param name="height"> - the amount of characters tall the console should be.</param>
+	/// <param name="fontWidth"> - how many horizontal screen pixels each console character is.</param>
+	/// <param name="fontHeight"> - how many vertical screen pixels each console character is.</param>
+	/// <param name="frontColor"> - The Default foreground color (text color) of the console. (can be Default)</param>
+	/// <param name="backColor"> - The Default background color (pixel color) of the console. (can be Default)</param>
+	void initialize(const char* title, int width, int height, int fontWidth, int fontHeight, short frontColor, short backColor);
 	void render(bool clearScreen);
 	void terminateACRE();
 
@@ -387,7 +399,7 @@
 	inline int Height(Area area) { return area.height; }
 	inline int spWidth(Space space) { return abs(space.xEnd - space.xStart); }
 	inline int spHeight(Space space) { return abs(space.yEnd - space.yStart); }
-	inline int Center(int objLength, int worldLength) { return worldLength / 2 - objLength / 2;}
+	inline int Center(int objLength, int worldLength) { return (worldLength / 2.0f) - (objLength / 2.0f);}
 	inline int Random(int rangeStart, int rangeEnd) { return (rand() % (rangeEnd - rangeStart + 1)) + rangeStart;}
 
 	int txtWidth(const char* string, Font fontType)
@@ -431,7 +443,7 @@
 		return false;
 	}
 
-	float timePerSec(float amount)
+	float amntPerSec(float amount)
 	{
 		return amount * deltaTime;
 	}
@@ -1063,7 +1075,7 @@
 	Space spDrawCircle(int x, int y, Space space, int radius, bool filled, short color)
 	{
 		space = calcSpace(space, x, y, radius * 2, radius * 2);
-		sysDrawCircle(x, y, *areaToDrawOn, radius, filled, Default, Default, color);
+		sysDrawCircle(space.xStart+radius, space.yStart+radius, *areaToDrawOn, radius, filled, Default, Default, color);
 		return space;
 	}
 	
@@ -1324,6 +1336,7 @@
 
 	void _setConsoleFullscreen(bool fullscreen)
 	{
+		_hasBeenResized = true;
 		COORD largestSize;
 		if (fullscreen)
 			getConsoleWindowSize(&_oldWidth, &_oldHeight);
@@ -1450,6 +1463,12 @@
 			ScreenSpace.xEnd = Screen.width, ScreenSpace.yEnd = Screen.height;
 			_needsResizeCorrection = false;
 		}
+
+		int w, h;
+		getConsoleWindowSize(&w, &h);
+
+		if (w != Screen.width || h != Screen.height)
+			setConsoleToSize(w, h, showErrors);
 	}
 
 	void consoleEvents()
@@ -1571,7 +1590,7 @@
 		SetConsoleTitleA(currentTitle);
 	}
 
-	void initialize(const char* title, int width, int height, int fontWidth, int fontHeight, Color frontColor, Color backColor)
+	void initialize(const char* title, int width, int height, int fontWidth, int fontHeight, short frontColor, short backColor)
 	{
 		//set default values
 		if (width == Default) width = defaultScreenWidth;
@@ -1780,13 +1799,22 @@
 	Renamed clamp() to clampFloat() and clampInt()
 	Renamed Error() to _Error()
 	Renamed center() to Center()
+	Renamed timePerSec() to amntPerSec()
 
 	Made _Error not need wide chars.
 	Fixed memory leaks in resizeArea()
+	Fixed bug in spDrawCircle()
+	Fixed wasResized() function.
+
 
 	ACRE_Gui:
 		Now works across multiple files!
 		This extension was completely reworked.
+
+	ACRE_Gameplay:
+		Updated the Renderer.
+		Now can also react to console size changing.
+		function definitions completely different.
 	*/
 
 /*

@@ -1,34 +1,28 @@
+#define ACRE_START
+#define ACRE_SHOW_FPS
+#define ACRE_ALLOW_RESIZE
+#include "../acre files/ACREngine.h"
+
+void start()
+{
+	initialize("Demo", 150, 80, 4, 4, Default, Default);
+
+	while (true)
+	{
+		if (key(Q).pressed)
+			setFullscreen(true);
+		if (key(W).pressed)
+			setFullscreen(false);
+
+		drawText(Centered, Centered, "ACREngine!", EightBit, White);
+		drawPixel(Mouse.x, Mouse.y, Red);
+
+		render(true);
+	}
+}
 
 
-
-//#define ACRE_START
-//#define ACRE_SHOW_FPS
-//#define ACRE_ALLOW_RESIZE
-//#include "../acre files/ACREngine.h"
-//
-//void start()
-//{
-//	initialize("Title", 150, 80, 8, 8, Default, Default);
-//
-//	while (true)
-//	{
-//		if (key(Q).pressed)
-//			setFullscreen(true);
-//		if (key(W).pressed)
-//			setFullscreen(false);
-//
-//		for (int y = 0; y < Height(Screen); y++)
-//			for (int x = 0; x < Width(Screen); x++)
-//				drawPixel(x, y, (y) % 256);
-//
-//		drawNumber(Centered, Centered, Width(Screen), EightBit, White);
-//		drawPixel(Mouse.x, Mouse.y, Red);
-//		render(true);
-//	}
-//}
-
-
-
+/*
 #define ACRE_ALLOW_RESIZE
 #define ACRE_START
 
@@ -90,10 +84,10 @@ void start()
 
 		// do calculations for buttons and sliders. (meaning let them check if they were pressed, etc.)
 		if (calculateButton(b1))
-			slider1->sliderVal += slider1->sliderVal < 100 ? timePerSec(10) : 0;
+			slider1->sliderVal += slider1->sliderVal < 100 ? amntPerSec(10) : 0;
 		
 		if (calculateButton(b2))
-			slider1->sliderVal -= slider1->sliderVal > 1 ? timePerSec(10) : 0;
+			slider1->sliderVal -= slider1->sliderVal > 1 ? amntPerSec(10) : 0;
 
 		calculateButton(b3);
 		calculateSlider(slider1);
@@ -119,3 +113,4 @@ void start()
 
 	deleteArea(&spr);
 }
+*/

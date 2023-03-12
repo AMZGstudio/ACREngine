@@ -1,10 +1,24 @@
 #pragma once
 
-#ifdef ACRE_3_COMPATIBLE
+/*
+How to use this Extension:
+
+
+
+
+
+*/
+
+/*
+Changelog:
+	Updated renderer
+
+*/
+#ifdef ACRE_31_COMPATIBLE
 
 #ifdef ACRE_EX_TRANSFORM
 	#define ACRE_EX_GAMEPLAY
-
+	
 	#include <vector> 
 	#include <string>
 	#include <map>
@@ -18,25 +32,28 @@ namespace acre // delcarations
 	{
 	private:
 		Area _window;
+		AreaTrans _windowAT;
 
-		float fadeProgress;
-		float fadeIncrement;
-
+		float fadeProgress = 0;
 		float timeFromLastShake = 0;
+		
 		int amntShakes = 0;
 		float timeForShake = 10;
 		int shakeState = 0;
 
 		enum fadeState { Neither, startedFadeIn, finished, startedFadeOut };
-		fadeState fs;
+		fadeState fs = Neither;
 
 	public:
+
+		// you are allowed to change this
+		float fadeIncrement = 2;
+
 		static bool doShake;
 
 		Renderer();
 		~Renderer();
 		
-		void draw();
 		void render();
 		void reset();
 
@@ -68,13 +85,6 @@ namespace acre // delcarations
 		void fadeIn();
 	};
 
-	/*
-	Class Notes:
-
-	When creating an option, if you specify the x as Default, it will become Centered.
-	if you specify y as Default, it will add the y to be the next layer down.
-
-	*/
 	class Menu
 	{
 	public:
@@ -88,7 +98,7 @@ namespace acre // delcarations
 	private:
 		// options and options space + font
 		std::vector<Option> _options;
-		Space _spOptions;
+		//Space _spOptions;
 		Font _font;
 
 		// selected option and pressed or not
@@ -98,24 +108,18 @@ namespace acre // delcarations
 		// option specs
 		bool _optionShadow;
 		short _opShadowColor;
+		
 		bool _fade;
 		short _fadeSpeed;
 
-		const int _shadowOffsetX = 1;
-		const int _shadowOffsetY = 1;
-		const int _vSpace = 7; // space in between options (vertical space)
-		const int _hitSpace = 2; // how much bigger text bounding box is
-
-		// area related
-		bool _areaShadow;
-		short _arShadowColor;
 		AreaTrans _tv;
+		bool hasTV;
 
 		// internal
 		bool _usingKeyboard = false;
 
 	protected:
-		virtual void drawOption(Option& op, const bool hovered);
+		virtual void drawOption(Option& op, Space _spOptions, const bool hovered);
 		virtual void optionHovered(Option& op);
 		virtual void optionPressed(Option& op);
 
@@ -123,16 +127,23 @@ namespace acre // delcarations
 		void keyboardCalculations();
 
 	public:
-		Menu(Font optionFont, Space optionSpace, bool optionShadow = true, short shadowColor = DarkGrey, bool fade = true, short fadeSpeed = 800);
+		const int _shadowOffsetX = 1;
+		const int _shadowOffsetY = 1;
+		const int _vSpace = 7;   // space in between options (vertical space)
+		const int _hitSpace = 2; // how much bigger text bounding box is
 
-		void addOption(std::string text, int x, int y); // y can be default
-		void setArea(Area area, int x, int y, float zoom = 1, bool shadow = false, short shadowColor = DarkGrey);
+		Menu(Font optionFont, int normalR, int normalG, int normalB, int hoveredR, int hoveredG, int hoveredB, bool optionShadow = true, short shadowColor = DarkGrey, bool fade = true, short fadeSpeed = 800);
+
+		// When creating an option, if you specify the x as Default, it will become Centered.
+		// if you specify y as Default, it will add the y to be the next layer down.
+		void addOption(std::string text); // y can be default
+		void setArea(Area area, int x, int y, float zoom = 1);
 
 		void drawArea();
-		void drawOptions();
-		void draw();
+		void drawOptions(Space optionSpace);
+		void draw(Space optionSpace);
 
-		void calculations();
+		void calculations(Space optionSpace);
 
 		void deselectOptions();
 		bool pressed() const;
@@ -218,11 +229,8 @@ namespace acre // definitions
 	inline Renderer::Renderer()
 	{
 		_window = createArea(Width(Screen), Height(Screen), Default, Default);
+		_windowAT = createAT(&_window, 0, 0);
 		setDefaultDrawArea(&_window);
-
-		fs = Neither;
-		fadeProgress = 0;
-		fadeIncrement = 2;
 	}
 
 	Renderer::~Renderer()
@@ -231,80 +239,38 @@ namespace acre // definitions
 		setDefaultDrawArea(&Screen);
 	}
 
-	void Renderer::draw()
+	inline void Renderer::render()
 	{
-		if (fs == startedFadeIn || fs == startedFadeOut)
+		if (wasResized())
 		{
-			if (fadeProgress < 1)
-				for (int y = 0; y < Height(Screen); y++)
-					for (int x = 0; x < Width(Screen); x++)
-					{
-						short r, g, b;
-						Xterm(_window.colBack[y * Width(Screen) + x], &r, &g, &b);
+			resizeArea(Screen.width, Screen.height, &_window);
+		}
+		 
+		if (fs == finished)
+			sysDrawRect(0, 0, Screen.width, Screen.height, Screen, true, Default, Default, Black);
 
-						r -= map(fs == startedFadeOut ? 1 - fadeProgress : fadeProgress, 0, 1, 0, 255);
-						g -= map(fs == startedFadeOut ? 1 - fadeProgress : fadeProgress, 0, 1, 0, 255);
-						b -= map(fs == startedFadeOut ? 1 - fadeProgress : fadeProgress, 0, 1, 0, 255);
+		else if (fs == Neither)
+			sysDrawArea(0, 0, Screen, _window);
 
-						sysDrawPixel(x, y, Screen, Default, Default, Color(clamp(r, 0, 255), clamp(g, 0, 255), clamp(b, 0, 255)));
-					}
+		else // its either fading in, or fading out
+		{
+			sysDrawAT(&_windowAT, Screen);
+			
+			fadeProgress += amntPerSec(fadeIncrement);
+			if (fs == startedFadeIn) _windowAT.opacity =1-fadeProgress;
+			if (fs == startedFadeOut) _windowAT.opacity = fadeProgress;
 
-			fadeProgress += timePerSec(fadeIncrement);
 			if (fadeProgress > 1)
 			{
 				fadeProgress = 0;
 				if (fs == startedFadeIn) fs = finished;
 				if (fs == startedFadeOut) fs = Neither;
 			}
-
 		}
 
-		else if (fs == finished)
-		{
-			reset();
-		}
-		else
-		{
-			if (doShake)
-			{
-				timeFromLastShake += timePerSec(timeForShake);
-				if (timeFromLastShake > 1)
-				{
-					timeFromLastShake = 0;
-					shakeState = rand() % 8;
-					amntShakes++;
-				}
-				/*if (amntShakes > 4)
-				{
-					doShake = false;
-					timeFromLastShake = 0;
-					amntShakes = 0;
-
-				}*/
-
-				switch (shakeState)
-				{
-				case 0: sysDrawArea(1, 1, Screen, _window); break;
-				case 1: sysDrawArea(1, 0, Screen, _window); break;
-				case 2: sysDrawArea(0, 1, Screen, _window); break;
-				case 3: sysDrawArea(0, 0, Screen, _window); break;
-				case 4: sysDrawArea(-1, -1, Screen, _window); break;
-				case 5: sysDrawArea(-1, -0, Screen, _window); break;
-				case 6: sysDrawArea(-0, -1, Screen, _window); break;
-				case 7: sysDrawArea(-0, -0, Screen, _window); break;
-				}
-
-			}
-
-			else
-				sysDrawArea(0, 0, Screen, _window);
-
-		}
-	}
-
-	inline void Renderer::render()
-	{
 		::render(false);
+		::reset(Screen);
+		reset();
 	}
 
 	inline void Renderer::reset()
@@ -389,18 +355,18 @@ namespace acre // definitions
 	|				   Menu Class	    		  |
 	\*-------------------------------------------*/
 
-	void Menu::drawOption(Option& op, const bool hovered)
+	void Menu::drawOption(Option& op, Space _spOptions, const bool hovered)
 	{
 		if (_optionShadow)
 			spDrawText(op.x + _shadowOffsetX, op.y + _shadowOffsetY, _spOptions, op.text.c_str(), _font, DarkGrey);
 
-		spDrawText(op.x, op.y, _spOptions, op.text.c_str(), _font, Color(op.r, op.g, op.b));
+		spDrawText(op.x, op.y, _spOptions, op.text.c_str(), _font, calcColor(op.r, op.g, op.b));
 	}
 
 	inline void Menu::optionHovered(Option& op)
 	{
-		short r, g, b;
-		Xterm(Red, &r, &g, &b);
+		Color r, g, b;
+		calcXterm(Red, &r, &g, &b);
 
 		op.r = r;
 		op.g = g;
@@ -416,54 +382,50 @@ namespace acre // definitions
 		_indexPressed = _highlighted;
 	}
 
-	inline Menu::Menu(Font optionFont, Space optionSpace, bool optionShadow, short shadowColor, bool fade, short fadeSpeed)
+	inline Menu::Menu(Font optionFont, int normalR, int normalG, int normalB, int hoveredR, int hoveredG, int hoveredB, bool optionShadow, short shadowColor, bool fade, short fadeSpeed)
 	{
 		_font = optionFont;
 		_font.spacingX = 2;
-
-		_spOptions = optionSpace;
 
 		_optionShadow = optionShadow;
 		_opShadowColor = shadowColor;
 		_optionShadow = optionShadow;
 
+		hasTV = false;
+		_tv = {0};
 		_fade = fade;
 		_fadeSpeed = fadeSpeed;
 	}
 
-	inline void Menu::addOption(std::string text, int x, int y)
+	inline void Menu::addOption(std::string text)
 	{
-		if (x == Default || x == Centered) // calculate X here because we can, not Y, that must be done later
-			x = center(txtWidth(text.c_str(), _font) + _shadowOffsetX, _spOptions, X);
-
-		_options.push_back({ text, x, y });
+		_options.push_back({ text, 0,0 });
 	}
 
-	inline void Menu::setArea(Area area, int x, int y, float zoom, bool shadow, short shadowColor)
+	inline void Menu::setArea(Area area, int x, int y, float zoom)
 	{
-		_areaShadow = shadow;
-		_arShadowColor = shadowColor;
-
-		_tv = createAT(area, x, y);
+		hasTV = true;
+		_tv = createAT(&area, x, y);
 		setPivotAT(&_tv, Centered, Centered, false);
 		setZoomAT(&_tv, zoom);
 	}
 
 	inline void Menu::drawArea()
 	{
-		drawAT(&_tv);
+		if (hasTV)
+			drawAT(&_tv);
 	}
 
-	inline void Menu::drawOptions()
+	inline void Menu::drawOptions(Space optionSpace)
 	{
 		for (auto op = _options.begin(); op < _options.end(); op++)
-			drawOption(*op, (op - _options.begin()) == _highlighted);
+			drawOption(*op, optionSpace, (op - _options.begin()) == _highlighted);
 	}
 
-	inline void Menu::draw()
+	inline void Menu::draw(Space optionSpace)
 	{
 		drawArea();
-		drawOptions();
+		drawOptions(optionSpace);
 	}
 
 	inline void Menu::keyboardCalculations()
@@ -493,23 +455,22 @@ namespace acre // definitions
 		}
 	}
 
-	inline void Menu::calculations()
+	inline void Menu::calculations(Space optionSpace)
 	{
-		int i = 0, y = _tv.y + _tv.area.height * _tv.zoom + 5;
+		int i = 0, y = _tv.y + _tv.area->height * _tv.zoom + 5;
 		bool LMBPressed = key(LMB).pressed;
 
 		for (Option& o : _options)
 		{
 			// correct Y in the case it was default
-			if (o.y == Default)
-				o.y = i * (txtHeight("", _font) + _vSpace + _shadowOffsetX);
+			o.y = i * (txtHeight("", _font) + _vSpace + _shadowOffsetX);
+			o.x = Center(txtWidth(o.text.c_str(), _font) + _shadowOffsetX, spWidth(optionSpace));
 
 			// calculate the collide space for that option
-			Space textSpace = calcSpace(_spOptions, o.x, o.y, txtWidth(o.text.c_str(), _font), txtHeight(o.text.c_str(), _font));
+			Space textSpace = calcSpace(optionSpace, o.x, o.y, txtWidth(o.text.c_str(), _font), txtHeight(o.text.c_str(), _font));
 
 			// adjust colision space by making bounding box bigger
-			textSpace.
-				-= _hitSpace;
+			textSpace.xStart -= _hitSpace;
 			textSpace.yStart -= _hitSpace;
 
 			textSpace.xEnd += _shadowOffsetX + _hitSpace;
@@ -518,7 +479,7 @@ namespace acre // definitions
 			if (!_usingKeyboard)
 				deselectOptions();
 
-			if (pointSpaceCollide(Mouse.x, Mouse.y, textSpace))
+			if (pointSpaceOverlap(Mouse.x, Mouse.y, textSpace))
 			{
 				_usingKeyboard = false;
 				_highlighted = i;
@@ -530,13 +491,13 @@ namespace acre // definitions
 
 			if (_highlighted != i)
 			{
-				o.r += timePerSec(_fadeSpeed);
-				o.g += timePerSec(_fadeSpeed);
-				o.b += timePerSec(_fadeSpeed);
+				o.r += amntPerSec(_fadeSpeed);
+				o.g += amntPerSec(_fadeSpeed);
+				o.b += amntPerSec(_fadeSpeed);
 
-				o.r = clamp(o.r, 0, 255);
-				o.g = clamp(o.g, 0, 255);
-				o.b = clamp(o.b, 0, 255);
+				o.r = clampFloat(o.r, 0, 255);
+				o.g = clampFloat(o.g, 0, 255);
+				o.b = clampFloat(o.b, 0, 255);
 			}
 			i++;
 		}
@@ -724,7 +685,7 @@ namespace acre // definitions
 			if (paused)
 				return false;
 			
-			time += timePerSec(1);
+			time += amntPerSec(1);
 
 			if (time >= waitTime)
 			{
@@ -770,9 +731,9 @@ namespace acre // definitions
 #endif
 
 #else
-#error You need to use ACRE_Transforms
+#error You need to include ACRE_Transform.h before including ACRE_Gameplay.h!
 #endif
 
 #else
-#error You need to include ACRE 3.0 before.
+#error You need to use ACRE 3.1 and include it before!
 #endif

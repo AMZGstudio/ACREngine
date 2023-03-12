@@ -1,7 +1,6 @@
 -- premake5.lua
 workspace "ACREngine" -- name of the solution
    
-   architecture "x86" -- can be x64, although fullscreen is buggy that way
    startproject "Application"
    location "../"
 
