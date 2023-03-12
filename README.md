@@ -59,7 +59,7 @@ _Program to make a moving circle on the screen_
 ```C
 
 #define ACRE_START // only do this in the main file.
-#include "../ACRE Files/ACREngine.h"
+#include "../acre files/ACREngine.h"
 
 void start()
 {
@@ -77,17 +77,14 @@ void start()
 
         // check if any of the WASD keys are pressed, and move the x and y of the circle accordingly.
         // timePerSec adds the correct amount to the coordinates, to make them move 40 units every second.
-        if (key(W).held) y -= timePerSec(40);
-        if (key(S).held) y += timePerSec(40);
-        if (key(A).held) x -= timePerSec(40);
-        if (key(D).held) x += timePerSec(40);
+        if (key(W).held) y -= amntPerSec(40);
+        if (key(S).held) y += amntPerSec(40);
+        if (key(A).held) x -= amntPerSec(40);
+        if (key(D).held) x += amntPerSec(40);
 
         // render to screen, true tells it to clear the screen after rendering.
         render(true);
     }
-
-    //close the API, (stops memory from leaking)
-    terminateACRE();
 }
 ```
 # Games made in ACRE
