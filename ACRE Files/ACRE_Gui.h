@@ -4,20 +4,20 @@
 	#define ACRE_EX_GUI
 
 	#define TEXT_SIZE 100
-	#define LIGHT_WINDOW_COL Color(160, 160, 160)
-	#define LIGHT_BUT_ON_COL Color(100, 100, 100)
-	#define LIGHT_BUT_OF_COL Color(120, 120, 120)
-	#define LIGHT_SLIDEB_COL Color(80, 80, 80)
-	#define LIGHT_SLIDEF_COL Color(100, 100, 100)
-	#define LIGHT_TITLE_COL Color(100, 100, 100)
+	#define LIGHT_WINDOW_COL calcColor(160, 160, 160)
+	#define LIGHT_BUT_ON_COL calcColor(100, 100, 100)
+	#define LIGHT_BUT_OF_COL calcColor(120, 120, 120)
+	#define LIGHT_SLIDEB_COL calcColor(80, 80, 80)
+	#define LIGHT_SLIDEF_COL calcColor(100, 100, 100)
+	#define LIGHT_TITLE_COL calcColor(100, 100, 100)
 	#define LIGHT_TEXT_COL Black
 
-	#define DARK_WINDOW_COL Color(70, 70, 70)
-	#define DARK_BUT_ON_COL Color(80, 80, 80)
-	#define DARK_BUT_OF_COL Color(105, 105, 105)
-	#define DARK_SLIDEB_COL Color(50, 50, 50)
-	#define DARK_SLIDEF_COL Color(100, 100, 100)
-	#define DARK_TITLE_COL Color(100, 100, 100)
+	#define DARK_WINDOW_COL calcColor(70, 70, 70)
+	#define DARK_BUT_ON_COL calcColor(80, 80, 80)
+	#define DARK_BUT_OF_COL calcColor(105, 105, 105)
+	#define DARK_SLIDEB_COL calcColor(50, 50, 50)
+	#define DARK_SLIDEF_COL calcColor(100, 100, 100)
+	#define DARK_TITLE_COL calcColor(100, 100, 100)
 	#define DARK_TEXT_COl White
 
 	enum OptionStates { Button, Slider, TextBox };
@@ -157,7 +157,7 @@
 	Option* createSlider(Window* parentWindow, int x, int y, int width, int height, float slideStartLoc) // slide start loc is float between 0, and 100
 	{
 		Option* op = _createOption(parentWindow, x, y, width, height);
-		op->sliderVal = clamp(slideStartLoc, 1, 100);
+		op->sliderVal = clampFloat(slideStartLoc, 1, 100);
 		op->type = Slider;
 
 		return op;
@@ -207,7 +207,7 @@
 	bool calculateSlider(Option* slider)
 	{
 		Space sp = calcSpace(_windowSpace(slider->_window), slider->x, slider->y, slider->width, slider->height);
-		slider->sliderVal = clamp(slider->sliderVal, 1, 100);
+		slider->sliderVal = clampFloat(slider->sliderVal, 1, 100);
 
 		if (pointSpaceOverlap(Mouse.x, Mouse.y, sp) && key(LMB).held)
 		{
@@ -226,13 +226,13 @@
 		for (int y = yStart; y < yEnd; y++)
 			for (int x = xStart; x < xEnd; x++)
 			{
-				short r, g, b;
-				Xterm(getPointBack(x, y), &r, &g, &b);
+				Color r, g, b;
+				calcXterm(getBackColor(x, y), &r, &g, &b);
 
 				if (y == yStart || x == xStart)
-					drawPixel(x, y, Color(r + 20, g + 20, b + 20));
+					drawPixel(x, y, calcColor(r + 20, g + 20, b + 20));
 				else if (y == yEnd - 1 || x == xEnd - 1)
-					drawPixel(x, y, Color(r - 20, g - 20, b - 20));
+					drawPixel(x, y, calcColor(r - 20, g - 20, b - 20));
 			}
 	}
 
@@ -280,7 +280,7 @@
 		} break;
 
 		default:
-			Error("tried to draw invalid option.", __LINE__);
+			_Error("tried to draw invalid option.", __LINE__);
 		}
 	}
 

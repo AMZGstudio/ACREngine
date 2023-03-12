@@ -65,17 +65,17 @@ short calculateColor(short colorArea, short colorScreen, float opacity)
 	if (colorArea == Default)
 		return colorScreen;
 	
-	short tr, tg, tb; // t = this
-	short br, bg, bb; // b = background
+	Color tr, tg, tb; // t = this
+	Color br, bg, bb; // b = background
 
-	Xterm(colorScreen, &br, &bg, &bb);
-	Xterm(colorArea,   &tr, &tg, &tb);
+	calcXterm(colorScreen, &br, &bg, &bb);
+	calcXterm(colorArea,   &tr, &tg, &tb);
 
 	short r = (short)(tr * opacity + (1 - opacity) * br);
 	short g = (short)(tg * opacity + (1 - opacity) * bg);
 	short b = (short)(tb * opacity + (1 - opacity) * bb);
 
-	return Color(r, g, b);
+	return (short)calcColor(r, g, b);
 }
 
 void setPivotAT(AreaTrans* at, float xPivot, float yPivot, bool worldSpace)
@@ -91,7 +91,7 @@ void setPivotAT(AreaTrans* at, float xPivot, float yPivot, bool worldSpace)
 
 void sysDrawAT(AreaTrans* at, Area area)
 {
-	if ((at->opacity = clamp(at->opacity, 0, 1)) == 0)
+	if ((at->opacity = clampFloat(at->opacity, 0, 1)) == 0)
 		return;
 
 	Space areaToDrawOnSpace = { 0, 0, area.width, area.height };

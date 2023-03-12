@@ -65,13 +65,6 @@
 		#else
 		#define _WIN32_WINNT 0x0601
 		#endif	
-		
-		#if defined(ACRE_SHOW_FPS) && defined(ACRE_FULLSCREEN)
-			#undef ACRE_SHOW_FPS
-		#endif
-		#if defined(ACRE_ALLOW_RESIZE) && defined(ACRE_FULLSCREEN)
-			#undef ACRE_ALLOW_RESIZE
-		#endif
 
 		#include <stdio.h>
 		#include <windows.h>
@@ -153,17 +146,17 @@
 		LeftHalfBlock = 221, RightHalfBlock = 222, UpperHalfBlock = 223
 	};
 
+	typedef unsigned char Color;
 	// this must be overriden by the user, which acts as the main file.
 
 	void start();
 	// variable declarations
-	extern int defaultFrontColor, defaultBackColor;
+	extern Color defaultFrontColor, defaultBackColor;
 	extern float fps;
 	extern MOUSE Mouse;
 	extern Font EightBit;
 
 	// function declarations
-	int center(int length, Space screenSpace, int mode);
 
 	Area loadSprite(const char* spriteFilePath);
 	void makeSprite(Area areaToMakeSprite, char* spriteFilePath);
@@ -173,29 +166,37 @@
 	int Height(Area area);
 	int spWidth(Space space);
 	int spHeight(Space space);
+	int Center(int objLength, int worldLength);
 	int Random(int rangeStart, int rangeEnd);
+
 	float timePerSec(float amount);
 	Space calcSpace(Space prevSpace, int xStart, int yStart, int width, int height);
-	int strToInt(char* string);
 	void intToStr(char* string, int num);
 	float map(float numberToMap, int numberBegin, int numberEnd, int numberMapStart, int numberMapEnd);
-	float clamp(float numToClamp, float min, float max);
+	inline float clampFloat(float numToClamp, float min, float max);
+	inline int clampInt(int numToClamp, int min, int max);
+
 	void clampSpace(Space* space, Space spaceToClampTo);
-	void Xterm(short col, short* r, short* g, short* b);
-	int Color(int r, int g, int b);
+	void calcXterm(Color color, Color* r, Color* g, Color* b);
+	Color calcColor(int red, int green, int blue);
 	int txtWidth(const char* string, Font fontType);
 	int txtHeight(const char* string, Font fontType);
 	void setDefaultDrawArea(Area* ar);
 	bool legalArea(Area area);
-
 	bool wasResized();
 	bool pointSpaceOverlap(int x, int y, Space screenSpace);
 	bool spaceOverlap(Space space1, Space space2);
+	
+	void setFullscreen(bool fullscreen);
 
-	void sysGetPoint(int x, int y, Area area, int data[3]);
+	Color sysGetFrontColor(int x, int y, Area area);
+	Color sysGetBackColor(int x, int y, Area area);
+	char sysGetChar(int x, int y, Area area);
+	
+	Color getFrontColor(int x, int y);
+	Color getBackColor(int x, int y);
 	char getChar(int x, int y);
-	int getPointFront(int x, int y);
-	int getPointBack(int x, int y);
+
 	
 	Point sysDrawPixel(int x, int y, Area area, char character, short front_color, short back_color);
 	void sysDrawRect(int xStart, int yStart, int xEnd, int yEnd, Area area, bool filled, char character, short front_color, short back_color);
@@ -240,7 +241,7 @@
 
 	Area createArea(int width, int height, short front_color, short back_color);
 	void deleteArea(Area* area);
-	void initialize(const char* title, int width, int height, int fontWidth, int fontHeight, int defaultFront, int defaultBack);
+	void initialize(const char* title, int width, int height, int fontWidth, int fontHeight, Color frontColor, Color backColor);
 	void render(bool clearScreen);
 	void terminateACRE();
 
@@ -276,7 +277,7 @@
 	size_t nextSlot;
 
 	int _consoleFontWidth = 8, _consoleFontHeight = 16;
-	int defaultFrontColor = FRONT_COLOR, defaultBackColor = BACK_COLOR;
+	Color defaultFrontColor = FRONT_COLOR, defaultBackColor = BACK_COLOR;
 	int defaultScreenWidth = 100, defaultScreenHeight = 30;
 
 	float fps = 0;
@@ -284,11 +285,15 @@
 	unsigned int _countIndex = 0;
 
 	bool _firstInitialize = true;
-	bool _needsResizeCorrection = false;
+	bool _needsResizeCorrection = true;
 	bool _hasBeenResized = false;
 	bool _finishedFPSLoop = false;
+	int _newWidth, _newHeight;
+	int _oldWidth, _oldHeight; // the size of the console before setting it to fullscreen
+	bool _to_be_fullscreen = false;
+	bool _fullscreen = false;
 
-	//windows handles
+	// windows handles
 	HANDLE hConsoleOutput, hConsoleInput;
 	HWND ConsoleWindow;
 
@@ -351,7 +356,7 @@
 		for (; x1 <= x2; x1++) sysDrawPixel(x1, y, area, charater, front_color, back_color);
 	}
 	
-	void Error(const char* errorMsg, int line)
+	void _Error(const char* errorMsg, int line)
 	{
 		char thing[200] = { 0 };
 		sprintf(thing, "ACRError: (LINE:%d): %s", line, errorMsg);
@@ -359,35 +364,14 @@
 		exit(EXIT_FAILURE);
 	}
 
-	int center(int length, Space screenSpace, int mode)
-	{
-		if (mode == X)
-		{
-			int screenSpaceWidth = screenSpace.xEnd - screenSpace.xStart;
-			float halfWayThrough = (float)screenSpaceWidth / 2.0f;
-			float halfText = (float)length / 2.0f;
-
-			return (int)(halfWayThrough - halfText);
-		}
-		else if (mode == Y)
-		{
-			int screenSpaceWidth = screenSpace.yEnd - screenSpace.yStart; // include the other end.
-			float halfWayThrough = (float)screenSpaceWidth / 2.0f;
-			float halfText = (float)length / 2.0f;
-
-			return (int)(halfWayThrough - halfText);
-		}
-		return -1;
-	}
-
 	inline Space calcSpace(Space prevSpace, int xStart, int yStart, int width, int height)
 	{
-		Space sp = { prevSpace.xStart, prevSpace.yStart, 0, 0  };//prevSpace.xStart, prevSpace.yStart };
+		Space sp = { prevSpace.xStart, prevSpace.yStart, 0, 0 };
 
-		if (xStart == Centered) sp.xStart += center(width, prevSpace, X);
+		if (xStart == Centered) sp.xStart += Center(width, spWidth(prevSpace));
 		else sp.xStart += xStart;
 
-		if (yStart == Centered) sp.yStart += center(height, prevSpace, Y);
+		if (yStart == Centered) sp.yStart += Center(height, spHeight(prevSpace));
 		else sp.yStart += yStart;
 
 		sp.xEnd += sp.xStart + width;
@@ -403,6 +387,7 @@
 	inline int Height(Area area) { return area.height; }
 	inline int spWidth(Space space) { return abs(space.xEnd - space.xStart); }
 	inline int spHeight(Space space) { return abs(space.yEnd - space.yStart); }
+	inline int Center(int objLength, int worldLength) { return worldLength / 2 - objLength / 2;}
 	inline int Random(int rangeStart, int rangeEnd) { return (rand() % (rangeEnd - rangeStart + 1)) + rangeStart;}
 
 	int txtWidth(const char* string, Font fontType)
@@ -456,42 +441,37 @@
 		float output = (float)numberMapStart + (((float)numberMapEnd - (float)numberMapStart) / ((float)numberEnd - (float)numberBegin)) * ((float)numberToMap - (float)numberBegin);
 		return output;
 	}
-	float clamp(float numToClamp, float min, float max)
+	inline float clampFloat(float numToClamp, float minimum, float maximum)
 	{
-		if (numToClamp < (float)min)
-			numToClamp = (float)min;
-		if (numToClamp > (float)max)
-			numToClamp = (float)max;
-		return numToClamp;
+		return min(max(minimum, numToClamp), maximum);
 	}
-
+	inline int clampInt(int numToClamp, int minimum, int maximum)
+	{
+		return min(max(minimum, numToClamp), maximum);
+	}
 	void clampSpace(Space* space, Space spaceToClampTo)
 	{
 		if (!spaceOverlap(*space, spaceToClampTo))
 			return;
 
-		space->xStart = clamp(space->xStart, spaceToClampTo.xStart, spaceToClampTo.xEnd);
-		space->yStart = clamp(space->yStart, spaceToClampTo.yStart, spaceToClampTo.yEnd);
-		space->xEnd = clamp(space->xEnd, spaceToClampTo.xStart, spaceToClampTo.xEnd);
-		space->yEnd = clamp(space->yEnd, spaceToClampTo.yStart, spaceToClampTo.yEnd);
+		space->xStart = clampInt(space->xStart, spaceToClampTo.xStart, spaceToClampTo.xEnd);
+		space->yStart = clampInt(space->yStart, spaceToClampTo.yStart, spaceToClampTo.yEnd);
+		space->xEnd = clampInt(space->xEnd, spaceToClampTo.xStart, spaceToClampTo.xEnd);
+		space->yEnd = clampInt(space->yEnd, spaceToClampTo.yStart, spaceToClampTo.yEnd);
 	}
 
-	int strToInt(char* string)
-	{
-		return atoi(string);
-	}
 	void intToStr(char* string, int num)
 	{
 		_itoa(num, string, 10);
 	}
 	
-	void Xterm(short col, short* r, short* g, short* b)
+	void calcXterm(Color color, Color* r, Color* g, Color* b)
 	{
-		col = (short)clamp(col, 0, 255);
-		int vals[6] = { 0,95,135,175,215,255 };
+		color = (Color)clampInt(color, 0, 255);
+		Color vals[6] = { 0,95,135,175,215,255 };
 
-		if (col < 16)
-			switch(col)
+		if (color < 16)
+			switch(color)
 			{
 			case 0: *r = 0, *g = 0, *b = 0; break;
 			case 1: *r = 128, *g = 0, *b = 0; break;
@@ -510,36 +490,35 @@
 			case 14: *r = 0, *g = 255, *b = 255; break;
 			case 15: *r = 255, *g = 255, *b = 255; break;
 			}	
-		else if (col >= 16 && col <= 231)
+		else if (color >= 16 && color <= 231)
 		{
-			col -= 16;
-			int num6s = (int)(col / 6.0f);
-			*b = vals[col % 6];
+			color -= 16;
+			int num6s = (int)color / 6;
+			*b = vals[color % 6];
 			*r = (int)(num6s / 6.0f); // keep as a 0...5 number, to be used for green.
 			*g = vals[num6s - ((*r) * 6)];
 			*r = vals[*r]; // then convert it to 0...255;
 		}
-		else if (col > 231)
+		else if (color > 231)
 		{
-			col -= 232;
-			*r = 8, * g = 8, * b = 8;
-			*r += col * 10;
-			*g += col * 10;
-			*b += col * 10;
+			color -= 232;
+			*r = 8 + color * 10;
+			*g = 8 + color * 10;
+			*b = 8 + color * 10;
 		}
 	}
 
-	int Color(int r, int g, int b) // this code is not mine
+	Color calcColor(int red, int green, int blue) // modified from internet
 	{
-		clamp((float)r, 0, 255);
-		clamp((float)g, 0, 255);
-		clamp((float)b, 0, 255);
+		red = clampInt(red, 0, 255);
+		green = clampInt(green, 0, 255);
+		blue = clampInt(blue, 0, 255);
 
 		#define v2ci(v) (v < 48 ? 0 : v < 115 ? 1 : (v - 35) / 40)
-		int ir = v2ci(r), ig = v2ci(g), ib = v2ci(b);   // 0..5 each
+		int ir = v2ci(red), ig = v2ci(green), ib = v2ci(blue);   // 0..5 each
 		#define color_index() (36 * ir + 6 * ig + ib)  /* 0..215, lazy evaluation */
 
-		int average = (r + g + b) / 3;
+		int average = (red + green + blue) / 3;
 		int gray_index = average > 238 ? 23 : (average - 3) / 10;  // 0..23
 
 		static const int i2cv[6] = { 0, 0x5f, 0x87, 0xaf, 0xd7, 0xff };
@@ -547,10 +526,10 @@
 		int gv = 8 + 10 * gray_index;  // same value for r/g/b, 0..255
 
 		#define dist_square(A,B,C, a,b,c) ((A-a)*(A-a) + (B-b)*(B-b) + (C-c)*(C-c))
-		int color_err = dist_square(cr, cg, cb, r, g, b);
-		int gray_err = dist_square(gv, gv, gv, r, g, b);
+		int color_err = dist_square(cr, cg, cb, red, green, blue);
+		int gray_err = dist_square(gv, gv, gv, red, green, blue);
 		return color_err <= gray_err ? 16 + color_index() : 232 + gray_index;
-	} // removed static int, and replaced with int
+	}
 
 	/*-------------------------------------------*\
 	|		    Image Handling Functions		  |
@@ -576,7 +555,7 @@
 		{
 			char msg[100] = "Opening ACRE file: ";
 			sprintf(msg, "Opening ACRE file: %s", spriteFilePath);
-			Error(msg, __LINE__);
+			_Error(msg, __LINE__);
 		}
 
 		while ((ch = fgetc(spriteFile)) != ';')
@@ -655,37 +634,40 @@
 			&& max(space1.yStart, space2.yStart) < min(space1.yEnd, space2.yEnd);
 	}
 
+	inline void setFullscreen(bool fullscreen)
+	{
+		_to_be_fullscreen = fullscreen;
+		_needsResizeCorrection = true;
+	}
+
 	/*-------------------------------------------*\
 	|		       Getting Functions	     	  |
 	\*-------------------------------------------*/
 
-	void sysGetPoint(int x, int y, Area area, int data[3])
+	Color sysGetFrontColor(int x, int y, Area area)
 	{
-		int slot = y * (Screen.width) + x;
-		data[0] = area.characters[slot];
-		data[1] = area.colFront[slot];
-		data[2] = area.colBack[slot];
+		return area.colFront[y * area.width + x];
 	}
-	
+	Color sysGetBackColor(int x, int y, Area area)
+	{
+		return area.colBack[y * area.width + x];
+	}
+	char sysGetChar(int x, int y, Area area)
+	{
+		return area.characters[y * area.width + x];
+	}
+
+	Color getFrontColor(int x, int y)
+	{
+		return areaToDrawOn->colFront[y * areaToDrawOn->width + x];
+	}
+	Color getBackColor(int x, int y)
+	{
+		return areaToDrawOn->colBack[y * areaToDrawOn->width + x];
+	}
 	char getChar(int x, int y)
 	{
-		int data[3] = { 0 };
-		sysGetPoint(x, y, Screen, data);
-		return data[0];
-	}
-	
-	int getPointFront(int x, int y)
-	{
-		int data[3] = { 0 };
-		sysGetPoint(x, y, Screen, data);
-		return data[1];
-	}
-	
-	int getPointBack(int x, int y)
-	{
-		int data[3] = { 0 };
-		sysGetPoint(x, y, Screen, data);
-		return data[2];
+		return areaToDrawOn->characters[y * areaToDrawOn->width + x];
 	}
 
 	/*-------------------------------------------*\
@@ -701,17 +683,17 @@
 
 		if (character != Default)
 			if (character == '\n' || character > 256 || character <= 0) // or invalid color
-				Error("Tried to add newline (\'\\n\'), or invalid character, to the screen buffer!", __LINE__);
+				_Error("Tried to add newline (\'\\n\'), or invalid character, to the screen buffer!", __LINE__);
 			else area.characters[slot] = character;
 
 		if (front_color != Default)
 			if (front_color < 0 || front_color > 255)
-				Error("Tried to add invalid foreground color, to the screen buffer!", __LINE__);
+				_Error("Tried to add invalid foreground color, to the screen buffer!", __LINE__);
 			else area.colFront[slot] = front_color;
 
 		if (back_color != Default)
 			if (back_color < 0 || back_color  > 255)
-				Error("Tried to add invalid background color, to the screen buffer!", __LINE__);
+				_Error("Tried to add invalid background color, to the screen buffer!", __LINE__);
 			else area.colBack[slot] = back_color;
 		
 		return loc;
@@ -1026,21 +1008,21 @@
 
 	void sysDrawArea(int x, int y, Area area, Area areaToDraw)
 	{
-		if (!legalArea(areaToDraw)) Error("Can't draw deleted Area!", __LINE__);
+		if (!legalArea(areaToDraw)) _Error("Can't draw deleted Area!", __LINE__);
 
 		for (int ys = 0; ys < areaToDraw.height; ys++)
 			for (int xs = 0; xs < areaToDraw.width; xs++)
 			{
 				int loc = ys * (areaToDraw.width) + xs;
-				sysDrawPixel(x + xs, y + ys, area, (area.drawText) ? areaToDraw.characters[loc] : Default, (area.drawFront) ? areaToDraw.colFront[loc] : Default, (area.drawBack) ? areaToDraw.colBack[loc] : Default);
+				sysDrawPixel(x + xs, y + ys, area, (areaToDraw.drawText) ? areaToDraw.characters[loc] : Default, (areaToDraw.drawFront) ? areaToDraw.colFront[loc] : Default, (areaToDraw.drawBack) ? areaToDraw.colBack[loc] : Default);
 			}
 	}
 
 	void sysDrawPartialArea(int x, int y, Area area, Area areaToDraw, int startAreaX, int startAreaY, int endAreaX, int endAreaY)
 	{
 		int newX=0, newY=0;
-		if (!legalArea(areaToDraw)) Error("Can't draw deleted Area!", __LINE__);
-		if (endAreaX > areaToDraw.width || endAreaY > areaToDraw.height || startAreaX < 0 || startAreaY < 0) Error("Can't draw partial Area bigger than area itself.", __LINE__);
+		if (!legalArea(areaToDraw)) _Error("Can't draw deleted Area!", __LINE__);
+		if (endAreaX > areaToDraw.width || endAreaY > areaToDraw.height || startAreaX < 0 || startAreaY < 0) _Error("Can't draw partial Area bigger than area itself.", __LINE__);
 
 		for (int ys = startAreaY; ys < endAreaY; ys++)
 		{
@@ -1182,7 +1164,7 @@
 	Key key(int whichKey)
 	{
 		if (whichKey < 0 || whichKey >= AMOUNT_KEYS)
-			Error("Tried to access key that doesn't exist!", __LINE__);
+			_Error("Tried to access key that doesn't exist!", __LINE__);
 
 		return allKeys[whichKey];
 	}
@@ -1259,19 +1241,16 @@
 		area->width = width;
 		area->height = height;
 
-		if (!legalArea(*area)) Error("Can't draw deleted Area!", __LINE__);
+		if (!legalArea(*area)) _Error("Can't resize area to be negative!", __LINE__);
 
-		char* newVal = (char*)realloc(NULL, (sizeof(char) * width * height) + 1);
-
-		if (newVal != NULL)
-			area->characters = newVal;
-
+		char* charData = (char*)realloc(area->characters, (sizeof(char) * width * height) + 1);
 		short* colFrontData = (short*)realloc(area->colFront, (sizeof(short) * width * height));
 		short* colBackData = (short*)realloc(area->colBack, (sizeof(short) * width * height));
 		
-		// ugh... this exists so we don't get warnings.
+		// this exists so we don't get warnings.
 		if (colFrontData != NULL) area->colFront = colFrontData;
 		if (colBackData != NULL) area->colBack = colBackData;
+		if (charData != NULL) area->characters = charData;
 
 		for (int i = 0; i < (width * height); i++)
 		{
@@ -1310,9 +1289,9 @@
 		info.FontWeight = FONT_WEIGHT;
 		info.FontFamily = FF_DONTCARE;
 		wcscpy(info.FaceName, L"Consolas");
-		if (!SetConsoleOutputCP(codePage)) Error("Setting consoles codepage failed.", __LINE__);
+		if (!SetConsoleOutputCP(codePage)) _Error("Setting consoles codepage failed.", __LINE__);
 
-		if (!SetCurrentConsoleFontEx(hConsoleOutput, 0, &info)) Error("Setting console font failed.", __LINE__);
+		if (!SetCurrentConsoleFontEx(hConsoleOutput, 0, &info)) _Error("Setting console font failed.", __LINE__);
 	}
 
 	void getConsoleWindowSize(int* w, int* h)
@@ -1320,131 +1299,127 @@
 		CONSOLE_SCREEN_BUFFER_INFO csbi;
 
 		if (!GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi))
-			Error("Unable to get the current console window size", __LINE__);
+			_Error("Unable to get the current console window size", __LINE__);
 
 		*w = csbi.srWindow.Right - csbi.srWindow.Left + 1;
-		*h = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
+ 		*h = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
 	}
-	
-	void windowFullscreen(int* x, int* y, COORD largestSize)
-	{
-		// if it succeeded, then do other functions.
-		if (SetConsoleDisplayMode(hConsoleOutput, CONSOLE_FULLSCREEN_MODE, 0))
-		{
-			largestSize = GetLargestConsoleWindowSize(hConsoleOutput);
 
-			*x = (int)largestSize.X;
-			*y = (int)largestSize.Y;
-
-			COORD size = { (short)(*x), (short)(*y) };
-			if (!SetConsoleScreenBufferSize(hConsoleOutput, size))
-				Error("Unable to resize screen buffer!", __LINE__);
-
-			SMALL_RECT info = { 0, 0, (short)(*x - 1), (short)(*y - 1) };
-			if (!SetConsoleWindowInfo(hConsoleOutput, TRUE, &info))
-				Error("Unable to resize window after resizing buffer!", __LINE__);
-
-			return;
-		}
-
-		if (_consoleFontHeight != _consoleFontWidth)
-			Error("When using fullscreen in x64, font width and height must be equal!", __LINE__);
-
-		// if it failed, then make the console fullscreen the x64 way.
-		COORD size = { largestSize.X, largestSize.Y };
-		SetConsoleScreenBufferSize(hConsoleOutput, size);
-
-		DWORD dwStyle = GetWindowLongA(ConsoleWindow, GWL_STYLE);
-		SetWindowLongA(ConsoleWindow, GWL_STYLE, dwStyle & ~WS_OVERLAPPEDWINDOW);
-		SendMessageA(ConsoleWindow, WM_SYSCOMMAND, SC_MAXIMIZE, 0);
-
-		DWORD dwWidth = GetSystemMetrics(SM_CXSCREEN) / _consoleFontWidth;
-		DWORD dwHeight = GetSystemMetrics(SM_CYSCREEN) / _consoleFontHeight;
-
-		double ratio = (double)dwWidth / (double)largestSize.X;
-		
-		*x = largestSize.X;
-		*y = (int)((double)dwHeight / ratio);
-
-		// Super janky, but works??? it corrects the dimensions depending on the font size
-		if (_consoleFontHeight == 5 || _consoleFontHeight == 7 || _consoleFontHeight == 10 || _consoleFontHeight == 11 ||
-			_consoleFontHeight == 14 || _consoleFontHeight == 29 || _consoleFontHeight == 30 || _consoleFontHeight == 17 || _consoleFontHeight == 27)
-			*y += 1;
-
-		if (_consoleFontHeight == 22 || _consoleFontHeight == 23 || _consoleFontHeight == 24 || _consoleFontHeight == 26 ||
-			_consoleFontHeight == 27 || _consoleFontHeight == 29 || _consoleFontHeight == 30)
-			*x -= 1;
-
-		COORD sizeOther = { (short)(*x), (short)(*y) };
-		if (!SetConsoleScreenBufferSize(hConsoleOutput, sizeOther))
-			Error("Unable to set screen buffer size in x64 mode!", __LINE__);
-	}
-	
 	void dimensionTooBigError(char dimension, int currSize, int maxSize)
 	{
 		char errMsg[200] = { 0 };
 		sprintf(errMsg, "%c dimension too big (%d > %d)", dimension, currSize, maxSize);
-		Error(errMsg, __LINE__);
+		_Error(errMsg, __LINE__);
 	}
 
-	void calculateConsoleSize(int* x, int* y, bool Errors)
+	void setModes()
+	{
+		#ifdef ACRE_ALLOW_RESIZE
+			SetWindowLongA(ConsoleWindow, GWL_STYLE, WS_OVERLAPPEDWINDOW & ~WS_VSCROLL); // makes the window normal again
+		#else
+			SetWindowLongA(ConsoleWindow, GWL_STYLE, WS_OVERLAPPEDWINDOW & ~WS_MAXIMIZEBOX & ~WS_SIZEBOX & ~WS_VSCROLL); //makes window not resizbale
+		#endif
+		SendMessageA(ConsoleWindow, WM_SYSCOMMAND, SC_RESTORE, 0);
+	}
+
+	void _setConsoleFullscreen(bool fullscreen)
+	{
+		COORD largestSize;
+		if (fullscreen)
+			getConsoleWindowSize(&_oldWidth, &_oldHeight);
+
+		if (SetConsoleDisplayMode(hConsoleOutput, fullscreen ? CONSOLE_FULLSCREEN_MODE : CONSOLE_WINDOWED_MODE, 0))
+		{
+			if (fullscreen) // cant combine this with if statement above, because we dont want the else to trigger
+			{
+				largestSize = GetLargestConsoleWindowSize(hConsoleOutput);
+				_newWidth = largestSize.X, _newHeight = largestSize.Y;
+			}
+			else
+			{
+				setModes();
+				_newWidth = _oldWidth, _newHeight = _oldHeight;
+			}
+		}
+		else // if it failed, then make the console fullscreen the x64 way.
+		{
+			largestSize = GetLargestConsoleWindowSize(hConsoleOutput);
+
+			if (fullscreen)
+			{
+				getConsoleWindowSize(&_oldWidth, &_oldHeight);
+
+				if (_consoleFontHeight != _consoleFontWidth)
+					_Error("When using fullscreen in x64, font width and height must be equal!", __LINE__);
+
+				SetWindowLongA(ConsoleWindow, GWL_STYLE, GetWindowLongA(ConsoleWindow, GWL_STYLE) & ~WS_OVERLAPPEDWINDOW);
+				SendMessageA(ConsoleWindow, WM_SYSCOMMAND, SC_MAXIMIZE, 0);
+
+				SetConsoleScreenBufferSize(hConsoleOutput, largestSize);
+				DWORD dwWidth = GetSystemMetrics(SM_CXSCREEN) / _consoleFontWidth;
+				DWORD dwHeight = GetSystemMetrics(SM_CYSCREEN) / _consoleFontHeight;
+
+				double ratio = (double)dwWidth / (double)largestSize.X;
+				largestSize.Y = (int)((double)dwHeight / ratio);
+
+				// Super janky, but works??? it corrects the dimensions depending on the font size
+				if (_consoleFontHeight == 5 || _consoleFontHeight == 7 || _consoleFontHeight == 10 || _consoleFontHeight == 11 ||
+					_consoleFontHeight == 14 || _consoleFontHeight == 29 || _consoleFontHeight == 30 || _consoleFontHeight == 17 || _consoleFontHeight == 27)
+					largestSize.Y += 1;
+
+				if (_consoleFontHeight == 22 || _consoleFontHeight == 23 || _consoleFontHeight == 24 || _consoleFontHeight == 26 ||
+					_consoleFontHeight == 27 || _consoleFontHeight == 29 || _consoleFontHeight == 30)
+					largestSize.X -= 1;
+
+				if (!SetConsoleScreenBufferSize(hConsoleOutput, largestSize))
+					_Error("Unable to set screen buffer size in x64 mode!", __LINE__);
+
+				_newWidth = largestSize.X, _newHeight = largestSize.Y;
+			}
+			else
+			{
+				setModes();
+				_newWidth = _oldWidth, _newHeight = _oldHeight;
+			}
+		}
+	
+		_fullscreen = fullscreen;
+	}
+
+	void setConsoleToSize(int width, int height, bool errors)
 	{
 		COORD largestSize = GetLargestConsoleWindowSize(hConsoleOutput);
-		
-		#ifdef ACRE_FULLSCREEN
-			windowFullscreen(x, y, largestSize);
-		#else
+		if (width > largestSize.X && errors) dimensionTooBigError('X', width, largestSize.X);
+		if (height > largestSize.Y && errors) dimensionTooBigError('Y', height, largestSize.Y);
 
-		if (*x > largestSize.X && Errors)
-			dimensionTooBigError('X', *x, largestSize.X);
-		if (*y > largestSize.Y && Errors)
-			dimensionTooBigError('Y', *y, largestSize.Y);
-		
-		int width, height;
-		getConsoleWindowSize(&width, &height);
+		int currWidth, currHeight;
+		getConsoleWindowSize(&currWidth, &currHeight);
 
-		if (width > *x || height > *y)
+		if (currWidth > width || currHeight > height)
 		{
 			// window size needs to be adjusted before the buffer size can be reduced.
-			SMALL_RECT info = { 0,0, (short)(*x < width ? *x - 1 : width - 1), (short)(*y < height ? *y - 1 : height - 1) };
-			if (!SetConsoleWindowInfo(hConsoleOutput, TRUE, &info))
-				if (!Errors) return; else Error("Resizing window failed!", __LINE__);
+			SMALL_RECT info = { 0,0, (short)(width < currWidth ? width - 1 : currWidth - 1), (short)(height < currHeight ? height - 1 : currHeight - 1) };
+			if (!SetConsoleWindowInfo(hConsoleOutput, TRUE, &info) && errors)
+				_Error("Resizing window failed!", __LINE__);
 		}
 
-		COORD size = { (short)(*x), (short)(*y) };
-		if (!SetConsoleScreenBufferSize(hConsoleOutput, size))
-			if (!Errors) return; else Error("Unable to resize screen buffer!", __LINE__);
+		COORD size = { (short)width, (short)height };
+		if (!SetConsoleScreenBufferSize(hConsoleOutput, size) && errors)
+			_Error("Unable to resize screen buffer!", __LINE__);
 
-		SMALL_RECT info = { 0, 0, (short)(*x - 1), (short)(*y - 1) };
-		if (!SetConsoleWindowInfo(hConsoleOutput, TRUE, &info))
-			if (!Errors) return; else Error("Unable to resize window after resizing buffer!", __LINE__);
-	
-		#endif
+		SMALL_RECT info = { 0, 0, (short)(width - 1), (short)(height - 1) };
+		if (!SetConsoleWindowInfo(hConsoleOutput, TRUE, &info) && errors)
+			_Error("Unable to resize window after resizing buffer!", __LINE__);
 	}
 
 	inline bool isWindowActive()
 	{
 		#ifdef ACRE_IGNORE_ACTIVE_WINDOW
-		return true;
+			return true;
 		#else
-		if (ConsoleWindow == GetForegroundWindow()) return true;
-		return false;
+			if (ConsoleWindow == GetForegroundWindow()) return true;
+			return false;
 		#endif
-	}
-
-	void setRequiredModes()
-	{
-		#ifndef ACRE_ALLOW_RESIZE
-			SetWindowLong(ConsoleWindow, GWL_STYLE, GetWindowLong(ConsoleWindow, GWL_STYLE) & ~WS_MAXIMIZEBOX & ~WS_SIZEBOX); //makes window not resizbale
-		#endif
-
-		// Set flags to allow mouse input, and disable selecting, and support for ANSI escape sequences.	
-		if (!SetConsoleMode(hConsoleInput, ENABLE_EXTENDED_FLAGS | ENABLE_WINDOW_INPUT | ENABLE_MOUSE_INPUT))
-			Error("Setting The consoles Input modes did not work.", __LINE__);
-		if (!SetConsoleMode(hConsoleOutput, ENABLE_PROCESSED_OUTPUT | ENABLE_VIRTUAL_TERMINAL_PROCESSING | ENABLE_WRAP_AT_EOL_OUTPUT | DISABLE_NEWLINE_AUTO_RETURN))
-			Error("Setting The consoles Output modes did not work.", __LINE__);
-	
-		ShowScrollBar(ConsoleWindow, SB_BOTH, FALSE);
 	}
 
 	/*-------------------------------------------*\
@@ -1452,6 +1427,30 @@
 	\*-------------------------------------------*/
 
 	WINDOW_BUFFER_SIZE_RECORD wbsr = { 0 };
+
+	void resizeCalculations(bool showErrors, bool getSize)
+	{
+		if (_needsResizeCorrection)
+		{
+			if (_to_be_fullscreen && !_fullscreen)
+				_setConsoleFullscreen(true);
+			
+			else if (!_to_be_fullscreen && _fullscreen)
+				_setConsoleFullscreen(false);
+			
+			else if (getSize)
+				getConsoleWindowSize(&_newWidth, &_newHeight);
+			
+			setConsoleToSize(_newWidth, _newHeight, showErrors);
+
+			resizeArea(_newWidth, _newHeight, &Screen);
+			screenBufferFull = (char*)realloc(screenBufferFull, sizeof(char) * ((Screen.width * Screen.height) * ANSI_STR_LEN + 1));
+			memset(screenBufferFull, 0, sizeof(char) * (Screen.width * Screen.height * ANSI_STR_LEN + 1)); // after allocating the screenBufferFull, empty it out.
+
+			ScreenSpace.xEnd = Screen.width, ScreenSpace.yEnd = Screen.height;
+			_needsResizeCorrection = false;
+		}
+	}
 
 	void consoleEvents()
 	{
@@ -1463,7 +1462,7 @@
 		GetNumberOfConsoleInputEvents(hConsoleInput, &events);
 		if (events > 0)
 			if (!ReadConsoleInputA(hConsoleInput, irInBuf, events, &events))
-				Error("failed reading console inputs\n", __LINE__);
+				_Error("failed reading console inputs\n", __LINE__);
 
 		bool didResize = false, scrollWMOVED = false, scrollHMOVED = false;
 
@@ -1494,39 +1493,29 @@
 				}
 			}
 			break;
+
 			#ifdef ACRE_ALLOW_RESIZE
 			case WINDOW_BUFFER_SIZE_EVENT:
 			{
+				bool didResize = true;
 				wbsr = irInBuf[i].Event.WindowBufferSizeEvent;
-
 				if (wbsr.dwSize.X == Screen.width && wbsr.dwSize.Y == Screen.height)
 					break;
 
-				resizeArea(wbsr.dwSize.X, wbsr.dwSize.Y, &Screen);
-
-				_needsResizeCorrection = true;
-				_hasBeenResized = true;
-				didResize = true;
-				
-				ScreenSpace.xEnd = Screen.width, ScreenSpace.yEnd = Screen.height;
-
-				screenBufferFull = (char*)realloc(screenBufferFull, sizeof(char) * ((Screen.width * Screen.height) * ANSI_STR_LEN + 1));
-				memset(screenBufferFull, 0, sizeof(char) * (Screen.width * Screen.height * ANSI_STR_LEN + 1)); // after allocating the screenBufferFull, empty it out.
-			}
+				_newWidth = wbsr.dwSize.X, _newHeight = wbsr.dwSize.Y;
+				_needsResizeCorrection = true, _hasBeenResized = true, didResize = true;
+			} break;
+			
 			#endif
-
 			default: break;
 			}	
 		}
 
-		if (!didResize && _needsResizeCorrection)
+		if (!didResize)
 		{
-			int w, h;
-			getConsoleWindowSize(&w, &h);
-			calculateConsoleSize(&w, &h, false);
-
-			_needsResizeCorrection = false;
+			resizeCalculations(false, true);
 		}
+
 		if (!scrollHMOVED) Mouse.scrollH = 0;
 		if (!scrollWMOVED) Mouse.scrollW = 0;
 	}
@@ -1534,7 +1523,7 @@
 	void terminateACRE()
 	{
 		if (SetConsoleOutputCP(65001) == 0)
-			Error("Changing codepage back to default failed.", __LINE__);
+			_Error("Changing codepage back to default failed.", __LINE__);
 
 		free(screenBufferFull);
 		deleteArea(&Screen);
@@ -1566,13 +1555,13 @@
 	{
 		char currentTitle[200] = { 0 };
 
-		#if defined(ACRE_SHOW_FPS) && !defined(NO_ACRE_WATERMARK)
+		#if defined(ACRE_SHOW_FPS) && !defined(ACRE_REMOVE_WATERMARK)
 			sprintf(currentTitle, "%s - AMZG Studio - ACREngine - %.2f fps", windowTitle, fps);
 
-		#elif defined(ACRE_SHOW_FPS) && defined(NO_ACRE_WATERMARK)
+		#elif defined(ACRE_SHOW_FPS) && defined(ACRE_REMOVE_WATERMARK)
 			sprintf(currentTitle, "%s - %.2f fps", windowTitle, fps);
 
-		#elif !defined(NO_ACRE_WATERMARK)
+		#elif !defined(ACRE_REMOVE_WATERMARK)
 			sprintf(currentTitle, "%s - AMZG Studio - ACREngine", windowTitle);
 
 		#else
@@ -1582,7 +1571,7 @@
 		SetConsoleTitleA(currentTitle);
 	}
 
-	void initialize(const char* title, int width, int height, int fontWidth, int fontHeight, int frontColor, int backColor)
+	void initialize(const char* title, int width, int height, int fontWidth, int fontHeight, Color frontColor, Color backColor)
 	{
 		//set default values
 		if (width == Default) width = defaultScreenWidth;
@@ -1596,7 +1585,7 @@
 		if ((int)title != Default) strcpy(windowTitle, title);
 
 		if (_consoleFontWidth < 2)
-			Error("The minimum font height is 2!", __LINE__);
+			_Error("The minimum font height is 2!", __LINE__);
 
 		if (_firstInitialize)
 		{
@@ -1607,16 +1596,22 @@
 			hConsoleOutput = GetStdHandle(STD_OUTPUT_HANDLE);
 			hConsoleInput = GetStdHandle(STD_INPUT_HANDLE);
 
-			if (hConsoleOutput == INVALID_HANDLE_VALUE) Error("Retreiving Console Output Handle Failed", __LINE__);
-			if (hConsoleInput == INVALID_HANDLE_VALUE) Error("Retreiving Console Input Handle Failed", __LINE__);
+			if (hConsoleOutput == INVALID_HANDLE_VALUE) _Error("Retreiving Console Output Handle Failed", __LINE__);
+			if (hConsoleInput == INVALID_HANDLE_VALUE) _Error("Retreiving Console Input Handle Failed", __LINE__);
 
 			ConsoleWindow = GetConsoleWindow();
 
-			setRequiredModes();
+			setModes();
 			initializeKeys();
 
-			if (!QueryPerformanceFrequency(&frequency))
-				Error("Getting Performance Frequency Failed!", __LINE__);
+			// Set flags to allow mouse input, and disable selecting, and support for ANSI escape sequences.	
+			if (!SetConsoleMode(hConsoleInput, ENABLE_EXTENDED_FLAGS | ENABLE_WINDOW_INPUT | ENABLE_MOUSE_INPUT))
+				_Error("Setting The consoles Input modes did not work.", __LINE__);
+			if (!SetConsoleMode(hConsoleOutput, ENABLE_PROCESSED_OUTPUT | ENABLE_VIRTUAL_TERMINAL_PROCESSING | ENABLE_WRAP_AT_EOL_OUTPUT | DISABLE_NEWLINE_AUTO_RETURN))
+				_Error("Setting The consoles Output modes did not work.", __LINE__);
+
+			QueryPerformanceCounter(&liStart);
+			QueryPerformanceFrequency(&frequency);
 
 			WriteConsoleA(hConsoleOutput, "\x1b[?25l", 7, NULL, NULL); // hide the console cursor
 
@@ -1625,18 +1620,14 @@
 		}
 
 		SetFont(_consoleFontWidth, _consoleFontHeight, FONT_WEIGHT, 65001);
-		calculateConsoleSize(&width, &height, true);
 		calculateAndSetWindowTitle(windowTitle);
-
-		deleteArea(&Screen);
-		Screen = createArea(width, height, defaultFrontColor, defaultBackColor);
-		ScreenSpace.xEnd = Screen.width, ScreenSpace.yEnd = Screen.height;
 		
-		// realloc, so that if initialize is called more than once, we dont leak memory
-		screenBufferFull = (char*)realloc(screenBufferFull, sizeof(char) * ((Screen.width * Screen.height) * ANSI_STR_LEN + 1));
-		memset(screenBufferFull, 0, sizeof(char) * (Screen.width * Screen.height * ANSI_STR_LEN + 1)); // after allocating the screenBufferFull, empty it out.
-				
-		QueryPerformanceCounter(&liStart);
+		// since now the dimensions are different, we are going to need to resize the console and whatnot.
+		_newWidth = width;
+		_newHeight = height;
+		_needsResizeCorrection = true;
+		resizeCalculations(true, false);
+
 		srand((unsigned int)liStart.QuadPart);
 	}
 
@@ -1644,37 +1635,37 @@
 	|		     Functions for Rendering	  	  |
 	\*-------------------------------------------*/
 	
+	void calculateKeys()
+	{
+		for (size_t i = 0; i < AMOUNT_KEYS; i++)
+		{
+			bool down = (GetAsyncKeyState(allKeys[i].code) & 0x8000) && isWindowActive();
+
+			allKeys[i].pressed = false;
+			allKeys[i].released = false;
+
+			if (down && !allKeys[i].held)
+				allKeys[i].pressed = true;
+
+			if (!down && allKeys[i].held)
+				allKeys[i].released = true;
+
+			allKeys[i].held = down;
+		}
+	}
+
 	static inline void addString(const char* string, size_t size)
 	{
 		memcpy(&screenBufferFull[nextSlot], string, size);
 		nextSlot += size;
 	}
 
-	static inline void addSingleColor(const char* before, unsigned char color)
+	static inline void _addSingleColor(const char* before, Color color)
 	{
-		char buffer[4] = { 0 };
+		char buffer[4] = {0};
 		_itoa(color, buffer, 10);
-		addString(before, 5);
+		addString(before, 5);	
 		addString(buffer, 3);
-	}
-	
-	void calculateKeys()
-	{
-		for (size_t i = 0; i < AMOUNT_KEYS; i++)
-		{
-			bool down = (GetAsyncKeyState(allKeys[i].code) & 0x8000) && isWindowActive();
-			
-			allKeys[i].pressed = false;
-			allKeys[i].released = false;
-
-			if (down && !allKeys[i].held)
-				allKeys[i].pressed = true;
-			
-			if (!down && allKeys[i].held)
-				allKeys[i].released = true;
-		
-			allKeys[i].held = down;
-		}
 	}
 
 	void render(bool clearScreen)
@@ -1693,13 +1684,13 @@
 				addString("\033[", 2);
 
 				if (drawForeground)
-					addSingleColor("38;5;", Screen.colFront[i]);
+					_addSingleColor("38;5;", Screen.colFront[i]);
 
 				if (drawForeground && drawBackground)
 					screenBufferFull[nextSlot] = ';', nextSlot++;
 
 				if (drawBackground)
-					addSingleColor("48;5;", Screen.colBack[i]);
+					_addSingleColor("48;5;", Screen.colBack[i]);
 
 				screenBufferFull[nextSlot] = 'm'; nextSlot++; // m is needed for ansi stuff
 
@@ -1711,7 +1702,7 @@
 
 		// actual render
 		if (!WriteConsoleA(hConsoleOutput, screenBufferFull, nextSlot, NULL, NULL))
-			Error("Rendering failed.", __LINE__);
+			_Error("Rendering failed.", __LINE__);
 
 		if (clearScreen) 
 			reset(Screen);
@@ -1721,7 +1712,7 @@
 		calculateAndSetWindowTitle(windowTitle);
 
 		QueryPerformanceCounter(&liEnd);
-		deltaTime = clamp((float)(liEnd.QuadPart - liStart.QuadPart) / (float)frequency.QuadPart, 0, 2);
+		deltaTime = clampFloat((float)(liEnd.QuadPart - liStart.QuadPart) / (float)frequency.QuadPart, 0, 2);
 		liStart = liEnd;
 		
 		if (_countIndex >= FPS_COUNTS) _countIndex = 0, _finishedFPSLoop = true;
@@ -1731,8 +1722,7 @@
 		for (size_t i = 0; i < (_finishedFPSLoop ? FPS_COUNTS : _countIndex); i++)
 			totalTime += _pastPerformance[i];
 
-		fps = (totalTime);
-		//fps = 1.0f / (totalTime / (float)(_finishedFPSLoop ? FPS_COUNTS : _countIndex));
+		fps = 1.0f / (totalTime / (float)(_finishedFPSLoop ? FPS_COUNTS : _countIndex));
 	}
 
 	int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
@@ -1740,6 +1730,7 @@
 		// create a console. Note this project is a windowed application. The reason we do it this way, is so it will never use the windows terminal, and always the cmd.
 		AllocConsole();
 		start();
+		terminateACRE();
 		return 0;
 	}
 
@@ -1747,76 +1738,61 @@
 
 	/*
 	Changelog:
-	keys are now calculated once (in render function)
-	getSpace removed
 	drawRect functions now uses width, and height
 	textBoxInput now updated signature
 	textBoxInput supports many more keys now.
 
-
-	spDraw...Filled() no longer exist.
-	spDraw...() Now have filled parameter.
 	drawTriangle functions now return space.
 	function color parameters are now shorts.
-	Cleaned up renderer.
+
+	spDraw...() Now have filled parameter.
+	Changed keys to be calculated once (in render function)
 	Changed order of parameters in sysDrawCircle (to be more consistent)
-	renamed colorFront to front_color, and colorBack to back_color
-	renamed startX to xStart, startY to yStart, endX to xEnd, endY to yEnd.
-	Renamed LeftM to LMB, renamed RightM to RMB
-	Added character to sysDrawText
+	Changed fps to work differently. FPS_TICKS no longer exists. To change how many fps were counted use FPS_COUNTS
+	Changed program clean up, you no longer need to call terminateACRE(), it does that itself.
+	Changed Center() functions parameters, and cleaned up inside. The function should usually be paired with spWidth or spHeight.
+	
+	Cleaned up renderer.
 	Cleaned up sysDrawText
 	Cleaned up sysDrawPoint and renamed to sysDrawPixel
-	Changed fps to work differently. FPS_TICKS no longer exists. To change how many fps were counted use FPS_COUNTS
-	Variables the user shouldnt touch now begin with "_"
+	
+	spDraw...Filled() no longer exist.
+	Removed strToInt()
+	Removed getSpace 
 	Removed Timers. They just aren't needed.
 	Removed rectangleCollide function.
-
 	Removed spaceCollide.
+	Removed ACRE_FULLSCREEN to set fullscreen
+	Removed sysGetPoint, getPointFront, getPointBack
+	
+	Added getFrontColor, getBackColor, sysGetFrontColor, sysGetBackColor, sysGetChar
+	Added character to sysDrawText
 	Added spaceOverlap
-	Renamed spacePointCollide to spacePointOverlap
 	Added clampSpace()
+	Added setFullscreen(), as a method to change fullscreen at runtime
+	
+	Variables the user shouldn't touch now begin with "_"
+	Renamed startX to xStart, startY to yStart, endX to xEnd, endY to yEnd.
+	Renamed colorFront to front_color, and colorBack to back_color
+	Renamed LeftM to LMB, renamed RightM to RMB
+	Renamed spacePointCollide to spacePointOverlap
+	Renamed NO_ACRE_WATERMARK to ACRE_REMOVE_WATERMARK
+	Renamed clamp() to clampFloat() and clampInt()
+	Renamed Error() to _Error()
+	Renamed center() to Center()
 
-	Made Error not need wide chars.
+	Made _Error not need wide chars.
+	Fixed memory leaks in resizeArea()
 
 	ACRE_Gui:
 		Now works across multiple files!
 		This extension was completely reworked.
-
-	TODO:
-		Make fullscreen a toggleable option
-
 	*/
 
 /*
 
-TODO: Test if this function is faster
-
-void _byteToStr(unsigned char x, char* s) // modified from https://johnnylee-sde.github.io/Fast-unsigned-integer-to-string/
-	{
-		if (x <= 9) *s = (char)(x | 0x30);
-		else if (x <= 99)
-		{
-			UINT64 low = x;
-			UINT64 ll = ((low * 103) >> 9) & 0x1E; low += ll * 3;
-			ll = ((low & 0xF0) >> 4) | ((low & 0x0F) << 8);
-			*(UINT16*)s = (UINT16)(ll | 0x3030);
-		}
-		else
-		{
-			UINT64 low, ll;
-			UINT32 digits;
-
-			low = x; digits = (low > 999) ? 4 : 3;
-			ll = ((low * 5243) >> 19) & 0xFF; low -= ll * 100;
-			low = (low << 16) | ll;
-			ll = ((low * 103) >> 9) & 0x1E001E; low += ll * 3;
-			ll = ((low & 0x00F000F0) << 28) | (low & 0x000F000F) << 40;
-			ll |= 0x3030303000000000;
-
-			UINT8* p = (UINT8*)&ll;
-			if (digits == 4) *(UINT32*)s = *(UINT32*)(&p[4]);
-			else { *(UINT16*)s = *(UINT16*)(&p[5]); *(((UINT8*)s) + 2) = *(UINT8*)(&p[7]); }
-		}
-	}
+	Benchmark after updating everything:
+		around 2.03 ms with FPS_COUNTS 3, plugged in
+		1746 lines of code
 
 */

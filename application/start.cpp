@@ -1,42 +1,34 @@
-#define ACRE_START
-#define FPS_COUNTS 3
-#define ACRE_SHOW_FPS
-#include "../acre files/ACREngine.h"
-
-void start()
-{
-	initialize("Title", 400, 300, 2, 2, Default, Default);
-
-	while (true)
-	{
-		for (int y = 0; y < Height(Screen); y++)
-			for (int x = 0; x < Width(Screen); x++)
-				drawPixel(x, y, (x) % 256);
-
-
-		render(true);
-	}
-}
-
-/*
-
-Benchmark after updating everything:
-	around 2.03 ms with FPS_COUNTS 3
-
-*/
 
 
 
+//#define ACRE_START
+//#define ACRE_SHOW_FPS
+//#define ACRE_ALLOW_RESIZE
+//#include "../acre files/ACREngine.h"
+//
+//void start()
+//{
+//	initialize("Title", 150, 80, 8, 8, Default, Default);
+//
+//	while (true)
+//	{
+//		if (key(Q).pressed)
+//			setFullscreen(true);
+//		if (key(W).pressed)
+//			setFullscreen(false);
+//
+//		for (int y = 0; y < Height(Screen); y++)
+//			for (int x = 0; x < Width(Screen); x++)
+//				drawPixel(x, y, (y) % 256);
+//
+//		drawNumber(Centered, Centered, Width(Screen), EightBit, White);
+//		drawPixel(Mouse.x, Mouse.y, Red);
+//		render(true);
+//	}
+//}
 
 
 
-
-
-
-
-
-
-/*#define ACRE_FULLSCREEN
 #define ACRE_ALLOW_RESIZE
 #define ACRE_START
 
@@ -58,7 +50,7 @@ void start()
 	bool darkMode = true;
 
 	// start ACRE engine
-	initialize("New Version!", 190, 105, 8, 8, Default, VeryDarkGrey);
+	initialize("Sprite Viewer", 190, 105, 6, 6, Default, VeryDarkGrey);
 
 	// ~~~~~~~~~~~ Create Resources ~~~~~~~~~~~~~ //
 	Window* w = createWindow(2, 2, 45, 60, "Sprite Controls");
@@ -76,6 +68,8 @@ void start()
 	// ~~~~~~~~ Create Transformed Area ~~~~~~~~~ //
 	Area spr = loadSprite(fileName);
 	AreaTrans at = createAT(spr, Centered, Centered);
+
+
 
 	// ~~~~~~~~~~~~~~~ Main Loop ~~~~~~~~~~~~~~~~ //
 	while (!key(Esc).pressed)
@@ -108,9 +102,12 @@ void start()
 		at.opacity = map(slider2->sliderVal, 100, 1, 0, 1);
 		if (b3->wasPressed)
 		{
-			defaultBackColor = darkMode ? Color(200, 200, 200) : VeryDarkGrey;
+			defaultBackColor = darkMode ? calcColor(200, 200, 200) : VeryDarkGrey;
 			darkMode = !darkMode;
 		}
+
+		if (key(Q).pressed) setFullscreen(false);
+		if (key(W).pressed) setFullscreen(true);	
 
 		drawAT(&at);
 		drawWindowAndContents(w, darkMode);
@@ -121,5 +118,4 @@ void start()
 	}
 
 	deleteArea(&spr);
-	terminateACRE();
-}*/
+}
