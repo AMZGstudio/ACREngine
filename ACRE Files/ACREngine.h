@@ -242,17 +242,6 @@
 
 	Area createArea(int width, int height, short front_color, short back_color);
 	void deleteArea(Area* area);
-	
-	/// <summary>
-	/// This function will initialize ACREngine. It should be the first function called in void start()
-	/// </summary>
-	/// <param name="title"> - string that contains the window title.</param>
-	/// <param name="width"> - the amount of characters wide the console should be.</param>
-	/// <param name="height"> - the amount of characters tall the console should be.</param>
-	/// <param name="fontWidth"> - how many horizontal screen pixels each console character is.</param>
-	/// <param name="fontHeight"> - how many vertical screen pixels each console character is.</param>
-	/// <param name="frontColor"> - The Default foreground color (text color) of the console. (can be Default)</param>
-	/// <param name="backColor"> - The Default background color (pixel color) of the console. (can be Default)</param>
 	void initialize(const char* title, int width, int height, int fontWidth, int fontHeight, short frontColor, short backColor);
 	void render(bool clearScreen);
 	void terminateACRE();
@@ -1754,73 +1743,3 @@
 	}
 
 #endif
-
-	/*
-	Changelog:
-	drawRect functions now uses width, and height
-	textBoxInput now updated signature
-	textBoxInput supports many more keys now.
-
-	drawTriangle functions now return space.
-	function color parameters are now shorts.
-
-	spDraw...() Now have filled parameter.
-	Changed keys to be calculated once (in render function)
-	Changed order of parameters in sysDrawCircle (to be more consistent)
-	Changed fps to work differently. FPS_TICKS no longer exists. To change how many fps were counted use FPS_COUNTS
-	Changed program clean up, you no longer need to call terminateACRE(), it does that itself.
-	Changed Center() functions parameters, and cleaned up inside. The function should usually be paired with spWidth or spHeight.
-	
-	Cleaned up renderer.
-	Cleaned up sysDrawText
-	Cleaned up sysDrawPoint and renamed to sysDrawPixel
-	
-	spDraw...Filled() no longer exist.
-	Removed strToInt()
-	Removed getSpace 
-	Removed Timers. They just aren't needed.
-	Removed rectangleCollide function.
-	Removed spaceCollide.
-	Removed ACRE_FULLSCREEN to set fullscreen
-	Removed sysGetPoint, getPointFront, getPointBack
-	
-	Added getFrontColor, getBackColor, sysGetFrontColor, sysGetBackColor, sysGetChar
-	Added character to sysDrawText
-	Added spaceOverlap
-	Added clampSpace()
-	Added setFullscreen(), as a method to change fullscreen at runtime
-	
-	Variables the user shouldn't touch now begin with "_"
-	Renamed startX to xStart, startY to yStart, endX to xEnd, endY to yEnd.
-	Renamed colorFront to front_color, and colorBack to back_color
-	Renamed LeftM to LMB, renamed RightM to RMB
-	Renamed spacePointCollide to spacePointOverlap
-	Renamed NO_ACRE_WATERMARK to ACRE_REMOVE_WATERMARK
-	Renamed clamp() to clampFloat() and clampInt()
-	Renamed Error() to _Error()
-	Renamed center() to Center()
-	Renamed timePerSec() to amntPerSec()
-
-	Made _Error not need wide chars.
-	Fixed memory leaks in resizeArea()
-	Fixed bug in spDrawCircle()
-	Fixed wasResized() function.
-
-
-	ACRE_Gui:
-		Now works across multiple files!
-		This extension was completely reworked.
-
-	ACRE_Gameplay:
-		Updated the Renderer.
-		Now can also react to console size changing.
-		function definitions completely different.
-	*/
-
-/*
-
-	Benchmark after updating everything:
-		around 2.03 ms with FPS_COUNTS 3, plugged in
-		1746 lines of code
-
-*/
