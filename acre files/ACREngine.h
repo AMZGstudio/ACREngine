@@ -54,6 +54,15 @@
 
 */
 
+/*
+TODO:
+
+Changelog:
+	- Changed Area to not have 3 buffers, and instead only have 1.
+	- Renamed .width and .height to .w, and .h inside of Area.
+
+*/
+
 #ifndef ACRE_INCLUDES
 #define ACRE_INCLUDES
 	#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
@@ -66,6 +75,7 @@
 		#define _WIN32_WINNT 0x0601
 		#endif	
 
+		#include <stdint.h>
 		#include <stdio.h>
 		#include <windows.h>
 		#include <winbase.h>
@@ -114,7 +124,7 @@
 	typedef struct Space { int xStart, yStart, xEnd, yEnd; } Space;
 	typedef struct MOUSE { int x, y; int scrollH, scrollW; } MOUSE;
 	typedef struct Font { int _w, width, height, spacingX, spacingY; const unsigned char *data; } Font;
-	typedef struct Area { int width, height; short* colFront, * colBack; char* characters; bool drawFront, drawBack, drawText; } Area;
+	typedef struct Area { size_t w, h; uint32_t* data; bool drawFront, drawBack, drawText; } Area; // data is (1 byte colorFront, 1 byte colorBack, 1 byte character, 1 byte to specify if any of them are "Default")
 	typedef struct Key { bool pressed, held, released; char character; int code; } Key;
 
 	extern Area Screen;
@@ -162,12 +172,16 @@
 	void makeSprite(Area areaToMakeSprite, char* spriteFilePath);
 
 	bool isWindowActive();
+
 	int Width(Area area);
 	int Height(Area area);
 	int spWidth(Space space);
 	int spHeight(Space space);
 	int Center(int objLength, int worldLength);
 	int Random(int rangeStart, int rangeEnd);
+
+	uint8_t getByte(uint32_t data, uint8_t nthByte);
+	uint32_t combineBytes(uint8_t b1, uint8_t b2, uint8_t b3, uint8_t b4);
 
 	float amntPerSec(float amount);
 	Space calcSpace(Space prevSpace, int xStart, int yStart, int width, int height);
@@ -199,7 +213,10 @@
 	Color getBackColor(int x, int y);
 	char getChar(int x, int y);
 	
-	Point sysDrawPixel(int x, int y, Area area, char character, short front_color, short back_color);
+	void _fastDrawPixel(int x, int y, Area area, uint8_t color_front, uint8_t color_back, char character);
+	void _fastCopyPixel(int x, int y, Area area, uint32_t other_pixel);
+
+	void sysDrawPixel(int x, int y, Area area, char character, short front_color, short back_color);
 	void sysDrawRect(int xStart, int yStart, int xEnd, int yEnd, Area area, bool filled, char character, short front_color, short back_color);
 	void sysDrawCircle(int x, int y, Area area, int radius, bool filled, char character, short front_color, short back_color);
 	void sysDrawLine(int xStart, int yStart, int xEnd, int yEnd, Area area, char character, short front_color, short back_color);
@@ -384,13 +401,16 @@
 	|		 General Functions / Miscelanous   	  |
 	\*-------------------------------------------*/
 
-	inline int Width(Area area) { return area.width; }
-	inline int Height(Area area) { return area.height; }
+	inline int Width(Area area) { return area.w; }
+	inline int Height(Area area) { return area.h; }
 	inline int spWidth(Space space) { return abs(space.xEnd - space.xStart); }
 	inline int spHeight(Space space) { return abs(space.yEnd - space.yStart); }
 	inline int Center(int objLength, int worldLength) { return (worldLength / 2.0f) - (objLength / 2.0f);}
 	inline int Random(int rangeStart, int rangeEnd) { return (rand() % (rangeEnd - rangeStart + 1)) + rangeStart;}
 
+	inline uint8_t getByte(uint32_t data, uint8_t nthByte) { return (data >> (24 - (nthByte * 8))) & 0xFF; }
+	inline uint32_t combineBytes(uint8_t b1, uint8_t b2, uint8_t b3, uint8_t b4) { return (uint32_t)(b1 << 24) | (b2 << 16) | (b3 << 8) | b4; }
+	
 	int txtWidth(const char* string, Font fontType)
 	{
 		size_t maxWidth = 0;
@@ -570,13 +590,11 @@
 		Area sprite = createArea(nWidth, nHeight, Default, Default);
 		sprite.drawText = includeText;
 
-		for (int j = 0; j < nHeight; j++)
+		for (int y = 0; y < nHeight; y++)
 		{
-			for (int i = 0; i < nWidth; i++)
-			{
-				sprite.colBack[j * nWidth + i] = readColor(spriteFile);
-				sprite.characters[j * nWidth + i] = fgetc(spriteFile);
-			}
+			for (int x = 0; x < nWidth; x++)
+				_fastDrawPixel(x, y, sprite, 0, readColor(spriteFile), fgetc(spriteFile));
+			
 			fgetc(spriteFile);
 		}
 		fclose(spriteFile);
@@ -598,16 +616,17 @@
 			strcat(extraModes, ":T");
 
 		FILE* file = fopen(newPath, "w");
-		fprintf(file, "acrev3.1%s;%d;%d\n", extraModes, areaToMakeSprite.width, areaToMakeSprite.height);
+		fprintf(file, "acrev3.2%s;%d;%d\n", extraModes, areaToMakeSprite.w, areaToMakeSprite.h);
 		
-		for (int y = 0; y < areaToMakeSprite.height; y++)
+		for (int y = 0; y < areaToMakeSprite.h; y++)
 		{
-			for (int x = 0; x < areaToMakeSprite.width; x++)
-				fprintf(file, "%d;%c", areaToMakeSprite.colBack[y * areaToMakeSprite.width + x], areaToMakeSprite.characters[y * areaToMakeSprite.width + x]);
+			for (int x = 0; x < areaToMakeSprite.w; x++)
+				fprintf(file, "%d;%c", getByte(areaToMakeSprite.data[y * areaToMakeSprite.w + x], 1), getByte(areaToMakeSprite.data[y * areaToMakeSprite.w + x], 2));
 			
-			if (y != areaToMakeSprite.height - 1)
+			if (y != areaToMakeSprite.h - 1)
 				fwrite("\n", 1, 1, file);
 		}
+
 		fclose(file);
 	}
 
@@ -617,7 +636,7 @@
 	}
 	bool legalArea(Area area)
 	{
-		return (area.width != -1 && area.height != -1);
+		return (area.w != -1 && area.h != -1);
 	}
 
 	/*-------------------------------------------*\
@@ -647,57 +666,64 @@
 
 	Color sysGetFrontColor(int x, int y, Area area)
 	{
-		return area.colFront[y * area.width + x];
+		return getByte(area.data[y * area.w + x], 0);
 	}
 	Color sysGetBackColor(int x, int y, Area area)
 	{
-		return area.colBack[y * area.width + x];
+		return getByte(area.data[y * area.w + x], 1);
 	}
 	char sysGetChar(int x, int y, Area area)
 	{
-		return area.characters[y * area.width + x];
+		return getByte(area.data[y * area.w + x], 2);
 	}
 
 	Color getFrontColor(int x, int y)
 	{
-		return areaToDrawOn->colFront[y * areaToDrawOn->width + x];
+		return getByte(areaToDrawOn->data[y * areaToDrawOn->w + x], 0);
 	}
 	Color getBackColor(int x, int y)
 	{
-		return areaToDrawOn->colBack[y * areaToDrawOn->width + x];
+		return getByte(areaToDrawOn->data[y * areaToDrawOn->w + x], 1);
 	}
 	char getChar(int x, int y)
 	{
-		return areaToDrawOn->characters[y * areaToDrawOn->width + x];
+		return getByte(areaToDrawOn->data[y * areaToDrawOn->w + x], 2);
 	}
 
 	/*-------------------------------------------*\
 	|		   System Drawing Functions			  |
 	\*-------------------------------------------*/
 
-	Point sysDrawPixel(int x, int y, Area area, char character, short front_color, short back_color)
+	inline void _fastDrawPixel(int x, int y, Area area, uint8_t color_front, uint8_t color_back, char character)
 	{
-		Point loc = { x, y };
-		if (x < 0 || y < 0 || x >= area.width || y >= area.height) return loc;
+		area.data[y * area.w + x] = combineBytes(color_front, color_back, character, 0);
+	}
 
-		int slot = y * (area.width) + x;
+	inline void _fastCopyPixel(int x, int y, Area area, uint32_t other_pixel)
+	{
+		area.data[y * area.w + x] = other_pixel;
+	}
 
-		if (character != Default)
-			if (character == '\n' || character > 256 || character <= 0) // or invalid color
-				_Error("Tried to add newline (\'\\n\'), or invalid character, to the screen buffer!", __LINE__);
-			else area.characters[slot] = character;
-
-		if (front_color != Default)
-			if (front_color < 0 || front_color > 255)
-				_Error("Tried to add invalid foreground color, to the screen buffer!", __LINE__);
-			else area.colFront[slot] = front_color;
-
-		if (back_color != Default)
-			if (back_color < 0 || back_color  > 255)
-				_Error("Tried to add invalid background color, to the screen buffer!", __LINE__);
-			else area.colBack[slot] = back_color;
+	void sysDrawPixel(int x, int y, Area area, char character, short front_color, short back_color)
+	{
+		if (x < 0 || y < 0 || x >= area.w || y >= area.h) return;
 		
-		return loc;
+		size_t addr = y * area.w + x;
+
+		if (front_color == Default) front_color = getByte(area.data[addr], 0);
+		if (back_color == Default) back_color = getByte(area.data[addr], 1);
+		if (character == Default) character = getByte(area.data[addr], 2);
+
+		if (front_color < 0 || front_color > 255)
+			_Error("Tried to add invalid foreground color, to the screen buffer!", __LINE__);
+		
+		if (back_color < 0 || back_color  > 255)
+			_Error("Tried to add invalid background color, to the screen buffer!", __LINE__);
+		
+		if (character == '\n' || character > 256 || character <= 0)
+			_Error("Tried to add newline (\'\\n\'), or invalid character, to the screen buffer!", __LINE__);
+		
+		area.data[y * area.w + x] = combineBytes(front_color, back_color, character, 0);
 	}
 	
 	void sysDrawRect(int xStart, int yStart, int xEnd, int yEnd, Area area, bool filled, char character, short front_color, short back_color)
@@ -1011,11 +1037,11 @@
 	{
 		if (!legalArea(areaToDraw)) _Error("Can't draw deleted Area!", __LINE__);
 
-		for (int ys = 0; ys < areaToDraw.height; ys++)
-			for (int xs = 0; xs < areaToDraw.width; xs++)
+		for (int ys = 0; ys < areaToDraw.h; ys++)
+			for (int xs = 0; xs < areaToDraw.w; xs++)
 			{
-				int loc = ys * (areaToDraw.width) + xs;
-				sysDrawPixel(x + xs, y + ys, area, (areaToDraw.drawText) ? areaToDraw.characters[loc] : Default, (areaToDraw.drawFront) ? areaToDraw.colFront[loc] : Default, (areaToDraw.drawBack) ? areaToDraw.colBack[loc] : Default);
+				size_t loc = ys * (areaToDraw.w) + xs;
+				sysDrawPixel(x + xs, y + ys, area, (areaToDraw.drawText) ? getByte(areaToDraw.data[loc], 2) : Default, (areaToDraw.drawFront) ? getByte(areaToDraw.data[loc], 0) : Default, (areaToDraw.drawBack) ? getByte(areaToDraw.data[loc], 1) : Default);
 			}
 	}
 
@@ -1023,14 +1049,14 @@
 	{
 		int newX=0, newY=0;
 		if (!legalArea(areaToDraw)) _Error("Can't draw deleted Area!", __LINE__);
-		if (endAreaX > areaToDraw.width || endAreaY > areaToDraw.height || startAreaX < 0 || startAreaY < 0) _Error("Can't draw partial Area bigger than area itself.", __LINE__);
+		if (endAreaX > areaToDraw.w || endAreaY > areaToDraw.h || startAreaX < 0 || startAreaY < 0) _Error("Can't draw partial Area bigger than area itself.", __LINE__);
 
 		for (int ys = startAreaY; ys < endAreaY; ys++)
 		{
 			for (int xs = startAreaX; xs < endAreaX; xs++)
 			{
-				int loc = ys * (areaToDraw.width) + xs;
-				sysDrawPixel(x+newX, y+newY, area, areaToDraw.characters[loc], areaToDraw.colFront[loc], areaToDraw.colBack[loc]);
+				int loc = ys * (areaToDraw.w) + xs;
+				sysDrawPixel(x+newX, y+newY, area, getByte(areaToDraw.data[loc], 2), getByte(areaToDraw.data[loc], 0), getByte(areaToDraw.data[loc], 1));
 				newX++;
 			}
 			newX=0, newY++;
@@ -1086,6 +1112,7 @@
 		sysDrawLine(space.xStart, space.yStart, space.xEnd, space.yEnd, *areaToDrawOn, Default, Default, color);
 		return space;
 	}
+
 	Space spDrawText(int x, int y, Space space, const char* text, Font fontType, short color)
 	{
 		space = calcSpace(space, x, y, txtWidth(text, fontType), txtHeight(text, fontType));
@@ -1108,7 +1135,7 @@
 
 	Space spDrawArea(int x, int y, Space space, Area areaToDraw)
 	{
-		space = calcSpace(space, x, y, areaToDraw.width, areaToDraw.height);
+		space = calcSpace(space, x, y, areaToDraw.w, areaToDraw.h);
 		sysDrawArea(space.xStart, space.yStart, *areaToDrawOn, areaToDraw);
 		return space;
 	}
@@ -1121,18 +1148,17 @@
 
 	void clear(Area area)
 	{
-		for (int i = 0; i < (area.width * area.height); i++)
-			area.colBack[i] = Default, area.colFront[i] = Default;
+		//for (int i = 0; i < (area.w * area.h); i++)
+			//area.data[i] = Default, area.data[i] = Default;
 
-		memset(area.characters, Default, sizeof(char) * (area.width * area.height));
+		memset(area.data, 0, sizeof(uint32_t) * (area.w * area.h));
 	}
 
 	void reset(Area area)
 	{
-		for (int i = 0; i < (area.width * area.height); i++)
-			area.colBack[i] = defaultBackColor, area.colFront[i] = defaultFrontColor;
-		
-		memset(area.characters, DEFAULT_CHARACTER, sizeof(char) * (area.width * area.height));
+		uint32_t d = combineBytes(defaultFrontColor, defaultBackColor, DEFAULT_CHARACTER, 0);
+		for (int i = 0; i < (area.w * area.h); i++)
+			area.data[i] = d;
 	}
 
 	/*-------------------------------------------*\
@@ -1218,63 +1244,47 @@
 	Area createArea(int width, int height, short front_color, short back_color)
 	{
 		Area area;
-		area.width = width;
-		area.height = height;
+		area.w = (size_t)width;
+		area.h = (size_t)height;
+
 		area.drawText = false;
 		area.drawFront = false;
 		area.drawBack = true;
 
-		area.characters = (char*)malloc((sizeof(char) * width * height) + 1);
-		area.colFront = (short*)malloc((sizeof(short) * width * height));
-		area.colBack = (short*)malloc((sizeof(short) * width * height));
-
-		for (int i = 0; i < (width * height); i++)
-		{
-			area.colFront[i] = front_color;
-			area.colBack[i] = back_color;
-			area.characters[i] = DEFAULT_CHARACTER;
-		}
+		area.data = (uint32_t*)malloc((sizeof(uint32_t) * width * height));
+		
+		for (size_t i = 0; i < (width * height); i++)
+			area.data[i] = combineBytes(front_color, back_color, DEFAULT_CHARACTER, 0);
+		
 		return area;
 	}
 
 	void resizeArea(int width, int height, Area* area)
 	{
-		area->width = width;
-		area->height = height;
+		area->w = width;
+		area->h = height;
 
 		if (!legalArea(*area)) _Error("Can't resize area to be negative!", __LINE__);
 
-		char* charData = (char*)realloc(area->characters, (sizeof(char) * width * height) + 1);
-		short* colFrontData = (short*)realloc(area->colFront, (sizeof(short) * width * height));
-		short* colBackData = (short*)realloc(area->colBack, (sizeof(short) * width * height));
-		
-		// this exists so we don't get warnings.
-		if (colFrontData != NULL) area->colFront = colFrontData;
-		if (colBackData != NULL) area->colBack = colBackData;
-		if (charData != NULL) area->characters = charData;
+		uint32_t* data = (uint32_t*)realloc(area->data, (sizeof(uint32_t) * width * height));
 
-		for (int i = 0; i < (width * height); i++)
-		{
-			area->colFront[i] = defaultFrontColor;
-			area->colBack[i] = defaultBackColor;
-			area->characters[i] = DEFAULT_CHARACTER;
-		}
+		// this exists so we don't get warnings.
+		if (data != NULL) area->data = data;
+		
+		for (size_t i = 0; i < (width * height); i++)
+			area->data[i] = combineBytes(defaultFrontColor, defaultBackColor, DEFAULT_CHARACTER, 0);
 	}
 
 	void deleteArea(Area* area)
 	{
-		if (area->width == -1 || area->height == -1)
+		if (area->w == -1 || area->h == -1)
 			return;
 
-		area->width = -1;
-		area->height = -1;
+		area->w = -1;
+		area->h = -1;
 
-		free(area->characters);
-		free(area->colFront);
-		free(area->colBack);
-		area->characters = NULL;
-		area->colFront = NULL;
-		area->colBack = NULL;
+		free(area->data);
+		area->data = NULL;
 	}
 
 	/*-------------------------------------------*\
@@ -1446,17 +1456,17 @@
 			setConsoleToSize(_newWidth, _newHeight, showErrors);
 
 			resizeArea(_newWidth, _newHeight, &Screen);
-			screenBufferFull = (char*)realloc(screenBufferFull, sizeof(char) * ((Screen.width * Screen.height) * ANSI_STR_LEN + 1));
-			memset(screenBufferFull, 0, sizeof(char) * (Screen.width * Screen.height * ANSI_STR_LEN + 1)); // after allocating the screenBufferFull, empty it out.
+			screenBufferFull = (char*)realloc(screenBufferFull, sizeof(char) * ((Screen.w * Screen.h) * ANSI_STR_LEN + 1));
+			memset(screenBufferFull, 0, sizeof(char) * (Screen.w * Screen.h * ANSI_STR_LEN + 1)); // after allocating the screenBufferFull, empty it out.
 
-			ScreenSpace.xEnd = Screen.width, ScreenSpace.yEnd = Screen.height;
+			ScreenSpace.xEnd = Screen.w, ScreenSpace.yEnd = Screen.h;
 			_needsResizeCorrection = false;
 		}
 
 		int w, h;
 		getConsoleWindowSize(&w, &h);
 
-		if (w != Screen.width || h != Screen.height)
+		if (w != Screen.w || h != Screen.h)
 			setConsoleToSize(w, h, showErrors);
 	}
 
@@ -1682,30 +1692,35 @@
 		nextSlot = 6;
 
 		short currentForeground = Default, currentBackground = Default;
-		for (size_t i = 0; i < Screen.width * Screen.height; i++)
+		for (size_t i = 0; i < Screen.w * Screen.h; i++)
 		{
-			bool drawForeground = Screen.colFront[i] != currentForeground;
-			bool drawBackground = Screen.colBack[i] != currentBackground;
-			
+			uint8_t front, back, chr;
+			front = getByte(Screen.data[i], 0);
+			back  = getByte(Screen.data[i], 1);
+
+			bool drawForeground = front != currentForeground;
+			bool drawBackground = back != currentBackground;
+		
 			if (drawForeground || drawBackground)
 			{
 				addString("\033[", 2);
 
 				if (drawForeground)
-					_addSingleColor("38;5;", Screen.colFront[i]);
+					_addSingleColor("38;5;", front);
 
 				if (drawForeground && drawBackground)
 					screenBufferFull[nextSlot] = ';', nextSlot++;
 
 				if (drawBackground)
-					_addSingleColor("48;5;", Screen.colBack[i]);
+					_addSingleColor("48;5;", back);
 
 				screenBufferFull[nextSlot] = 'm'; nextSlot++; // m is needed for ansi stuff
 
-				currentForeground = Screen.colFront[i];
-				currentBackground = Screen.colBack[i];
+				currentForeground = front;
+				currentBackground = back;
 			} 
-			screenBufferFull[nextSlot] = Screen.characters[i]; nextSlot++;
+			chr   = getByte(Screen.data[i], 2);
+			screenBufferFull[nextSlot] = chr; nextSlot++;
 		}
 
 		// actual render
