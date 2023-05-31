@@ -1,7 +1,7 @@
 #define ACRE_START 
 #define ACRE_FONTS
-#include "ACREngine.h"
-#include "ACRE_Fonts.h"
+#include "../ACREngine.h"
+#include "../ACRE_Fonts.h"
 
 int main()
 {

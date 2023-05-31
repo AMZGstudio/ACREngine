@@ -1,7 +1,7 @@
 #define ACRE_START
 #define SHOW_FPS
 
-#include "ACREngine.h"
+#include "../ACREngine.h"
 #include "escapi.h"
 
 typedef struct Pixel {

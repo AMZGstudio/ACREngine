@@ -2,8 +2,8 @@
 #define SHOW_FPS
 #define ACRE_FONTS
 
-#include "ACREngine.h"
-#include "ACRE_Fonts.h"
+#include "../ACREngine.h"
+#include "../ACRE_Fonts.h"
 
 typedef struct Piece {
 	char* data;
