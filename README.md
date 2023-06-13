@@ -9,7 +9,7 @@ ACREngine or _AMZG Console Render Engine_ is a C & C++ Game/Render engine that u
 This game engine can be used for a variety of things. You can make fully fledged games that look like normal games, or you can make ASCII art games. You can use ACRE as a means to add colors to the console, or you can use it as a method to print to the console with high speeds. All of these things, in a simple library, allowing you to focus on the project, and not the engine! Whether a beginner or advanced programmer, creating a game couldn't be easier!
 
 # Features
-    ✅ Fullscreen onsole applications.
+    ✅ Fullscreen console applications.
     ✅ resizable console window.
     ✅ user input handling.
     ✅ extremely simple API (with no boiler plate).
