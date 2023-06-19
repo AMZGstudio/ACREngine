@@ -2,23 +2,23 @@
 # ACREngine 
 ![](https://img.shields.io/badge/License-BSD-blue) ![](https://img.shields.io/badge/Language-C++-Green) ![](https://img.shields.io/badge/Language-C-Green) ![](https://img.shields.io/badge/Platform-Windows-blue)
 
-ACREngine or _AMZG Console Render Engine_ is a C & C++ Game/Render engine that uses the windows console. It was designed with simplicity in mind, and is very easy to get started with. ACRE is very modular, and (on its own) is just a single header file! In addition, ACRE has expansion packs with additional features! 
+ACREngine or _AMZG Console Render Engine_ is a C & C++ Game/Render engine that uses the windows console. It was designed with simplicity in mind, and is extremely easy to get started with. ACRE is highly modular, and (on its own) is just a single header file! In addition, ACRE has expansion packs with additional features! 
 
 
 # When to use it?
 This game engine can be used for a variety of things. You can make fully fledged games that look like normal games, or you can make ASCII art games. You can use ACRE as a means to add colors to the console, or you can use it as a method to print to the console with high speeds. All of these things, in a simple library, allowing you to focus on the project, and not the engine! Whether a beginner or advanced programmer, creating a game couldn't be easier!
 
 # Features
-    ✅ Fullscreen console applications.
-    ✅ resizable console window.
-    ✅ user input handling.
-    ✅ extremely simple API (with no boiler plate).
-    ✅ no dlls, libs, etc. ACRE is a single file. 
-    ✅ easy to use drawing routines. 
-    ✅ custom image formats.
-    ✅ text drawing routines (with different fonts as well).
-    ✅ both compatible with C, and C++.
-    ✅ compiles with MSVC, and gcc/g++
+    ✅ Fullscreen console applications
+    ✅ Resizable console window
+    ✅ User input handling
+    ✅ Extremely simple API (with no boiler plate)
+    ✅ No dlls, libs, etc. ACRE is a single file
+    ✅ Easy-to-use drawing routines
+    ✅ Custom image formats
+    ✅ Text drawing routines (with different fonts as well)
+    ✅ Compatible with C and C++
+    ✅ Compiles with MSVC and MinGW
 
 # How do I get started?
 there are two methods to set everything up. You can use the included premake build method, that will setup a visual studio for you, or you can setup your project manually, and include ACRE yourself. If you are using visual studio the first method is recommended. 
@@ -89,7 +89,7 @@ void start()
 ```
 # Games made in ACRE
 
-Zombie shooter:
+Zombie shooter: [Zombie Shooter](https://github.com/AMZGstudio/Zombie-Shooter)
 
 Tetris:
 [tetris](https://user-images.githubusercontent.com/99887800/180656074-cdce0a86-dcd6-4bed-8709-dcf9b06bd744.png)
