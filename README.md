@@ -40,12 +40,12 @@ _Note: you are given sample code to get started._
 
 ## DIY Method
 
-if using visual studio, you must create a windows application project, and then include the header file named `"ACREngine.h"` found in the `acre files` folder.
+if you are using Visual Studio, you must create a windows application project, and include the header file named `"ACREngine.h"` found in the `acre files` folder.
 
 # Compilation
 Visual Studio: just hit build
 
-MinGW (gcc/g++): ______
+MinGW (gcc/g++): gcc -o code code.c
 
 # Documentation
 Take a look at the wiki, with documentation for every function. Additionally, you can look at example programs to understand how to use the game engine.
@@ -76,13 +76,13 @@ void start()
         drawCircle(x, y, 15, Blue);
 
         // check if any of the WASD keys are pressed, and move the x and y of the circle accordingly.
-        // timePerSec adds the correct amount to the coordinates, to make them move 40 units every second.
+        // amntPerSec adds the correct amount to the coordinates, to make them move 40 units every second.
         if (key(W).held) y -= amntPerSec(40);
         if (key(S).held) y += amntPerSec(40);
         if (key(A).held) x -= amntPerSec(40);
         if (key(D).held) x += amntPerSec(40);
 
-        // render to screen, true tells it to clear the screen after rendering.
+        // render to screen, 'true' tells it to clear the screen after rendering.
         render(true);
     }
 }
