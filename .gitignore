@@ -441,3 +441,4 @@ FodyWeavers.xsd
 # Additional files built by Visual Studio
 
 !premake5.exe
+/application/start.cpp
