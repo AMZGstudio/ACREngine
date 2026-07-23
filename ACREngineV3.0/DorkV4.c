@@ -1,4 +1,4 @@
-#define FULLSCREEN
+//#define FULLSCREEN
 
 #define SHOW_FPS
 #define ACRE_START
@@ -15,7 +15,7 @@
 
 int main()
 {
-	initalize("Dork", 180, 110, 5, 5, Default, 234);
+	initalize("Dork", 180, 110, 6, 6, Default, 234);
 	setDefaultDrawArea(&surface);
 
 	gameState gs = { MENU_STATE };
